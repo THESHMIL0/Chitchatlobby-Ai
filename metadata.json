@@ -1,0 +1,6 @@
+{
+  "name": "Chit Chat",
+  "description": "Real-time chat application featuring AI Lounge bot, custom rooms, voice notes, polls, and custom themes.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
