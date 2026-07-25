@@ -138,6 +138,104 @@ if (savedUser) {
     }
 }
 
+// Starting Page Setup Logic
+const AVATAR_PRESETS = [
+    'https://api.dicebear.com/7.x/bottts/svg?seed=ChitChatGuest',
+    'https://api.dicebear.com/7.x/adventurer/svg?seed=Alex',
+    'https://api.dicebear.com/7.x/lorelei/svg?seed=Sophia',
+    'https://api.dicebear.com/7.x/bottts/svg?seed=Sparky',
+    'https://api.dicebear.com/7.x/fun-emoji/svg?seed=Happy',
+    'https://api.dicebear.com/7.x/personas/svg?seed=Sam'
+];
+
+const avatarPresetsGrid = document.getElementById('avatar-presets-grid');
+const nameCharCount = document.getElementById('name-char-count');
+
+function renderAvatarPresets() {
+    if (!avatarPresetsGrid) return;
+    avatarPresetsGrid.innerHTML = AVATAR_PRESETS.map((url, index) => `
+        <img class="preset-avatar-item ${avatarPreview.src === url ? 'active' : ''}" 
+             src="${url}" 
+             alt="Preset ${index + 1}"
+             data-url="${url}">
+    `).join('');
+}
+
+renderAvatarPresets();
+
+if (avatarPresetsGrid) {
+    avatarPresetsGrid.addEventListener('click', (e) => {
+        const item = e.target.closest('.preset-avatar-item');
+        if (!item) return;
+        hapticFeedback('light');
+        const url = item.dataset.url;
+        currentUser.avatar = url;
+        avatarPreview.src = url;
+        document.getElementById('settings-avatar-preview').src = url;
+        document.querySelectorAll('.preset-avatar-item').forEach(el => el.classList.remove('active'));
+        item.classList.add('active');
+    });
+}
+
+// Randomize Avatar Button
+const btnRandomAvatar = document.getElementById('btn-random-avatar');
+if (btnRandomAvatar) {
+    btnRandomAvatar.onclick = () => {
+        hapticFeedback('medium');
+        const randomSeed = Math.random().toString(36).substring(2, 8);
+        const styles = ['bottts', 'adventurer', 'lorelei', 'fun-emoji', 'personas', 'avataaars'];
+        const randomStyle = styles[Math.floor(Math.random() * styles.length)];
+        const newUrl = `https://api.dicebear.com/7.x/${randomStyle}/svg?seed=${randomSeed}`;
+        currentUser.avatar = newUrl;
+        avatarPreview.src = newUrl;
+        document.getElementById('settings-avatar-preview').src = newUrl;
+        document.querySelectorAll('.preset-avatar-item').forEach(el => el.classList.remove('active'));
+    };
+}
+
+// Upload Triggers
+const btnTriggerUpload = document.getElementById('btn-trigger-upload');
+const btnUploadAvatarText = document.getElementById('btn-upload-avatar-text');
+const avatarPreviewContainer = document.getElementById('avatar-preview-container');
+
+if (btnTriggerUpload) btnTriggerUpload.onclick = (e) => { e.stopPropagation(); profilePicUpload.click(); };
+if (btnUploadAvatarText) btnUploadAvatarText.onclick = () => profilePicUpload.click();
+if (avatarPreviewContainer) avatarPreviewContainer.onclick = () => profilePicUpload.click();
+
+// Character Count for Username
+if (usernameInput) {
+    if (nameCharCount) nameCharCount.textContent = `${usernameInput.value.length}/20`;
+    usernameInput.addEventListener('input', () => {
+        const len = usernameInput.value.length;
+        if (nameCharCount) nameCharCount.textContent = `${len}/20`;
+    });
+}
+
+// Status Quick Chips
+const statusChipsContainer = document.getElementById('status-chips-container');
+if (statusChipsContainer) {
+    statusChipsContainer.addEventListener('click', (e) => {
+        const chip = e.target.closest('.status-chip');
+        if (!chip) return;
+        hapticFeedback('light');
+        document.querySelectorAll('.status-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        currentUser.about = chip.dataset.status;
+        document.getElementById('settings-about').value = currentUser.about;
+    });
+}
+
+// Starting Theme Pills
+document.querySelectorAll('.login-theme-pills .theme-pill').forEach(pill => {
+    pill.onclick = () => {
+        hapticFeedback('light');
+        document.querySelectorAll('.login-theme-pills .theme-pill').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        const themeChoice = pill.dataset.themeChoice;
+        setTheme(themeChoice);
+    };
+});
+
 loadingScreen.classList.add('hidden');
 if (currentUser && currentUser.name) {
     loginScreen.classList.add('hidden');
@@ -151,7 +249,13 @@ if (currentUser && currentUser.name) {
 profilePicUpload.addEventListener('change', function() {
     if (this.files[0]) {
         const reader = new FileReader();
-        reader.onload = (e) => { currentUser.avatar = e.target.result; avatarPreview.src = e.target.result; document.getElementById('settings-avatar-preview').src = e.target.result; saveUserLocally(); };
+        reader.onload = (e) => { 
+            currentUser.avatar = e.target.result; 
+            avatarPreview.src = e.target.result; 
+            document.getElementById('settings-avatar-preview').src = e.target.result; 
+            document.querySelectorAll('.preset-avatar-item').forEach(el => el.classList.remove('active'));
+            saveUserLocally(); 
+        };
         reader.readAsDataURL(this.files[0]);
     }
 });
@@ -159,8 +263,16 @@ profilePicUpload.addEventListener('change', function() {
 document.getElementById('login-btn').addEventListener('click', () => {
     hapticFeedback('light'); 
     currentUser.name = usernameInput.value.trim();
-    if (!currentUser.name) return alert('Enter a name');
-    if (!currentUser.avatar) { currentUser.avatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${currentUser.name}`; document.getElementById('settings-avatar-preview').src = currentUser.avatar; }
+    if (!currentUser.name) {
+        usernameInput.focus();
+        usernameInput.style.borderColor = '#ef4444';
+        setTimeout(() => { usernameInput.style.borderColor = ''; }, 1500);
+        return;
+    }
+    if (!currentUser.avatar) { 
+        currentUser.avatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(currentUser.name)}`; 
+        document.getElementById('settings-avatar-preview').src = currentUser.avatar; 
+    }
     document.getElementById('settings-username').value = currentUser.name;
     loginScreen.classList.add('hidden'); roomListScreen.classList.remove('hidden');
     saveUserLocally(); history.replaceState({screen: 'lobby'}, '', '#lobby'); 
