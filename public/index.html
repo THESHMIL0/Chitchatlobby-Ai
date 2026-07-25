@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Chit Chat</title>
+    <link rel="icon" type="image/svg+xml" href="/icon.svg">
+    <link rel="apple-touch-icon" href="/icon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -16,7 +18,7 @@
     <!-- Loading Screen -->
     <div id="loading-screen" class="screen">
         <div class="loading-container">
-            <div class="app-logo-glow">💬</div>
+            <div class="app-logo-glow"><img src="/icon.svg" alt="Chit Chat Logo" class="brand-app-logo"></div>
             <div class="spinner"></div>
             <h2 class="loading-title">Chit Chat</h2>
             <p class="loading-sub">Connecting securely...</p>
@@ -35,12 +37,21 @@
 
     <!-- Login Screen -->
     <div id="login-screen" class="screen hidden">
+        <!-- Top Floating Theme Bar -->
+        <div class="login-top-theme-bar">
+            <div class="login-theme-pills">
+                <button type="button" class="theme-pill" data-theme-choice="light" title="Light Mode">☀️ Light</button>
+                <button type="button" class="theme-pill" data-theme-choice="dark" title="Dark Mode">🌙 Dark</button>
+                <button type="button" class="theme-pill" data-theme-choice="pink" title="Rose Mode">🌸 Pink</button>
+            </div>
+        </div>
+
         <div class="login-card">
             <!-- Brand & Welcome Header -->
             <div class="login-header-wrap">
-                <div class="login-logo-glow">💬</div>
-                <h1 class="welcome-title">Welcome to Chit Chat</h1>
-                <p class="login-subtitle">Choose your avatar & set up your profile to start chatting</p>
+                <div class="login-logo-glow"><img src="/icon.svg" alt="Chit Chat Logo" class="brand-app-logo"></div>
+                <h1 class="welcome-title">Chit Chat</h1>
+                <p class="login-subtitle">Simple, fast & real-time messaging</p>
             </div>
 
             <!-- Avatar Selection Section -->
@@ -52,66 +63,29 @@
 
                 <div class="avatar-actions-row">
                     <button type="button" id="btn-random-avatar" class="chip-action-btn">
-                        <span>🎲 Randomize</span>
+                        <span>🎲 Shuffle Avatar</span>
                     </button>
                     <button type="button" id="btn-upload-avatar-text" class="chip-action-btn">
-                        <span>📁 Upload Photo</span>
+                        <span>📷 Upload Photo</span>
                     </button>
-                </div>
-
-                <!-- Avatar Presets Grid -->
-                <div class="avatar-presets-label">Choose an avatar style:</div>
-                <div class="avatar-presets-grid" id="avatar-presets-grid">
-                    <!-- Populated dynamically via JS -->
                 </div>
             </div>
 
             <input type="file" id="profile-pic-upload" accept="image/*" class="hidden">
 
-            <!-- Profile Fields Section -->
+            <!-- Name Input Section -->
             <div class="login-fields-section">
                 <div class="input-field-wrapper">
                     <span class="field-icon">👤</span>
-                    <input type="text" id="username-input" placeholder="Enter Display Name" autocomplete="off" maxlength="20">
-                    <span id="name-char-count" class="char-count">0/20</span>
-                </div>
-
-                <div class="status-quick-select">
-                    <div class="status-label">Quick Bio / Status:</div>
-                    <div class="status-chips-scroll" id="status-chips-container">
-                        <button type="button" class="status-chip active" data-status="Hey there! I am using Chit Chat.">👋 Hey there!</button>
-                        <button type="button" class="status-chip" data-status="Available to chat 💬">💬 Available</button>
-                        <button type="button" class="status-chip" data-status="Working / Busy 💼">💼 Busy</button>
-                        <button type="button" class="status-chip" data-status="On a mission 🚀">🚀 Active</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Starting Theme Quick Selector -->
-            <div class="login-theme-section">
-                <span class="theme-select-label">Theme Color:</span>
-                <div class="login-theme-pills">
-                    <button type="button" class="theme-pill active" data-theme-choice="emerald" title="Emerald Green">🌿</button>
-                    <button type="button" class="theme-pill" data-theme-choice="dark" title="Dark Mode">🌙</button>
-                    <button type="button" class="theme-pill" data-theme-choice="light" title="Light Mode">☀️</button>
-                    <button type="button" class="theme-pill" data-theme-choice="pink" title="Rose Pink">🌸</button>
+                    <input type="text" id="username-input" placeholder="Enter your display name" autocomplete="off" maxlength="20">
                 </div>
             </div>
 
             <!-- Main Start Button -->
             <button id="login-btn" class="primary-btn start-chat-btn">
-                <span>Start Chatting Now</span>
+                <span>Start Chatting</span>
                 <span class="btn-arrow">→</span>
             </button>
-
-            <!-- Feature Badges Footer -->
-            <div class="welcome-features-footer">
-                <span>⚡ Real-Time</span>
-                <span>•</span>
-                <span>🔒 Secure</span>
-                <span>•</span>
-                <span>🎙️ Voice Notes</span>
-            </div>
         </div>
     </div>
 
@@ -119,7 +93,7 @@
     <div id="room-list-screen" class="screen hidden">
         <div class="app-header lobby-header">
             <div class="lobby-title-wrap">
-                <span class="lobby-logo-icon">💬</span>
+                <img src="/icon.svg" alt="Chit Chat" class="lobby-logo-img">
                 <span class="lobby-title">Chit Chat</span>
             </div>
             <div class="lobby-actions">

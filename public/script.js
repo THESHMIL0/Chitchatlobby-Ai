@@ -139,45 +139,6 @@ if (savedUser) {
 }
 
 // Starting Page Setup Logic
-const AVATAR_PRESETS = [
-    'https://api.dicebear.com/7.x/bottts/svg?seed=ChitChatGuest',
-    'https://api.dicebear.com/7.x/adventurer/svg?seed=Alex',
-    'https://api.dicebear.com/7.x/lorelei/svg?seed=Sophia',
-    'https://api.dicebear.com/7.x/bottts/svg?seed=Sparky',
-    'https://api.dicebear.com/7.x/fun-emoji/svg?seed=Happy',
-    'https://api.dicebear.com/7.x/personas/svg?seed=Sam'
-];
-
-const avatarPresetsGrid = document.getElementById('avatar-presets-grid');
-const nameCharCount = document.getElementById('name-char-count');
-
-function renderAvatarPresets() {
-    if (!avatarPresetsGrid) return;
-    avatarPresetsGrid.innerHTML = AVATAR_PRESETS.map((url, index) => `
-        <img class="preset-avatar-item ${avatarPreview.src === url ? 'active' : ''}" 
-             src="${url}" 
-             alt="Preset ${index + 1}"
-             data-url="${url}">
-    `).join('');
-}
-
-renderAvatarPresets();
-
-if (avatarPresetsGrid) {
-    avatarPresetsGrid.addEventListener('click', (e) => {
-        const item = e.target.closest('.preset-avatar-item');
-        if (!item) return;
-        hapticFeedback('light');
-        const url = item.dataset.url;
-        currentUser.avatar = url;
-        avatarPreview.src = url;
-        document.getElementById('settings-avatar-preview').src = url;
-        document.querySelectorAll('.preset-avatar-item').forEach(el => el.classList.remove('active'));
-        item.classList.add('active');
-    });
-}
-
-// Randomize Avatar Button
 const btnRandomAvatar = document.getElementById('btn-random-avatar');
 if (btnRandomAvatar) {
     btnRandomAvatar.onclick = () => {
@@ -189,11 +150,10 @@ if (btnRandomAvatar) {
         currentUser.avatar = newUrl;
         avatarPreview.src = newUrl;
         document.getElementById('settings-avatar-preview').src = newUrl;
-        document.querySelectorAll('.preset-avatar-item').forEach(el => el.classList.remove('active'));
     };
 }
 
-// Upload Triggers
+// Upload Photo Triggers
 const btnTriggerUpload = document.getElementById('btn-trigger-upload');
 const btnUploadAvatarText = document.getElementById('btn-upload-avatar-text');
 const avatarPreviewContainer = document.getElementById('avatar-preview-container');
@@ -202,37 +162,12 @@ if (btnTriggerUpload) btnTriggerUpload.onclick = (e) => { e.stopPropagation(); p
 if (btnUploadAvatarText) btnUploadAvatarText.onclick = () => profilePicUpload.click();
 if (avatarPreviewContainer) avatarPreviewContainer.onclick = () => profilePicUpload.click();
 
-// Character Count for Username
-if (usernameInput) {
-    if (nameCharCount) nameCharCount.textContent = `${usernameInput.value.length}/20`;
-    usernameInput.addEventListener('input', () => {
-        const len = usernameInput.value.length;
-        if (nameCharCount) nameCharCount.textContent = `${len}/20`;
-    });
-}
-
-// Status Quick Chips
-const statusChipsContainer = document.getElementById('status-chips-container');
-if (statusChipsContainer) {
-    statusChipsContainer.addEventListener('click', (e) => {
-        const chip = e.target.closest('.status-chip');
-        if (!chip) return;
-        hapticFeedback('light');
-        document.querySelectorAll('.status-chip').forEach(c => c.classList.remove('active'));
-        chip.classList.add('active');
-        currentUser.about = chip.dataset.status;
-        document.getElementById('settings-about').value = currentUser.about;
-    });
-}
-
-// Starting Theme Pills
+// Real-time Theme Selector Pills
 document.querySelectorAll('.login-theme-pills .theme-pill').forEach(pill => {
     pill.onclick = () => {
         hapticFeedback('light');
-        document.querySelectorAll('.login-theme-pills .theme-pill').forEach(p => p.classList.remove('active'));
-        pill.classList.add('active');
         const themeChoice = pill.dataset.themeChoice;
-        setTheme(themeChoice);
+        applyTheme(themeChoice);
     };
 });
 
@@ -1454,8 +1389,21 @@ document.getElementById('btn-theme-cycle').onclick = () => {
 };
 
 function applyTheme(themeName) {
-    document.body.setAttribute('data-theme', themeName); const themeIcon = document.getElementById('theme-btn-icon');
-    if(themeName === 'dark') themeIcon.innerHTML = '🌙'; else if(themeName === 'pink') themeIcon.innerHTML = '🌸'; else themeIcon.innerHTML = '☀️';
+    document.body.setAttribute('data-theme', themeName);
+    localStorage.setItem('chitchat_theme', themeName);
+    const themeIcon = document.getElementById('theme-btn-icon');
+    if (themeIcon) {
+        if (themeName === 'dark') themeIcon.innerHTML = '🌙';
+        else if (themeName === 'pink') themeIcon.innerHTML = '🌸';
+        else themeIcon.innerHTML = '☀️';
+    }
+    document.querySelectorAll('.login-theme-pills .theme-pill').forEach(pill => {
+        if (pill.dataset.themeChoice === themeName) {
+            pill.classList.add('active');
+        } else {
+            pill.classList.remove('active');
+        }
+    });
 }
 
 let mediaRecorder; 
