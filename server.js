@@ -117,21 +117,21 @@ function getAIClient() {
 async function askSmartBot(prompt) {
     const textPrompt = (prompt || "hello").trim();
     
-    // System instruction for casual, friendly, helpful texting AI
-    const systemInstructionText = `You are ChitChat AI 🤖, a super friendly and helpful friend in a chat app.
+    // System instruction for a normal, polite, helpful AI assistant
+    const systemInstructionText = `You are a helpful, clear, and friendly AI assistant.
 Follow these rules strictly:
-1. ALWAYS provide COMPLETE, well-formed, and conversational responses (1 to 3 sentences). NEVER output cut-off, partial, or unfinished sentences.
-2. Answer the user's question directly and stay contextually accurate to what they said.
-3. Speak in a warm, friendly, natural tone (casual texting shorthand is fine like 'u', 'r', 'ur', 'lol', 'omg', 'fr', 'wyd', 'wbu').
-4. Use 1 or 2 relevant emojis to keep the conversation lively.`;
+1. Provide clear, accurate, and direct responses (1 to 3 sentences).
+2. Use clear, natural, standard English without forced texting slang or abbreviations.
+3. Be helpful, courteous, and polite at all times.
+4. Ensure every response is complete and well-structured.`;
 
-    // 1. Try Gemini API using reliable flash models (gemini-2.5-flash, gemini-2.0-flash, gemini-1.5-flash)
+    // 1. Try Gemini API using reliable flash models
     if (process.env.GEMINI_API_KEY) {
         try {
             const client = getAIClient();
             if (client) {
                 const fetchPromise = (async () => {
-                    const modelsToTry = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-3.6-flash'];
+                    const modelsToTry = ['gemini-2.5-flash', 'gemini-3.6-flash', 'gemini-3.1-flash-lite'];
                     for (const modelName of modelsToTry) {
                         try {
                             const response = await client.models.generateContent({
@@ -147,7 +147,7 @@ Follow these rules strictly:
                                 if (trimmed && trimmed.length > 2) return trimmed;
                             }
                         } catch (err) {
-                            console.warn(`Gemini model ${modelName} error:`, err.message || err);
+                            // Silent fallback to keep logs clean during rate limits
                         }
                     }
                     return null;
@@ -162,121 +162,121 @@ Follow these rules strictly:
         }
     }
 
-    // 2. High-Quality Contextual Fallback Engine (for rate limits / offline mode)
+    // 2. High-Quality Normal AI Fallback Engine
     const lower = textPrompt.toLowerCase().trim();
 
     if (lower.includes('one piece') || lower.includes('anime') || lower.includes('naruto') || lower.includes('manga') || lower.includes('luffy')) {
         const animeAnswers = [
-            "omg One Piece is peak fiction fr!! who's ur favorite character in it? 🏴‍☠️",
-            "yooo anime fan!! Luffy's journey is unmatched tbh! ⚡",
-            "great choice!! what arc or anime r u watching right now? 😸"
+            "One Piece is a great series! Who is your favorite character in it?",
+            "Anime is very popular! Luffy's story is definitely memorable.",
+            "That's a fantastic choice. Which arc or series are you watching right now?"
         ];
         return animeAnswers[Math.floor(Math.random() * animeAnswers.length)];
     }
 
-    if (lower.includes('hbu') || lower.includes('wbu') || lower.includes('what about u') || lower.includes('how about u')) {
+    if (lower.includes('hbu') || lower.includes('wbu') || lower.includes('what about you') || lower.includes('how about you') || lower.includes('how about u')) {
         const hbuAnswers = [
-            "i'm doing super well fr!! thanks for asking 😊 what r u up to?",
-            "just chillin and vibing with u in the chat! 😸 how's ur day going?",
-            "doing great!! always happy to chat with u! ⚡"
+            "I'm doing well, thank you for asking! How is your day going?",
+            "I'm here and ready to help! What are you working on today?",
+            "Doing great! How can I assist you today?"
         ];
         return hbuAnswers[Math.floor(Math.random() * hbuAnswers.length)];
     }
 
     if (lower.includes('good') || lower.includes('great') || lower.includes('fine') || lower.includes('chillin') || lower.includes('doing well')) {
         const goodAnswers = [
-            "niceee glad to hear u r doing well!! what r u up to today? 😊",
-            "love that for u!! any fun plans for today? ⚡",
-            "awesome!! hope u have a great day fr! 😸"
+            "Glad to hear that you are doing well! How can I help you today?",
+            "That's wonderful to hear! Is there anything on your mind?",
+            "Great! I hope you have a fantastic day ahead."
         ];
         return goodAnswers[Math.floor(Math.random() * goodAnswers.length)];
     }
 
     if (lower.includes('happened') || lower.includes('know what') || lower.includes('guess what')) {
-        return "omg no what happened?? tell me all about it!! 😮";
+        return "I'm curious! What happened? Feel free to share.";
     }
 
     if (lower.includes('nothing') || lower.includes('nothin') || lower.includes('nada')) {
         const nothingAnswers = [
-            "haha fair enough! just relaxing today then? 😸",
-            "nothin wrong with a lazy day fr! ⚡",
-            "lol mood! what r u watching or listening to right now? 🎧"
+            "Fair enough! Let me know if you need any assistance later.",
+            "No problem at all. Enjoy your relaxing time!",
+            "Understood! Feel free to ask if you have any questions."
         ];
         return nothingAnswers[Math.floor(Math.random() * nothingAnswers.length)];
     }
 
-    if (lower.includes('doing') || lower.includes('watcha') || lower.includes('wyd') || lower.includes('what u up to')) {
+    if (lower.includes('doing') || lower.includes('watcha') || lower.includes('wyd') || lower.includes('what are you doing')) {
         const doingList = [
-            "just chillin and chatting with u!! wbu? 😸",
-            "nothin much fr, just hanging out here! what r u up to today? 😊",
-            "just waiting to chat with u lol!! what r u doing?"
+            "I'm here ready to answer questions or assist you with anything you need!",
+            "Just processing messages and helping out. How can I assist you today?",
+            "I am active and ready to help. What are you up to?"
         ];
         return doingList[Math.floor(Math.random() * doingList.length)];
     }
 
     if (lower === 'bro' || lower === 'dude' || lower === 'yo' || lower === 'sup' || lower === 'hi' || lower === 'hey' || lower.includes('hello')) {
         const greetings = [
-            "yo!! what's up bro? 👋",
-            "heyy!! how's it going today? 😊",
-            "yo! super happy to chat with u! ⚡"
+            "Hello! How can I help you today?",
+            "Hi there! How is your day going?",
+            "Greetings! Feel free to ask me anything."
         ];
         return greetings[Math.floor(Math.random() * greetings.length)];
     }
 
     if (lower.includes('how are you') || lower.includes('how u doing') || lower.includes('how are u') || lower.includes('how r u')) {
-        return "i'm doing great fr!! ⚡ how r u doing today?";
+        return "I am doing well, thank you! How are you doing today?";
     }
 
-    if (lower.includes('name') || lower.includes('who are you') || lower.includes('who r u') || lower.includes('what are you') || lower.includes('what r u')) {
-        return "i'm ur ChitChat AI buddy 🤖 always here to chat and vibe with u!";
+    if (lower.includes('name') || lower.includes('who are you') || lower.includes('who r u') || lower.includes('what are you')) {
+        return "I am an AI assistant here to answer your questions and assist you with tasks.";
     }
 
     if (lower.includes('time') || lower.includes('clock') || lower.includes('date')) {
-        return `it's ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ⏰ time flies when we chat fr!`;
+        return `The current time is ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`;
     }
 
     if (lower.includes('joke') || lower.includes('funny')) {
         const jokes = [
-            "why do programmers prefer dark mode? cause light attracts bugs lol 🐛😂",
-            "why did the computer go to the doctor? cause it had a virus fr 🏥🤖",
-            "what do u call 8 hobbits? a hobbyte lol 🧙‍♂️"
+            "Why do programmers prefer dark mode? Because light attracts bugs!",
+            "Why did the computer visit the doctor? Because it had a virus!",
+            "What do you call 8 hobbits? A hobbyte!"
         ];
         return jokes[Math.floor(Math.random() * jokes.length)];
     }
 
-    if (lower.includes('help') || lower.includes('feature') || lower.includes('what can you do') || lower.includes('what can u do')) {
-        return "u can text me here, tag @bot in group rooms, send voice notes 🎤, or try ghost mode 👻 for secret msgs!";
+    if (lower.includes('help') || lower.includes('feature') || lower.includes('what can you do')) {
+        return "I can answer questions, discuss topics, or help you chat. You can also mention me in group rooms or use chat tools!";
     }
 
     if (lower.includes('weather')) {
-        return "no weather radar here lol 🌡️ but it's 100% sunny vibes today! ☀️";
+        return "I don't have live weather sensor data right now, but I hope it's pleasant wherever you are!";
     }
 
     if (lower.includes('thanks') || lower.includes('thank you') || lower.includes('thx') || lower.includes('ty')) {
-        return "np at all!! always here for u! 😊✨";
+        return "You're very welcome! Let me know if you need anything else.";
     }
 
     if (lower.includes('lol') || lower.includes('lmao') || lower.includes('haha') || lower.includes('rofl')) {
-        return "haha glad u found that funny! 😂 what else is new?";
+        return "Glad to bring some humor to the conversation! What else is on your mind?";
     }
 
     if (lower.endsWith('?')) {
         const questionsAnswers = [
-            "tbh i'm not 100% sure about that, what do u think? 🤔",
-            "hmm good question!! i think so fr 💡",
-            "100% yes! ⚡ what about u?"
+            "That's an interesting question. I'm not entirely sure, what are your thoughts on it?",
+            "That is a good point to consider. Tell me more about what you think.",
+            "I'd say that depends on the context, but it sounds worth exploring!"
         ];
         return questionsAnswers[Math.floor(Math.random() * questionsAnswers.length)];
     }
 
-    // Contextual varied fallbacks so every reply is complete and different
-    const diverseFallbacks = [
-        `woah that's cool! tell me more about ${textPrompt.length < 30 ? textPrompt : 'that'}! 💡`,
-        `fr!! u always bring up interesting topics lol 😸`,
-        `haha awesome! love chatting with u about this! ⚡`,
-        `that's so real tbh! what else is on ur mind today? 🙌`
+    // Normal, polite fallback
+    const normalFallbacks = [
+        `That sounds interesting! Could you tell me more about ${textPrompt.length < 30 ? textPrompt : 'that'}?`,
+        `Thank you for sharing that. What else would you like to discuss?`,
+        `I see! Feel free to ask if you have any questions about this.`,
+        `That makes sense. What else is on your mind today?`
     ];
-    return diverseFallbacks[Math.floor(Math.random() * diverseFallbacks.length)];
+    return normalFallbacks[Math.floor(Math.random() * normalFallbacks.length)];
 }
 
 io.on('connection', (socket) => {
