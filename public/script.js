@@ -207,6 +207,11 @@ function applyTheme(themeChoice) {
     }
 }
 
+const savedGlobalWallpaper = localStorage.getItem('chitchat_global_wallpaper');
+if (savedGlobalWallpaper) {
+    applyChatWallpaper(savedGlobalWallpaper);
+}
+
 try { history.replaceState({screen: 'exit'}, '', '#exit'); } catch(e){}
 const savedUser = localStorage.getItem('chitchat_user');
 if (savedUser) {
@@ -887,7 +892,7 @@ socket.on('chat history', (data) => {
     setSendBtnState(activeRoomId === 'ai_lounge' ? 'send' : 'mic');
     
     updateGroupHeader(data.room);
-    const savedWallpaper = localStorage.getItem('wallpaper_' + activeRoomId);
+    const savedWallpaper = (activeRoomId && localStorage.getItem('wallpaper_' + activeRoomId)) || localStorage.getItem('chitchat_global_wallpaper');
     applyChatWallpaper(savedWallpaper);
 
     if (isRoomSwitch || messages.querySelectorAll('li').length === 0) {
@@ -1107,23 +1112,51 @@ if (groupPicUpload) {
     });
 }
 
-function applyChatWallpaper(wallpaperUrl) {
+function applyChatWallpaper(wallpaperVal) {
     if (!chatScreen) return;
-    if (wallpaperUrl) {
-        chatScreen.style.backgroundImage = `url(${wallpaperUrl})`;
-        chatScreen.style.backgroundSize = 'cover';
-        chatScreen.style.backgroundPosition = 'center';
-        chatScreen.style.backgroundRepeat = 'no-repeat';
-        chatScreen.style.backgroundAttachment = 'fixed';
-        chatScreen.classList.add('has-custom-wallpaper');
-    } else {
-        chatScreen.style.backgroundImage = '';
-        chatScreen.style.backgroundSize = '';
-        chatScreen.style.backgroundPosition = '';
-        chatScreen.style.backgroundRepeat = '';
-        chatScreen.style.backgroundAttachment = '';
+    if (!wallpaperVal) {
+        chatScreen.style.removeProperty('background-image');
+        chatScreen.style.removeProperty('background-color');
+        chatScreen.style.removeProperty('background-size');
+        chatScreen.style.removeProperty('background-position');
+        chatScreen.style.removeProperty('background-repeat');
+        chatScreen.style.removeProperty('background-attachment');
         chatScreen.classList.remove('has-custom-wallpaper');
+        return;
     }
+
+    chatScreen.classList.add('has-custom-wallpaper');
+    if (wallpaperVal.startsWith('linear-gradient') || wallpaperVal.startsWith('radial-gradient')) {
+        chatScreen.style.setProperty('background-image', wallpaperVal, 'important');
+        chatScreen.style.removeProperty('background-color');
+        chatScreen.style.setProperty('background-size', 'cover', 'important');
+        chatScreen.style.setProperty('background-attachment', 'fixed', 'important');
+    } else if (wallpaperVal.startsWith('#') || wallpaperVal.startsWith('rgb')) {
+        chatScreen.style.setProperty('background-image', 'none', 'important');
+        chatScreen.style.setProperty('background-color', wallpaperVal, 'important');
+    } else {
+        chatScreen.style.setProperty('background-image', `url("${wallpaperVal}")`, 'important');
+        chatScreen.style.removeProperty('background-color');
+        chatScreen.style.setProperty('background-size', 'cover', 'important');
+        chatScreen.style.setProperty('background-position', 'center', 'important');
+        chatScreen.style.setProperty('background-repeat', 'no-repeat', 'important');
+        chatScreen.style.setProperty('background-attachment', 'fixed', 'important');
+    }
+}
+
+function setAndSaveWallpaper(wallpaperVal) {
+    if (wallpaperVal) {
+        localStorage.setItem('chitchat_global_wallpaper', wallpaperVal);
+        if (activeRoomId) {
+            localStorage.setItem('wallpaper_' + activeRoomId, wallpaperVal);
+        }
+    } else {
+        localStorage.removeItem('chitchat_global_wallpaper');
+        if (activeRoomId) {
+            localStorage.removeItem('wallpaper_' + activeRoomId);
+        }
+    }
+    applyChatWallpaper(wallpaperVal);
 }
 
 const btnChangeWallpaper = document.getElementById('btn-change-wallpaper');
@@ -1137,9 +1170,9 @@ if (wallpaperUpload) {
             const reader = new FileReader();
             reader.onload = (e) => {
                 const dataUrl = e.target.result;
-                localStorage.setItem('wallpaper_' + activeRoomId, dataUrl);
-                applyChatWallpaper(dataUrl);
+                setAndSaveWallpaper(dataUrl);
                 if (groupInfoModal) groupInfoModal.classList.add('hidden');
+                showToast('🖼️ Custom wallpaper uploaded!');
             };
             reader.readAsDataURL(this.files[0]);
             this.value = '';
@@ -1150,9 +1183,9 @@ if (wallpaperUpload) {
 const btnResetWallpaper = document.getElementById('btn-reset-wallpaper');
 if (btnResetWallpaper) {
     btnResetWallpaper.onclick = () => {
-        localStorage.removeItem('wallpaper_' + activeRoomId);
-        applyChatWallpaper(null);
+        setAndSaveWallpaper(null);
         if (groupInfoModal) groupInfoModal.classList.add('hidden');
+        showToast('Default wallpaper restored!');
     };
 }
 
@@ -1343,6 +1376,8 @@ function sendMessage() {
     if (!input) return;
     const text = input.value ? input.value.trim() : '';
     if (!text && !editingMsgId && activeRoomId !== 'ai_lounge') return;
+
+
 
     if (socket) socket.emit('typing', false); 
 
@@ -1768,10 +1803,11 @@ function getMessageInnerHTML(data, isMe, isStacked) {
             </div>
         `;
     } 
-    else if (data.uploadedImage) {
+    else if (data.uploadedImage || data.image) {
+        const imgSrc = data.uploadedImage || data.image;
         if (data.isAudio) {
             content = `
-                <div class="custom-audio-player" data-audio-src="${escapeHTML(data.uploadedImage)}">
+                <div class="custom-audio-player" data-audio-src="${escapeHTML(imgSrc)}">
                     <button class="cozy-play-btn play-pause-btn" title="Play Voice Note" type="button">
                         <svg class="play-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
                         <svg class="pause-icon hidden" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"></rect><rect x="14" y="4" width="4" height="16" rx="1"></rect></svg>
@@ -1791,8 +1827,8 @@ function getMessageInnerHTML(data, isMe, isStacked) {
                     </div>
                 </div>`;
         }
-        else if (data.isVideo) content = `<video src="${data.uploadedImage}" class="chat-video" controls playsinline></video>`;
-        else content = `<img src="${data.uploadedImage}" class="chat-image">`;
+        else if (data.isVideo) content = `${contentText ? `<span class="message-text" style="display:block; margin-bottom:6px;">${contentText}</span>` : ''}<video src="${escapeHTML(imgSrc)}" class="chat-video" controls playsinline></video>`;
+        else content = `${contentText ? `<span class="message-text" style="display:block; margin-bottom:6px;">${contentText}</span>` : ''}<img src="${escapeHTML(imgSrc)}" class="chat-image">`;
     } 
     else { content = `<span class="message-text">${contentText}</span>`; }
 
@@ -2244,5 +2280,134 @@ if ('serviceWorker' in navigator) {
         }).catch(err => {
             console.log('Service Worker registration failed:', err);
         });
+    });
+}
+
+// ==========================================================================
+// CUSTOMIZATION STUDIO HANDLERS
+// ==========================================================================
+
+// Customization Studio Logic
+const openCustomizationBtn = document.getElementById('open-customization-btn');
+const customizationModal = document.getElementById('customization-modal');
+const closeCustomizationModal = document.getElementById('close-customization-modal');
+
+if (openCustomizationBtn) {
+    openCustomizationBtn.onclick = () => {
+        if (appSettingsModal) appSettingsModal.classList.add('hidden');
+        hapticFeedback('medium');
+        if (customizationModal) customizationModal.classList.remove('hidden');
+    };
+}
+if (closeCustomizationModal) {
+    closeCustomizationModal.onclick = () => {
+        if (customizationModal) customizationModal.classList.add('hidden');
+    };
+}
+
+// Wallpaper preset buttons
+document.querySelectorAll('.wp-card').forEach(card => {
+    card.onclick = () => {
+        document.querySelectorAll('.wp-card').forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+        hapticFeedback('light');
+        const wpType = card.dataset.wp;
+        if (wpType === 'default') {
+            setAndSaveWallpaper(null);
+            showToast('Default doodle wallpaper applied!');
+        } else if (wpType === 'cute-mint') {
+            const grad = 'linear-gradient(135deg, #a7f3d0 0%, #6ee7b7 100%)';
+            setAndSaveWallpaper(grad);
+            showToast('Cute Mint wallpaper applied!');
+        } else if (wpType === 'pastel-gradient') {
+            const grad = 'linear-gradient(135deg, #fef08a 0%, #fbcfe8 50%, #c084fc 100%)';
+            setAndSaveWallpaper(grad);
+            showToast('Pastel Sunset wallpaper applied!');
+        } else if (wpType === 'dark-galaxy') {
+            const grad = 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)';
+            setAndSaveWallpaper(grad);
+            showToast('Cosmic Night wallpaper applied!');
+        }
+    };
+});
+
+// Solid color wallpaper apply
+const btnApplyColorWp = document.getElementById('btn-apply-color-wp');
+const custColorPicker = document.getElementById('cust-color-picker');
+if (btnApplyColorWp && custColorPicker) {
+    btnApplyColorWp.onclick = () => {
+        const color = custColorPicker.value;
+        setAndSaveWallpaper(color);
+        document.querySelectorAll('.wp-card').forEach(c => c.classList.remove('active'));
+        showToast('Color wallpaper applied!');
+    };
+}
+
+// Bubble Style Picker
+document.querySelectorAll('.bubble-style-card').forEach(card => {
+    card.onclick = () => {
+        document.querySelectorAll('.bubble-style-card').forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+        const styleName = card.dataset.bubbleStyle || 'rounded';
+        document.body.setAttribute('data-bubble-style', styleName);
+        localStorage.setItem('chitchat_bubble_style', styleName);
+        hapticFeedback('light');
+    };
+});
+
+// Saved bubble style
+const savedBubbleStyle = localStorage.getItem('chitchat_bubble_style');
+if (savedBubbleStyle) {
+    document.body.setAttribute('data-bubble-style', savedBubbleStyle);
+    document.querySelectorAll('.bubble-style-card').forEach(card => {
+        card.classList.toggle('active', card.dataset.bubbleStyle === savedBubbleStyle);
+    });
+}
+
+// Font Size Slider
+const fontSizeSlider = document.getElementById('font-size-slider');
+const fontSizeValue = document.getElementById('font-size-value');
+if (fontSizeSlider && fontSizeValue) {
+    fontSizeSlider.oninput = (e) => {
+        const size = e.target.value + 'px';
+        fontSizeValue.textContent = size;
+        document.documentElement.style.setProperty('--chat-font-size', size);
+        localStorage.setItem('chitchat_font_size', size);
+    };
+}
+
+const savedFontSize = localStorage.getItem('chitchat_font_size');
+if (savedFontSize) {
+    document.documentElement.style.setProperty('--chat-font-size', savedFontSize);
+    if (fontSizeSlider) fontSizeSlider.value = parseInt(savedFontSize);
+    if (fontSizeValue) fontSizeValue.textContent = savedFontSize;
+}
+
+// Floating Particle Effect on Reaction
+function triggerReactionParticles(x, y, emoji = '✨') {
+    const toggle = document.getElementById('toggle-reaction-fx');
+    if (toggle && !toggle.checked) return;
+
+    for (let i = 0; i < 6; i++) {
+        const p = document.createElement('span');
+        p.className = 'reaction-particle';
+        p.textContent = emoji;
+        p.style.left = x + 'px';
+        p.style.top = y + 'px';
+        const dx = (Math.random() - 0.5) * 100 + 'px';
+        const dy = (Math.random() * -80 - 20) + 'px';
+        p.style.setProperty('--dx', dx);
+        p.style.setProperty('--dy', dy);
+        document.body.appendChild(p);
+        setTimeout(() => p.remove(), 800);
+    }
+}
+
+// Hook double click on messages to particle burst
+const messagesListEl = document.getElementById('messages');
+if (messagesListEl) {
+    messagesListEl.addEventListener('dblclick', (e) => {
+        triggerReactionParticles(e.clientX, e.clientY, '❤️');
+        showToast('❤️ Reacted!');
     });
 }

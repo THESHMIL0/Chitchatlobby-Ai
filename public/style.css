@@ -3582,6 +3582,271 @@ li.system-message {
     transform: scale(1.1);
 }
 
+/* ==========================================================================
+   AI Image Studio & Customization Studio Enhancements
+   ========================================================================== */
+
+/* Customization Studio Modal Card */
+.customization-modal-card {
+    background: var(--header-card-bg);
+    border-radius: 20px;
+    width: 92%;
+    max-width: 520px;
+    max-height: 88dvh;
+    overflow-y: auto;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--border-color);
+    padding: 0;
+    animation: modalPopIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes modalPopIn {
+    from { opacity: 0; transform: scale(0.92) translateY(12px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--header-bg);
+    border-radius: 20px 20px 0 0;
+}
+
+.modal-title-with-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sparkle-icon {
+    font-size: 20px;
+}
+
+.modal-title-text {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.modal-close-btn {
+    background: transparent;
+    border: none;
+    font-size: 18px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+}
+
+.modal-close-btn:hover {
+    background: rgba(0,0,0,0.06);
+    color: var(--text-primary);
+}
+
+.modal-card-body {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+
+/* Customization Studio Styles */
+.cust-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.cust-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.wallpaper-preset-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+
+.wp-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    padding: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.wp-card.active, .wp-card:hover {
+    border-color: var(--accent);
+    background: rgba(34, 197, 94, 0.08);
+}
+
+.wp-card span {
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.wp-preview {
+    width: 100%;
+    height: 48px;
+    border-radius: 8px;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1);
+}
+
+.wp-pattern-default {
+    background: radial-gradient(#22c55e 1.2px, transparent 1.2px);
+    background-size: 12px 12px;
+    background-color: #f4fbf7;
+}
+
+.wp-cute-mint {
+    background: linear-gradient(135deg, #a7f3d0 0%, #6ee7b7 100%);
+}
+
+.wp-pastel-grad {
+    background: linear-gradient(135deg, #fef08a 0%, #fbcfe8 50%, #c084fc 100%);
+}
+
+.wp-dark-galaxy {
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+}
+
+.cust-custom-wp-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.cust-sublabel {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.cust-btn-sm {
+    padding: 5px 12px;
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.bubble-style-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.bubble-style-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    background: var(--input-bg);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.bubble-style-card.active, .bubble-style-card:hover {
+    border-color: var(--accent);
+    background: var(--message-my);
+}
+
+.bubble-style-card span {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.sample-bubble {
+    padding: 6px 12px;
+    font-size: 12px;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+}
+
+.sample-bubble.rounded {
+    border-radius: 14px;
+}
+
+.sample-bubble.pill {
+    border-radius: 20px;
+}
+
+.sample-bubble.classic {
+    border-radius: 8px 8px 0 8px;
+}
+
+.cust-slider-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#font-size-value {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.cust-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+}
+
+.cust-toggle-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.cust-toggle-desc {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin: 2px 0 0 0;
+}
+
+/* Floating Reaction Particle Burst */
+.reaction-particle {
+    position: fixed;
+    pointer-events: none;
+    font-size: 22px;
+    z-index: 9999;
+    animation: particleFly 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes particleFly {
+    0% { opacity: 1; transform: translate(0, 0) scale(0.6) rotate(0deg); }
+    100% { opacity: 0; transform: translate(var(--dx, 20px), var(--dy, -60px)) scale(1.4) rotate(20deg); }
+}
+
 
 
 
