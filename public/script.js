@@ -2017,7 +2017,7 @@ currentThemeIndex = availableThemes.indexOf(savedTheme);
 if(currentThemeIndex === -1) currentThemeIndex = 0;
 
 const THEME_ICONS_SVG = {
-    emerald: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="emHGrad" x1="0" y1="0" x2="24" y2="24"><stop offset="0%" stop-color="#34d399"/><stop offset="100%" stop-color="#059669"/></linearGradient></defs><path d="M12 3.5C12 3.5 18 7.5 18 13C18 16.3137 15.3137 19 12 19C8.68629 19 6 16.3137 6 13C6 7.5 12 3.5 12 3.5Z" stroke="url(#emHGrad)" stroke-width="2" stroke-linecap="round"/><path d="M12 7V19M12 13L15.5 9.5M12 15.5L8.5 12" stroke="url(#emHGrad)" stroke-width="1.8" stroke-linecap="round"/></svg>`,
+    emerald: `<span style="font-size:16px; line-height:1;">🌱</span>`,
     
     light: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="sunHGrad" x1="0" y1="0" x2="24" y2="24"><stop offset="0%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#d97706"/></linearGradient></defs><circle cx="12" cy="12" r="4.5" fill="url(#sunHGrad)"/><path d="M12 1.5V3.5M12 20.5V22.5M1.5 12H3.5M20.5 12H22.5M4.57 4.57L5.99 5.99M18.01 18.01L19.43 19.43M4.57 19.43L5.99 18.01M18.01 5.99L19.43 4.57" stroke="url(#sunHGrad)" stroke-width="2.2" stroke-linecap="round"/></svg>`,
     
