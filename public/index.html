@@ -16,7 +16,7 @@
 <body>
 
     <!-- Loading Screen -->
-    <div id="loading-screen" class="screen">
+    <div id="loading-screen" class="screen hidden">
         <div class="loading-container">
             <div class="app-logo-glow"><img src="/icon.svg" alt="Chit Chat Logo" class="brand-app-logo"></div>
             <div class="spinner"></div>
@@ -40,9 +40,30 @@
         <!-- Top Floating Theme Bar -->
         <div class="login-top-theme-bar">
             <div class="login-theme-pills">
-                <button type="button" class="theme-pill" data-theme-choice="light" title="Light Mode">☀️ Light</button>
-                <button type="button" class="theme-pill" data-theme-choice="dark" title="Dark Mode">🌙 Dark</button>
-                <button type="button" class="theme-pill" data-theme-choice="pink" title="Rose Mode">🌸 Pink</button>
+                <button type="button" class="theme-pill" data-theme-choice="emerald" title="Emerald Mode">
+                    <span class="theme-badge-icon">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="emPillG" x1="0" y1="0" x2="24" y2="24"><stop offset="0%" stop-color="#34d399"/><stop offset="100%" stop-color="#059669"/></linearGradient></defs><path d="M12 3.5C12 3.5 18 7.5 18 13C18 16.3137 15.3137 19 12 19C8.68629 19 6 16.3137 6 13C6 7.5 12 3.5 12 3.5Z" stroke="url(#emPillG)" stroke-width="2.2" stroke-linecap="round"/><path d="M12 7V19M12 13L15.5 9.5M12 15.5L8.5 12" stroke="url(#emPillG)" stroke-width="1.8" stroke-linecap="round"/></svg>
+                    </span>
+                    <span>Emerald</span>
+                </button>
+                <button type="button" class="theme-pill" data-theme-choice="light" title="Light Mode">
+                    <span class="theme-badge-icon">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="sunPillG" x1="0" y1="0" x2="24" y2="24"><stop offset="0%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#d97706"/></linearGradient></defs><circle cx="12" cy="12" r="4.5" fill="url(#sunPillG)"/><path d="M12 1.5V3.5M12 20.5V22.5M1.5 12H3.5M20.5 12H22.5" stroke="url(#sunPillG)" stroke-width="2" stroke-linecap="round"/></svg>
+                    </span>
+                    <span>Light</span>
+                </button>
+                <button type="button" class="theme-pill" data-theme-choice="dark" title="Dark Mode">
+                    <span class="theme-badge-icon">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="moonPillG" x1="0" y1="0" x2="24" y2="24"><stop offset="0%" stop-color="#818cf8"/><stop offset="100%" stop-color="#4f46e5"/></linearGradient></defs><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" fill="url(#moonPillG)"/></svg>
+                    </span>
+                    <span>Dark</span>
+                </button>
+                <button type="button" class="theme-pill" data-theme-choice="pink" title="Rose Mode">
+                    <span class="theme-badge-icon">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="rosePillG" x1="0" y1="0" x2="24" y2="24"><stop offset="0%" stop-color="#f472b6"/><stop offset="100%" stop-color="#db2777"/></linearGradient></defs><path d="M12 3C12 3 16.5 7 16.5 11C16.5 13.4853 14.4853 15.5 12 15.5C9.51472 15.5 7.5 13.4853 7.5 11C7.5 7 12 3 12 3Z" fill="url(#rosePillG)"/></svg>
+                    </span>
+                    <span>Pink</span>
+                </button>
             </div>
         </div>
 
@@ -93,8 +114,14 @@
     <div id="room-list-screen" class="screen hidden">
         <div class="app-header lobby-header">
             <div class="lobby-title-wrap">
-                <img src="/icon.svg" alt="Chit Chat" class="lobby-logo-img">
-                <span class="lobby-title">Chit Chat</span>
+                <div class="lobby-user-profile-trigger" id="lobby-profile-btn" title="View Profile">
+                    <img id="lobby-user-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=ChitChatGuest" alt="User Avatar" class="lobby-user-avatar-img">
+                    <span class="lobby-user-online-pulse"></span>
+                </div>
+                <div class="lobby-brand-meta">
+                    <span class="lobby-title">Chit Chat</span>
+                    <span class="lobby-status-pill">● Online</span>
+                </div>
             </div>
             <div class="lobby-actions">
                 <button id="btn-theme-cycle" class="icon-btn" title="Toggle Theme">
@@ -108,16 +135,19 @@
             </div>
         </div>
 
-        <div class="lobby-search-bar">
-            <span class="search-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            </span>
-            <input type="text" id="lobby-search-input" placeholder="Search rooms or chats..." autocomplete="off">
+
+
+        <div class="rooms-container">
+            <ul id="rooms-ul"></ul>
+            <div id="empty-rooms-state" class="empty-rooms-card hidden">
+                <div class="empty-rooms-icon">💬</div>
+                <h4 class="empty-rooms-title">No rooms available</h4>
+                <p class="empty-rooms-sub">Create a brand new room to start chatting with friends or AI!</p>
+            </div>
         </div>
 
-        <ul id="rooms-ul"></ul>
-        <button id="show-create-room-btn" class="fab-btn" title="Create Room">
-            <span>＋</span>
+        <button id="show-create-room-btn" class="fab-btn" title="Create New Room">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
         </button>
     </div>
 
@@ -164,20 +194,33 @@
             </button>
         </div>
 
-        <ul id="messages"></ul>
+        <!-- Chat Body Messages Canvas -->
+        <div id="chat-body-container">
+            <ul id="messages"></ul>
 
-        <!-- Floating Scroll To Bottom Button -->
-        <button id="scroll-bottom-btn" class="scroll-bottom-btn" title="Scroll to bottom" type="button">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
-            <span id="unread-count-badge" class="unread-count-badge hidden">0</span>
-        </button>
+            <!-- Floating Scroll To Bottom Button -->
+            <button id="scroll-bottom-btn" class="scroll-bottom-btn" title="Scroll to bottom" type="button">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+                <span id="unread-count-badge" class="unread-count-badge hidden">0</span>
+            </button>
 
-        <!-- Typing Indicator Banner -->
-        <div id="typing-indicator" class="typing-banner hidden">
-            <div class="typing-dots">
-                <span></span><span></span><span></span>
+            <!-- Floating Animated Typing Indicator Bubble near Messages -->
+            <div id="floating-typing-bubble" class="floating-typing-bubble hidden">
+                <div class="typing-bubble-avatar-wrap">
+                    <img id="floating-typing-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=ChitChat" alt="User Avatar">
+                </div>
+                <div class="typing-bubble-content">
+                    <div class="typing-bubble-meta">
+                        <span id="floating-typing-name" class="typing-bubble-name">Someone</span>
+                        <span class="typing-status-label">is typing</span>
+                    </div>
+                    <div class="typing-bubble-dots">
+                        <span class="typing-dot"></span>
+                        <span class="typing-dot"></span>
+                        <span class="typing-dot"></span>
+                    </div>
+                </div>
             </div>
-            <span id="typing-text">Someone is typing...</span>
         </div>
 
         <div id="reply-preview-container" class="hidden">
@@ -254,49 +297,89 @@
     <!-- Profile Screen -->
     <div id="profile-screen" class="screen hidden">
         <div class="profile-scroll-container">
-            <div class="profile-header-bg">
-                <button id="close-profile-btn" class="icon-btn back-btn-overlay">
+            <!-- Glass Top Bar -->
+            <div class="profile-top-navbar">
+                <button id="close-profile-btn" class="icon-btn back-btn-nav" title="Back to Settings">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
                 </button>
+                <div class="profile-nav-title">
+                    <h2>Edit Profile</h2>
+                    <span class="profile-online-badge">● Active Profile</span>
+                </div>
+                <div style="width: 36px;"></div>
+            </div>
+
+            <div class="profile-header-mesh">
+                <div class="mesh-orb orb-1"></div>
+                <div class="mesh-orb orb-2"></div>
             </div>
             
             <div class="profile-content-body">
-                <div id="settings-avatar-container" onclick="document.getElementById('profile-pic-upload').click()">
-                    <img id="settings-avatar-preview" src="https://api.dicebear.com/7.x/bottts/svg?seed=ChitChatGuest">
-                    <div class="edit-icon">📷</div>
+                <!-- Avatar Hero Area -->
+                <div class="profile-avatar-hero">
+                    <div id="settings-avatar-container" onclick="document.getElementById('profile-pic-upload').click()" title="Click to upload custom photo">
+                        <div class="avatar-ring-glow"></div>
+                        <img id="settings-avatar-preview" src="https://api.dicebear.com/7.x/bottts/svg?seed=ChitChatGuest" alt="User Avatar">
+                        <div class="edit-icon-badge">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                        </div>
+                    </div>
+                    <div class="avatar-quick-actions">
+                        <button type="button" id="profile-btn-random-avatar" class="avatar-action-chip">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+                            <span>Shuffle Avatar</span>
+                        </button>
+                        <button type="button" id="profile-btn-upload-avatar" class="avatar-action-chip secondary">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                            <span>Upload Photo</span>
+                        </button>
+                    </div>
                 </div>
 
-                <div class="avatar-presets-label">Select Avatar Preset</div>
-                <div class="avatar-presets-row" id="avatar-presets-row">
-                    <img class="avatar-preset-item" src="https://api.dicebear.com/7.x/bottts/svg?seed=Alex" data-seed="Alex">
-                    <img class="avatar-preset-item" src="https://api.dicebear.com/7.x/bottts/svg?seed=Maya" data-seed="Maya">
-                    <img class="avatar-preset-item" src="https://api.dicebear.com/7.x/bottts/svg?seed=ChitChatBot" data-seed="ChitChatBot">
-                    <img class="avatar-preset-item" src="https://api.dicebear.com/7.x/bottts/svg?seed=Spark" data-seed="Spark">
-                    <img class="avatar-preset-item" src="https://api.dicebear.com/7.x/bottts/svg?seed=Leo" data-seed="Leo">
-                </div>
-
+                <!-- Main Profile Form Card -->
                 <div class="profile-card">
+                    <!-- Display Name Field -->
                     <div class="profile-input-group">
-                        <label>Your Display Name</label>
-                        <input type="text" id="settings-username" placeholder="Display Name">
+                        <div class="input-header-row">
+                            <label for="settings-username">Display Name</label>
+                            <span id="name-char-count" class="char-counter">0/20</span>
+                        </div>
+                        <div class="input-with-icon">
+                            <span class="input-field-icon">👤</span>
+                            <input type="text" id="settings-username" placeholder="Display Name" maxlength="20" autocomplete="off">
+                        </div>
                     </div>
+
                     <div class="profile-divider"></div>
+
+                    <!-- About Status Field -->
                     <div class="profile-input-group">
-                        <label>About Status</label>
-                        <input type="text" id="settings-about" placeholder="Hey there! I am using Chit Chat.">
-                    </div>
-                    <div class="profile-divider"></div>
-                    <div class="profile-input-group">
-                        <label>Chat Bubble Accent Color</label>
-                        <div class="color-picker-row" style="display: flex; align-items: center; gap: 12px; margin-top: 6px;">
-                            <input type="color" id="settings-bubble-color" value="#dcf8c6" style="height: 38px; width: 50px; cursor: pointer; border: none; background: transparent; border-radius: 8px;">
-                            <span id="bubble-color-hex" style="font-weight: 700; font-size: 13px; color: var(--text-secondary);">#dcf8c6</span>
+                        <div class="input-header-row">
+                            <label for="settings-about">About Status</label>
+                            <span id="about-char-count" class="char-counter">0/60</span>
+                        </div>
+                        <div class="input-with-icon">
+                            <span class="input-field-icon">💬</span>
+                            <input type="text" id="settings-about" placeholder="Hey there! I am using Chit Chat." maxlength="60" autocomplete="off">
+                        </div>
+                        
+                        <!-- Quick Status Presets -->
+                        <div class="status-presets-wrap">
+                            <span class="status-presets-hint">Quick Status:</span>
+                            <div class="status-chips-row">
+                                <button type="button" class="status-chip-btn" data-status="Available ✨">Available ✨</button>
+                                <button type="button" class="status-chip-btn" data-status="At work 💼">At work 💼</button>
+                                <button type="button" class="status-chip-btn" data-status="In a meeting 📱">In a meeting 📱</button>
+                                <button type="button" class="status-chip-btn" data-status="Battery low 🔋">Battery low 🔋</button>
+                                <button type="button" class="status-chip-btn" data-status="Sleeping 😴">Sleeping 😴</button>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <button id="save-profile-btn" class="primary-btn save-profile-btn" style="margin-top: 20px; width: 100%;">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <!-- Save Changes CTA Button -->
+                <button id="save-profile-btn" class="primary-btn save-profile-btn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><polyline points="20 6 9 17 4 12"></polyline></svg>
                     <span>Save Changes</span>
                 </button>
             </div>
@@ -434,139 +517,166 @@
         </div>
     </div>
 
-    <!-- App Settings Modal -->
-    <div id="app-settings-modal" class="modal hidden">
-        <div class="modal-content settings-modal-content">
-            <div class="modal-drag-pill"></div>
-            
-            <div class="settings-header-row">
-                <div class="settings-title-group">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                    <h3>Settings</h3>
+    <!-- App Settings Screen (Full Page) -->
+    <div id="settings-screen" class="screen hidden">
+        <div class="app-header settings-page-header">
+            <button id="close-settings-page-btn" class="icon-btn back-btn" title="Back to chats">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            </button>
+            <div class="settings-header-title-wrap">
+                <h2 class="settings-page-title">Settings</h2>
+            </div>
+            <div class="settings-wa-header-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            </div>
+        </div>
+
+        <div class="settings-page-scroll">
+            <!-- User Profile Hero Card -->
+            <div id="settings-profile-card" class="settings-hero-profile-card">
+                <div class="settings-avatar-wrapper">
+                    <img id="settings-card-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=ChitChatGuest" alt="User Avatar">
+                    <span class="settings-avatar-badge" title="Online"></span>
                 </div>
-                <button id="close-settings-modal-btn" class="icon-btn close-modal-btn">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                <div class="settings-profile-info">
+                    <h4 id="settings-card-name">Guest User</h4>
+                    <p id="settings-card-about">Hey there! I am using Chit Chat.</p>
+                </div>
+                <button id="btn-open-profile" class="settings-edit-profile-btn">
+                    <span>Edit Profile</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
                 </button>
             </div>
 
-            <div class="settings-body-scroll">
-                <!-- User Profile Card -->
-                <div id="settings-profile-card" class="settings-profile-card">
-                    <img id="settings-card-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=ChitChatGuest">
-                    <div class="settings-profile-info">
-                        <h4 id="settings-card-name">Guest User</h4>
-                        <p id="settings-card-about">Hey there! I am using Chit Chat.</p>
-                    </div>
-                    <button id="btn-open-profile" class="settings-edit-profile-btn">
-                        <span>Edit</span>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            <!-- Appearance & Theme Section -->
+            <div class="settings-group-card">
+                <div class="settings-group-header">
+                    <span class="settings-group-title">APPEARANCE & THEME</span>
+                </div>
+                <div class="theme-selector-grid">
+                    <button class="theme-card-btn" data-theme-val="emerald">
+                        <span class="theme-icon theme-icon-emerald">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" fill="#25D366" opacity="0.2"/><path d="M12 3.5C12 3.5 18 7.5 18 13C18 16.3137 15.3137 19 12 19C8.68629 19 6 16.3137 6 13C6 7.5 12 3.5 12 3.5Z" stroke="#25D366" stroke-linecap="round"/><path d="M12 7V19M12 13L15.5 9.5" stroke="#25D366" stroke-linecap="round"/></svg>
+                        </span>
+                        <span class="theme-label">Emerald</span>
+                    </button>
+                    <button class="theme-card-btn" data-theme-val="light">
+                        <span class="theme-icon theme-icon-light">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4" fill="#f59e0b"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="#f59e0b" stroke-linecap="round"/></svg>
+                        </span>
+                        <span class="theme-label">Light</span>
+                    </button>
+                    <button class="theme-card-btn" data-theme-val="dark">
+                        <span class="theme-icon theme-icon-dark">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" fill="#6366f1" stroke="#6366f1"/></svg>
+                        </span>
+                        <span class="theme-label">Dark</span>
+                    </button>
+                    <button class="theme-card-btn" data-theme-val="pink">
+                        <span class="theme-icon theme-icon-pink">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="#ec4899" stroke="#ec4899"/></svg>
+                        </span>
+                        <span class="theme-label">Pink</span>
                     </button>
                 </div>
+            </div>
 
-                <!-- Appearance & Theme Section -->
-                <div class="settings-section">
-                    <div class="settings-section-title">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="5"></circle><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path></svg>
-                        <span>Appearance & Theme</span>
-                    </div>
-                    <div class="theme-selector-grid">
-                        <button class="theme-card-btn active" data-theme-val="light">
-                            <span class="theme-icon">☀️</span>
-                            <span class="theme-label">Light</span>
-                        </button>
-                        <button class="theme-card-btn" data-theme-val="dark">
-                            <span class="theme-icon">🌙</span>
-                            <span class="theme-label">Dark</span>
-                        </button>
-                        <button class="theme-card-btn" data-theme-val="pink">
-                            <span class="theme-icon">🌸</span>
-                            <span class="theme-label">Pink</span>
-                        </button>
-                    </div>
+            <!-- Notifications & Audio Section -->
+            <div class="settings-group-card">
+                <div class="settings-group-header">
+                    <span class="settings-group-title">NOTIFICATIONS & AUDIO</span>
                 </div>
+                <div class="settings-item-row">
+                    <div class="settings-item-icon-badge badge-amber">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                    </div>
+                    <div class="settings-item-text">
+                        <span>Sound Effects</span>
+                        <p>Play chime sounds for chat actions & messages</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-sound-effects" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="settings-item-row">
+                    <div class="settings-item-icon-badge badge-rose">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="3" ry="3"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+                    </div>
+                    <div class="settings-item-text">
+                        <span>Haptic Vibrations</span>
+                        <p>Tactile feedback on button presses</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-haptic-feedback" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
 
-                <!-- Notifications & Sounds -->
-                <div class="settings-section">
-                    <div class="settings-section-title">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-                        <span>Notifications & Audio</span>
-                    </div>
-                    <div class="settings-item-row">
-                        <div class="settings-item-text">
-                            <span>Sound Effects 🔔</span>
-                            <p>Play chime sounds for chat actions & messages</p>
-                        </div>
-                        <label class="switch">
-                            <input type="checkbox" id="toggle-sound-effects" checked>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div class="settings-item-row">
-                        <div class="settings-item-text">
-                            <span>Haptic Vibrations 📳</span>
-                            <p>Tactile feedback on button presses</p>
-                        </div>
-                        <label class="switch">
-                            <input type="checkbox" id="toggle-haptic-feedback" checked>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
+            <!-- Privacy & Security Section -->
+            <div class="settings-group-card">
+                <div class="settings-group-header">
+                    <span class="settings-group-title">PRIVACY & SECURITY</span>
                 </div>
+                <div class="settings-item-row">
+                    <div class="settings-item-icon-badge badge-emerald">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    </div>
+                    <div class="settings-item-text">
+                        <span>App Passcode Lock</span>
+                        <p>Require security lock when launching app</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-app-lock">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="settings-item-row">
+                    <div class="settings-item-icon-badge badge-purple">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                    </div>
+                    <div class="settings-item-text">
+                        <span>Ghost Disappearing Messages</span>
+                        <p>Send 10-second auto-delete messages in chat</p>
+                    </div>
+                    <span class="settings-badge-pill">Ghost 👻</span>
+                </div>
+            </div>
 
-                <!-- Privacy & Security -->
-                <div class="settings-section">
-                    <div class="settings-section-title">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                        <span>Privacy & Security</span>
-                    </div>
-                    <div class="settings-item-row">
-                        <div class="settings-item-text">
-                            <span>App Passcode Lock</span>
-                            <p>Require security lock when launching app</p>
-                        </div>
-                        <label class="switch">
-                            <input type="checkbox" id="toggle-app-lock">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div class="settings-item-row">
-                        <div class="settings-item-text">
-                            <span>Ghost Disappearing Messages</span>
-                            <p>Send 10-second auto-delete messages in chat</p>
-                        </div>
-                        <span class="settings-badge-pill">Ghost 👻</span>
-                    </div>
+            <!-- Data & Storage Section -->
+            <div class="settings-group-card">
+                <div class="settings-group-header">
+                    <span class="settings-group-title">DATA & STORAGE</span>
                 </div>
+                <div class="settings-item-row">
+                    <div class="settings-item-icon-badge badge-blue">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                    </div>
+                    <div class="settings-item-text">
+                        <span>Local Cache Storage</span>
+                        <p id="storage-usage-text">Calculated usage: 1.2 MB</p>
+                    </div>
+                    <button id="btn-clear-cache" class="settings-action-btn">Clear Cache</button>
+                </div>
+                <div class="settings-item-row">
+                    <div class="settings-item-icon-badge badge-teal">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                    </div>
+                    <div class="settings-item-text">
+                        <span>AI Assistant Engine</span>
+                        <p>Gemini 3.6-Flash powered smart bot</p>
+                    </div>
+                    <span class="settings-badge-pill success">Active 🤖</span>
+                </div>
+            </div>
 
-                <!-- Data & Storage -->
-                <div class="settings-section">
-                    <div class="settings-section-title">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
-                        <span>Data & Network</span>
-                    </div>
-                    <div class="settings-item-row">
-                        <div class="settings-item-text">
-                            <span>Local Cache Storage</span>
-                            <p id="storage-usage-text">Calculated usage: 1.2 MB</p>
-                        </div>
-                        <button id="btn-clear-cache" class="settings-action-btn">Clear Cache</button>
-                    </div>
-                    <div class="settings-item-row">
-                        <div class="settings-item-text">
-                            <span>AI Assistant Engine</span>
-                            <p>Gemini 3.6-Flash powered smart bot</p>
-                        </div>
-                        <span class="settings-badge-pill success">Active 🤖</span>
-                    </div>
-                </div>
-
-                <!-- Logout / Reset -->
-                <div class="settings-section" style="border: none; background: transparent; padding: 0; box-shadow: none;">
-                    <button id="btn-logout" class="danger-btn-full">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-                        <span>Reset App & Log Out</span>
-                    </button>
-                </div>
+            <!-- Logout / Reset -->
+            <div class="settings-group-card logout-card">
+                <button id="btn-logout" class="danger-btn-full">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    <span>Reset App & Log Out</span>
+                </button>
             </div>
         </div>
     </div>
@@ -577,5 +687,19 @@
     </div>
 
     <script src="script.js"></script>
+    <script>
+        (function() {
+            var ls = document.getElementById('loading-screen');
+            if (ls) ls.classList.add('hidden');
+            try {
+                if (typeof initAppView === 'function') {
+                    initAppView();
+                }
+                if (typeof renderRoomList === 'function') {
+                    renderRoomList();
+                }
+            } catch(e) { console.error('Fallback init error', e); }
+        })();
+    </script>
 </body>
 </html>

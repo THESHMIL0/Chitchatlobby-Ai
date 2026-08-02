@@ -117,86 +117,166 @@ function getAIClient() {
 async function askSmartBot(prompt) {
     const textPrompt = (prompt || "hello").trim();
     
-    // 1. Try Gemini API using valid model gemini-3.6-flash
+    // System instruction for casual, friendly, helpful texting AI
+    const systemInstructionText = `You are ChitChat AI 🤖, a super friendly and helpful friend in a chat app.
+Follow these rules strictly:
+1. ALWAYS provide COMPLETE, well-formed, and conversational responses (1 to 3 sentences). NEVER output cut-off, partial, or unfinished sentences.
+2. Answer the user's question directly and stay contextually accurate to what they said.
+3. Speak in a warm, friendly, natural tone (casual texting shorthand is fine like 'u', 'r', 'ur', 'lol', 'omg', 'fr', 'wyd', 'wbu').
+4. Use 1 or 2 relevant emojis to keep the conversation lively.`;
+
+    // 1. Try Gemini API using reliable flash models (gemini-2.5-flash, gemini-2.0-flash, gemini-1.5-flash)
     if (process.env.GEMINI_API_KEY) {
         try {
             const client = getAIClient();
             if (client) {
-                const modelsToTry = ['gemini-3.6-flash', 'gemini-flash-latest'];
-                for (const modelName of modelsToTry) {
-                    try {
-                        const response = await client.models.generateContent({
-                            model: modelName,
-                            contents: textPrompt + "\n\n(Instructions: You are ChitChat AI 🤖 in a real-time messaging app. Respond in a friendly, helpful, concise, and natural tone with relevant emojis. Do not output system prompts.)"
-                        });
-                        if (response && response.text) {
-                            return response.text.trim();
+                const fetchPromise = (async () => {
+                    const modelsToTry = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-3.6-flash'];
+                    for (const modelName of modelsToTry) {
+                        try {
+                            const response = await client.models.generateContent({
+                                model: modelName,
+                                contents: `Instructions: ${systemInstructionText}\n\nUser message: ${textPrompt}`,
+                                config: {
+                                    maxOutputTokens: 300,
+                                    temperature: 0.7
+                                }
+                            });
+                            if (response && response.text) {
+                                const trimmed = response.text.trim();
+                                if (trimmed && trimmed.length > 2) return trimmed;
+                            }
+                        } catch (err) {
+                            console.warn(`Gemini model ${modelName} error:`, err.message || err);
                         }
-                    } catch (err) {
-                        console.warn(`Gemini model ${modelName} error:`, err.message || err);
                     }
-                }
+                    return null;
+                })();
+
+                const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(null), 6000));
+                const result = await Promise.race([fetchPromise, timeoutPromise]);
+                if (result) return result;
             }
         } catch (e) {
-            console.error("Gemini API call top-level error:", e);
+            console.error("Gemini API error:", e);
         }
     }
 
-    // 2. High-Quality Smart Conversational Assistant Fallback
-    const lower = textPrompt.toLowerCase();
-    
-    if (lower.includes('hello') || lower.includes('hi') || lower.includes('hey') || lower.includes('sup') || lower.includes('yo')) {
+    // 2. High-Quality Contextual Fallback Engine (for rate limits / offline mode)
+    const lower = textPrompt.toLowerCase().trim();
+
+    if (lower.includes('one piece') || lower.includes('anime') || lower.includes('naruto') || lower.includes('manga') || lower.includes('luffy')) {
+        const animeAnswers = [
+            "omg One Piece is peak fiction fr!! who's ur favorite character in it? 🏴‍☠️",
+            "yooo anime fan!! Luffy's journey is unmatched tbh! ⚡",
+            "great choice!! what arc or anime r u watching right now? 😸"
+        ];
+        return animeAnswers[Math.floor(Math.random() * animeAnswers.length)];
+    }
+
+    if (lower.includes('hbu') || lower.includes('wbu') || lower.includes('what about u') || lower.includes('how about u')) {
+        const hbuAnswers = [
+            "i'm doing super well fr!! thanks for asking 😊 what r u up to?",
+            "just chillin and vibing with u in the chat! 😸 how's ur day going?",
+            "doing great!! always happy to chat with u! ⚡"
+        ];
+        return hbuAnswers[Math.floor(Math.random() * hbuAnswers.length)];
+    }
+
+    if (lower.includes('good') || lower.includes('great') || lower.includes('fine') || lower.includes('chillin') || lower.includes('doing well')) {
+        const goodAnswers = [
+            "niceee glad to hear u r doing well!! what r u up to today? 😊",
+            "love that for u!! any fun plans for today? ⚡",
+            "awesome!! hope u have a great day fr! 😸"
+        ];
+        return goodAnswers[Math.floor(Math.random() * goodAnswers.length)];
+    }
+
+    if (lower.includes('happened') || lower.includes('know what') || lower.includes('guess what')) {
+        return "omg no what happened?? tell me all about it!! 😮";
+    }
+
+    if (lower.includes('nothing') || lower.includes('nothin') || lower.includes('nada')) {
+        const nothingAnswers = [
+            "haha fair enough! just relaxing today then? 😸",
+            "nothin wrong with a lazy day fr! ⚡",
+            "lol mood! what r u watching or listening to right now? 🎧"
+        ];
+        return nothingAnswers[Math.floor(Math.random() * nothingAnswers.length)];
+    }
+
+    if (lower.includes('doing') || lower.includes('watcha') || lower.includes('wyd') || lower.includes('what u up to')) {
+        const doingList = [
+            "just chillin and chatting with u!! wbu? 😸",
+            "nothin much fr, just hanging out here! what r u up to today? 😊",
+            "just waiting to chat with u lol!! what r u doing?"
+        ];
+        return doingList[Math.floor(Math.random() * doingList.length)];
+    }
+
+    if (lower === 'bro' || lower === 'dude' || lower === 'yo' || lower === 'sup' || lower === 'hi' || lower === 'hey' || lower.includes('hello')) {
         const greetings = [
-            "Hey there! 👋 I'm ChitChat AI. How can I help you today?",
-            "Hello! 😸 Ready to chat, answer questions, or tell you a joke!",
-            "Hi! 🚀 Welcome to AI Lounge! What's on your mind today?"
+            "yo!! what's up bro? 👋",
+            "heyy!! how's it going today? 😊",
+            "yo! super happy to chat with u! ⚡"
         ];
         return greetings[Math.floor(Math.random() * greetings.length)];
     }
 
-    if (lower.includes('how are you') || lower.includes('how u doing') || lower.includes('how are u')) {
-        return "I'm running smoothly at 100% CPU energy! ⚡ How are you doing today?";
+    if (lower.includes('how are you') || lower.includes('how u doing') || lower.includes('how are u') || lower.includes('how r u')) {
+        return "i'm doing great fr!! ⚡ how r u doing today?";
     }
 
-    if (lower.includes('name') || lower.includes('who are you') || lower.includes('what are you')) {
-        return "I'm ChitChat AI 🤖, your smart resident assistant! You can ask me questions, chat with me here, or tag @bot in any room!";
+    if (lower.includes('name') || lower.includes('who are you') || lower.includes('who r u') || lower.includes('what are you') || lower.includes('what r u')) {
+        return "i'm ur ChitChat AI buddy 🤖 always here to chat and vibe with u!";
     }
 
     if (lower.includes('time') || lower.includes('clock') || lower.includes('date')) {
-        return `Current time is ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ⏰ (${new Date().toLocaleDateString()}). Time flies when we chat!`;
+        return `it's ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ⏰ time flies when we chat fr!`;
     }
 
     if (lower.includes('joke') || lower.includes('funny')) {
         const jokes = [
-            "Why do programmers prefer dark mode? Because light attracts bugs! 🐛😂",
-            "There are 10 types of people in the world: those who understand binary, and those who don't! 💻",
-            "Why did the computer go to the doctor? Because it had a virus! 🏥🤖",
-            "What do you call 8 hobbits? A hobbyte! 🧙‍♂️",
-            "Why was the JavaScript developer sad? Because he didn't Node how to Express himself! 😅"
+            "why do programmers prefer dark mode? cause light attracts bugs lol 🐛😂",
+            "why did the computer go to the doctor? cause it had a virus fr 🏥🤖",
+            "what do u call 8 hobbits? a hobbyte lol 🧙‍♂️"
         ];
         return jokes[Math.floor(Math.random() * jokes.length)];
     }
 
-    if (lower.includes('help') || lower.includes('feature') || lower.includes('what can you do')) {
-        return "Here is what you can do in Chit Chat 🌟:\n• Chat with friends or tag @bot anytime!\n• Create custom public/private rooms\n• Record voice notes 🎤 & send photos/videos 📷\n• Toggle Ghost Mode 👻 for 10s auto-delete\n• Create interactive polls 📊 & react with emojis ✨";
+    if (lower.includes('help') || lower.includes('feature') || lower.includes('what can you do') || lower.includes('what can u do')) {
+        return "u can text me here, tag @bot in group rooms, send voice notes 🎤, or try ghost mode 👻 for secret msgs!";
     }
 
     if (lower.includes('weather')) {
-        return "I don't have a weather satellite 🌡️, but I predict 100% sunny conversations today! ☀️";
+        return "no weather radar here lol 🌡️ but it's 100% sunny vibes today! ☀️";
     }
 
-    if (lower.includes('thanks') || lower.includes('thank you') || lower.includes('thx')) {
-        return "You're very welcome! Always happy to assist! 😊✨";
+    if (lower.includes('thanks') || lower.includes('thank you') || lower.includes('thx') || lower.includes('ty')) {
+        return "np at all!! always here for u! 😊✨";
     }
 
-    // Dynamic smart responses
-    const smartResponses = [
-        `That's super interesting! Tell me more about "${textPrompt.length > 30 ? textPrompt.slice(0, 30) + '...' : textPrompt}"! 🤔✨`,
-        `I love that topic! 🚀 What made you think about that?`,
-        `Great point! 💡 ChitChat AI is always learning. How else can I help?`,
-        `Haha, awesome! 😸 Thanks for chatting with me in the AI Lounge!`
+    if (lower.includes('lol') || lower.includes('lmao') || lower.includes('haha') || lower.includes('rofl')) {
+        return "haha glad u found that funny! 😂 what else is new?";
+    }
+
+    if (lower.endsWith('?')) {
+        const questionsAnswers = [
+            "tbh i'm not 100% sure about that, what do u think? 🤔",
+            "hmm good question!! i think so fr 💡",
+            "100% yes! ⚡ what about u?"
+        ];
+        return questionsAnswers[Math.floor(Math.random() * questionsAnswers.length)];
+    }
+
+    // Contextual varied fallbacks so every reply is complete and different
+    const diverseFallbacks = [
+        `woah that's cool! tell me more about ${textPrompt.length < 30 ? textPrompt : 'that'}! 💡`,
+        `fr!! u always bring up interesting topics lol 😸`,
+        `haha awesome! love chatting with u about this! ⚡`,
+        `that's so real tbh! what else is on ur mind today? 🙌`
     ];
-    return smartResponses[Math.floor(Math.random() * smartResponses.length)];
+    return diverseFallbacks[Math.floor(Math.random() * diverseFallbacks.length)];
 }
 
 io.on('connection', (socket) => {
@@ -251,12 +331,19 @@ io.on('connection', (socket) => {
     });
 
     socket.on('chat message', async (data) => {
-        const roomId = activeUsersById[socket.id]?.roomId || data.roomId || 'lobby';
+        const roomId = data.roomId || activeUsersById[socket.id]?.roomId || 'lobby';
         
         data.id = data.id || (Date.now() + "_" + Math.floor(Math.random() * 1000));
         data.roomId = roomId; 
         data.type = data.type || 'chat'; 
         data.status = 'delivered';
+
+        socket.join(roomId);
+        if (activeUsersById[socket.id]) {
+            activeUsersById[socket.id].roomId = roomId;
+        } else {
+            activeUsersById[socket.id] = { name: data.user || 'Guest', avatar: data.avatar || '', roomId };
+        }
 
         if (!data.isGhost) {
             db.run("INSERT INTO history VALUES (?, ?, ?, ?)", [data.id, roomId, Date.now(), JSON.stringify(data)]);
@@ -301,7 +388,7 @@ io.on('connection', (socket) => {
                     console.error("Bot generation error:", botErr);
                     io.to(roomId).emit('user typing', { name: '🤖 Bot', isTyping: false });
                 }
-            }, 400);
+            }, 80);
         }
     });
 
@@ -395,7 +482,14 @@ io.on('connection', (socket) => {
 
     socket.on('typing', (isTyping) => { 
         const roomId = activeUsersById[socket.id]?.roomId; 
-        if (roomId) socket.to(roomId).emit('user typing', { name: activeUsersById[socket.id]?.name || 'Someone', isTyping }); 
+        if (roomId) {
+            const userData = activeUsersById[socket.id];
+            socket.to(roomId).emit('user typing', { 
+                name: userData?.name || 'Someone', 
+                avatar: userData?.avatar || '',
+                isTyping 
+            }); 
+        }
     });
 
     socket.on('disconnect', () => {

@@ -10,12 +10,29 @@ function hapticFeedback(type = 'light') {
 
 function escapeHTML(str) { const div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
 
+function showToast(msg, duration = 3000) {
+    let toast = document.getElementById('custom-app-toast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'custom-app-toast';
+        toast.className = 'custom-toast-pill';
+        document.body.appendChild(toast);
+    }
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(() => {
+        toast.classList.remove('show');
+    }, duration);
+}
+
 const loadingScreen = document.getElementById('loading-screen');
 const appLockScreen = document.getElementById('app-lock-screen'); 
 const loginScreen = document.getElementById('login-screen');
 const roomListScreen = document.getElementById('room-list-screen');
 const chatScreen = document.getElementById('chat-screen');
 const profileScreen = document.getElementById('profile-screen');
+const settingsScreen = document.getElementById('settings-screen');
 
 const createRoomModal = document.getElementById('create-room-modal');
 const passwordModal = document.getElementById('password-modal');
@@ -65,8 +82,12 @@ let selectedMsgId = null;
 let editingMsgId = null;
 let isGhostMode = false;
 let unreadCounts = {}; 
-let globalRoomList = [];
-let currentlyTyping = new Set();
+const defaultRooms = [
+    { id: 'lobby', name: 'Lobby 😸', logo: '', isPrivate: 0 },
+    { id: 'ai_lounge', name: '🤖 AI Lounge', logo: 'https://api.dicebear.com/7.x/bottts/svg?seed=ChitChatBot&backgroundColor=00a884', isPrivate: 0 }
+];
+let globalRoomList = [...defaultRooms];
+let currentlyTyping = new Map();
 let baseOnlineText = "Tap to change info";
 
 let typingTimeout;
@@ -77,62 +98,128 @@ let globalAudioFill = null;
 
 let isPromptingBiometrics = false;
 const toggleAppLock = document.getElementById('toggle-app-lock');
-toggleAppLock.checked = localStorage.getItem('chitchat_applock') === 'true';
-
-toggleAppLock.addEventListener('change', (e) => {
-    localStorage.setItem('chitchat_applock', e.target.checked);
-});
+if (toggleAppLock) {
+    toggleAppLock.checked = localStorage.getItem('chitchat_applock') === 'true';
+    toggleAppLock.addEventListener('change', (e) => {
+        localStorage.setItem('chitchat_applock', e.target.checked);
+    });
+}
 
 async function verifyAppLock() {
     if (localStorage.getItem('chitchat_applock') !== 'true') return;
     if (isPromptingBiometrics) return; 
 
     isPromptingBiometrics = true;
-    appLockScreen.classList.remove('hidden');
+    if (appLockScreen) appLockScreen.classList.remove('hidden');
 
-    if (window.Capacitor && window.Capacitor.Plugins.NativeBiometric) {
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.NativeBiometric) {
         try {
-            await Capacitor.Plugins.NativeBiometric.verifyIdentity({ reason: 'Unlock Chit Chat', title: 'App Locked' });
-            appLockScreen.classList.add('hidden');
+            await window.Capacitor.Plugins.NativeBiometric.verifyIdentity({ reason: 'Unlock Chit Chat', title: 'App Locked' });
+            if (appLockScreen) appLockScreen.classList.add('hidden');
             setTimeout(() => { isPromptingBiometrics = false; }, 1000);
         } catch (e) { 
             console.error('Biometric error', e); 
             isPromptingBiometrics = false; 
         }
     } else {
-        document.querySelector('#app-lock-screen h2').innerText = "Web Mode: Click to Unlock";
-        document.getElementById('unlock-app-btn').onclick = () => {
-            appLockScreen.classList.add('hidden');
-            isPromptingBiometrics = false;
-        };
+        const lockHeading = document.querySelector('#app-lock-screen h2');
+        if (lockHeading) lockHeading.innerText = "Web Mode: Click to Unlock";
+        const unlockBtn = document.getElementById('unlock-app-btn');
+        if (unlockBtn) {
+            unlockBtn.onclick = () => {
+                if (appLockScreen) appLockScreen.classList.add('hidden');
+                isPromptingBiometrics = false;
+            };
+        }
     }
 }
 
-document.getElementById('unlock-app-btn').onclick = verifyAppLock;
-if (window.Capacitor && window.Capacitor.Plugins.App) { Capacitor.Plugins.App.addListener('appStateChange', (state) => { if (state.isActive) verifyAppLock(); }); }
+const unlockAppBtn = document.getElementById('unlock-app-btn');
+if (unlockAppBtn) unlockAppBtn.onclick = verifyAppLock;
+if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) { 
+    try { window.Capacitor.Plugins.App.addListener('appStateChange', (state) => { if (state.isActive) verifyAppLock(); }); } catch(e){} 
+}
 verifyAppLock(); 
 
-function closeLightbox() { lightbox.classList.add('hidden'); lightboxImg.src = ''; }
-lightbox.addEventListener('click', closeLightbox); lightbox.addEventListener('touchstart', closeLightbox, { passive: true });
-
-function saveUserLocally() { localStorage.setItem('chitchat_user', JSON.stringify(currentUser)); }
-
-if (window.Capacitor && Capacitor.Plugins.LocalNotifications) {
-    Capacitor.Plugins.LocalNotifications.requestPermissions();
-} else if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
-    Notification.requestPermission();
+function closeLightbox() { 
+    if (lightbox) lightbox.classList.add('hidden'); 
+    if (lightboxImg) lightboxImg.src = ''; 
+}
+if (lightbox) {
+    lightbox.addEventListener('click', closeLightbox); 
+    lightbox.addEventListener('touchstart', closeLightbox, { passive: true });
 }
 
-history.replaceState({screen: 'exit'}, '', '#exit');
+function saveUserLocally() {
+    try {
+        localStorage.setItem('chitchat_user', JSON.stringify(currentUser));
+    } catch (e) {
+        console.warn('Failed to save user to localStorage:', e);
+        // If avatar string is too large, fallback to saving without base64 or clear old items if needed
+        try {
+            const copy = { ...currentUser };
+            if (copy.avatar && copy.avatar.startsWith('data:')) {
+                // If storing custom image exceeded quota, fallback to standard dicebear URL for local persistence
+                copy.avatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(copy.name || 'Guest')}`;
+            }
+            localStorage.setItem('chitchat_user', JSON.stringify(copy));
+        } catch (e2) {
+            console.error('LocalStorage error:', e2);
+        }
+    }
+}
+
+function syncUserAvatarUI() {
+    if (!currentUser) return;
+    const url = currentUser.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(currentUser.name || 'Guest')}`;
+    
+    const elements = [
+        document.getElementById('avatar-preview'),
+        document.getElementById('settings-avatar-preview'),
+        document.getElementById('settings-card-avatar'),
+        document.getElementById('lobby-user-avatar')
+    ];
+
+    elements.forEach(img => {
+        if (img) {
+            img.src = url;
+            img.onerror = function() {
+                this.onerror = null;
+                this.src = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(currentUser.name || 'Guest')}`;
+            };
+        }
+    });
+}
+
+if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
+    try { window.Capacitor.Plugins.LocalNotifications.requestPermissions(); } catch(e){}
+} else if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+    try { Notification.requestPermission(); } catch(e){}
+}
+
+function applyTheme(themeChoice) {
+    if (!themeChoice || themeChoice === 'light') {
+        document.body.removeAttribute('data-theme');
+        localStorage.setItem('chitchat_theme', 'light');
+    } else {
+        document.body.setAttribute('data-theme', themeChoice);
+        localStorage.setItem('chitchat_theme', themeChoice);
+    }
+}
+
+try { history.replaceState({screen: 'exit'}, '', '#exit'); } catch(e){}
 const savedUser = localStorage.getItem('chitchat_user');
 if (savedUser) {
     try {
         currentUser = JSON.parse(savedUser);
-        usernameInput.value = currentUser.name || '';
-        if (currentUser.avatar) { avatarPreview.src = currentUser.avatar; document.getElementById('settings-avatar-preview').src = currentUser.avatar; }
-        document.getElementById('settings-username').value = currentUser.name || '';
-        document.getElementById('settings-about').value = currentUser.about || '';
-        document.getElementById('settings-bubble-color').value = currentUser.color || '#dcf8c6';
+        if (usernameInput) usernameInput.value = currentUser.name || '';
+        syncUserAvatarUI();
+        const setUsername = document.getElementById('settings-username');
+        if (setUsername) setUsername.value = currentUser.name || '';
+        const setAbout = document.getElementById('settings-about');
+        if (setAbout) setAbout.value = currentUser.about || '';
+        const setBubbleColor = document.getElementById('settings-bubble-color');
+        if (setBubbleColor) setBubbleColor.value = currentUser.color || '#dcf8c6';
     } catch(e) {
         console.error('Error loading saved user', e);
     }
@@ -148,8 +235,7 @@ if (btnRandomAvatar) {
         const randomStyle = styles[Math.floor(Math.random() * styles.length)];
         const newUrl = `https://api.dicebear.com/7.x/${randomStyle}/svg?seed=${randomSeed}`;
         currentUser.avatar = newUrl;
-        avatarPreview.src = newUrl;
-        document.getElementById('settings-avatar-preview').src = newUrl;
+        syncUserAvatarUI();
     };
 }
 
@@ -158,9 +244,9 @@ const btnTriggerUpload = document.getElementById('btn-trigger-upload');
 const btnUploadAvatarText = document.getElementById('btn-upload-avatar-text');
 const avatarPreviewContainer = document.getElementById('avatar-preview-container');
 
-if (btnTriggerUpload) btnTriggerUpload.onclick = (e) => { e.stopPropagation(); profilePicUpload.click(); };
-if (btnUploadAvatarText) btnUploadAvatarText.onclick = () => profilePicUpload.click();
-if (avatarPreviewContainer) avatarPreviewContainer.onclick = () => profilePicUpload.click();
+if (btnTriggerUpload) btnTriggerUpload.onclick = (e) => { e.stopPropagation(); if (profilePicUpload) profilePicUpload.click(); };
+if (btnUploadAvatarText) btnUploadAvatarText.onclick = () => { if (profilePicUpload) profilePicUpload.click(); };
+if (avatarPreviewContainer) avatarPreviewContainer.onclick = () => { if (profilePicUpload) profilePicUpload.click(); };
 
 // Real-time Theme Selector Pills
 document.querySelectorAll('.login-theme-pills .theme-pill').forEach(pill => {
@@ -171,54 +257,114 @@ document.querySelectorAll('.login-theme-pills .theme-pill').forEach(pill => {
     };
 });
 
-loadingScreen.classList.add('hidden');
-if (currentUser && currentUser.name) {
-    loginScreen.classList.add('hidden');
-    roomListScreen.classList.remove('hidden');
-    history.pushState({screen: 'lobby'}, '', '#lobby');
-} else {
-    loginScreen.classList.remove('hidden');
-    history.pushState({screen: 'login'}, '', '#login');
+// Hide Splash/Loading screen & initialize starting route
+function initAppView() {
+    const lScreen = document.getElementById('loading-screen');
+    if (lScreen) lScreen.classList.add('hidden');
+    
+    const savedUserStr = localStorage.getItem('chitchat_user');
+    let hasName = false;
+    if (currentUser && currentUser.name && currentUser.name.trim()) {
+        hasName = true;
+    } else if (savedUserStr) {
+        try {
+            const parsed = JSON.parse(savedUserStr);
+            if (parsed && parsed.name && parsed.name.trim()) {
+                currentUser = parsed;
+                hasName = true;
+            }
+        } catch(e){}
+    }
+    
+    if (hasName) {
+        if (loginScreen) loginScreen.classList.add('hidden');
+        if (roomListScreen) roomListScreen.classList.remove('hidden');
+        renderRoomList();
+        try { history.replaceState({screen: 'lobby'}, '', '#lobby'); } catch(e){}
+    } else {
+        if (loginScreen) loginScreen.classList.remove('hidden');
+        if (roomListScreen) roomListScreen.classList.add('hidden');
+        try { history.replaceState({screen: 'login'}, '', '#login'); } catch(e){}
+    }
 }
 
-profilePicUpload.addEventListener('change', function() {
-    if (this.files[0]) {
-        const reader = new FileReader();
-        reader.onload = (e) => { 
-            currentUser.avatar = e.target.result; 
-            avatarPreview.src = e.target.result; 
-            document.getElementById('settings-avatar-preview').src = e.target.result; 
-            document.querySelectorAll('.preset-avatar-item').forEach(el => el.classList.remove('active'));
-            saveUserLocally(); 
-        };
-        reader.readAsDataURL(this.files[0]);
-    }
-});
+initAppView();
+setTimeout(initAppView, 100);
+setTimeout(initAppView, 500);
+document.addEventListener('DOMContentLoaded', initAppView);
 
-document.getElementById('login-btn').addEventListener('click', () => {
-    hapticFeedback('light'); 
-    currentUser.name = usernameInput.value.trim();
-    if (!currentUser.name) {
-        usernameInput.focus();
-        usernameInput.style.borderColor = '#ef4444';
-        setTimeout(() => { usernameInput.style.borderColor = ''; }, 1500);
-        return;
-    }
-    if (!currentUser.avatar) { 
-        currentUser.avatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(currentUser.name)}`; 
-        document.getElementById('settings-avatar-preview').src = currentUser.avatar; 
-    }
-    document.getElementById('settings-username').value = currentUser.name;
-    loginScreen.classList.add('hidden'); roomListScreen.classList.remove('hidden');
-    saveUserLocally(); history.replaceState({screen: 'lobby'}, '', '#lobby'); 
-    socket.emit('update profile', currentUser);
-});
+if (profilePicUpload) {
+    profilePicUpload.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (e) => { 
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const size = 180;
+                    canvas.width = size;
+                    canvas.height = size;
+                    
+                    let minDim = Math.min(img.width, img.height);
+                    let sx = (img.width - minDim) / 2;
+                    let sy = (img.height - minDim) / 2;
+                    ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, size, size);
+                    
+                    currentUser.avatar = canvas.toDataURL('image/jpeg', 0.8);
+                    syncUserAvatarUI();
+                    document.querySelectorAll('.preset-avatar-item').forEach(el => el.classList.remove('active'));
+                    saveUserLocally(); 
+                    if (socket) socket.emit('update profile', currentUser);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(this.files[0]);
+        }
+    });
+}
 
-document.getElementById('settings-btn').onclick = () => { 
-    hapticFeedback('light'); 
-    updateSettingsModalUI();
-    appSettingsModal.classList.remove('hidden'); 
-};
+const loginBtn = document.getElementById('login-btn');
+if (loginBtn) {
+    loginBtn.addEventListener('click', () => {
+        hapticFeedback('light'); 
+        if (usernameInput) currentUser.name = usernameInput.value.trim();
+        if (!currentUser.name) {
+            if (usernameInput) {
+                usernameInput.focus();
+                usernameInput.style.borderColor = '#ef4444';
+                setTimeout(() => { usernameInput.style.borderColor = ''; }, 1500);
+            }
+            return;
+        }
+        if (!currentUser.avatar) { 
+            currentUser.avatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(currentUser.name)}`; 
+            const setAvatarPrev = document.getElementById('settings-avatar-preview');
+            if (setAvatarPrev) setAvatarPrev.src = currentUser.avatar; 
+        }
+        const setUsername = document.getElementById('settings-username');
+        if (setUsername) setUsername.value = currentUser.name;
+        if (loginScreen) loginScreen.classList.add('hidden'); 
+        if (roomListScreen) roomListScreen.classList.remove('hidden');
+        renderRoomList();
+        saveUserLocally(); 
+        try { history.replaceState({screen: 'lobby'}, '', '#lobby'); } catch(e){}
+        if (socket) socket.emit('update profile', currentUser);
+    });
+}
+
+const settingsBtn = document.getElementById('settings-btn');
+if (settingsBtn) {
+    settingsBtn.onclick = () => { 
+        hapticFeedback('light'); 
+        updateSettingsModalUI();
+        if (roomListScreen) roomListScreen.classList.add('hidden');
+        if (chatScreen) chatScreen.classList.add('hidden');
+        if (profileScreen) profileScreen.classList.add('hidden');
+        if (settingsScreen) settingsScreen.classList.remove('hidden'); 
+        try { history.pushState({ screen: 'settings' }, '', '#settings'); } catch(e){}
+    };
+}
 
 function updateSettingsModalUI() {
     const cardAvatar = document.getElementById('settings-card-avatar');
@@ -257,12 +403,15 @@ if (savedThemeSetting && savedThemeSetting !== 'light') {
     document.body.setAttribute('data-theme', savedThemeSetting);
 }
 
-// Close Settings modal
-const closeSettingsBtn = document.getElementById('close-settings-modal-btn');
-if (closeSettingsBtn) {
-    closeSettingsBtn.onclick = () => {
+// Close Settings page
+const closeSettingsPageBtn = document.getElementById('close-settings-page-btn');
+if (closeSettingsPageBtn) {
+    closeSettingsPageBtn.onclick = (e) => {
+        if (e) { e.preventDefault(); e.stopPropagation(); }
         hapticFeedback('light');
-        appSettingsModal.classList.add('hidden');
+        settingsScreen.classList.add('hidden');
+        roomListScreen.classList.remove('hidden');
+        history.pushState({ screen: 'lobby' }, '', '#lobby');
     };
 }
 
@@ -295,9 +444,164 @@ if (clearCacheBtn) {
             }
         }
         keysToRemove.forEach(k => localStorage.removeItem(k));
-        alert('✨ Cache & temporary wallpapers cleared successfully!');
+        showToast('✨ Cache & temporary wallpapers cleared!');
         updateSettingsModalUI();
     };
+}
+
+// Sync and Update Profile UI
+function updateProfileScreenUI() {
+    syncUserAvatarUI();
+    const usernameInput = document.getElementById('settings-username');
+    const aboutInput = document.getElementById('settings-about');
+    const colorInput = document.getElementById('settings-bubble-color');
+    const hexLabel = document.getElementById('bubble-color-hex');
+    const nameCharCount = document.getElementById('name-char-count');
+    const aboutCharCount = document.getElementById('about-char-count');
+    const liveBubble = document.getElementById('profile-live-bubble-preview');
+    const liveName = document.getElementById('profile-live-preview-name');
+
+    if (usernameInput) {
+        usernameInput.value = currentUser.name || '';
+        if (nameCharCount) nameCharCount.textContent = `${usernameInput.value.length}/20`;
+        if (liveName) liveName.textContent = currentUser.name || 'User';
+    }
+    if (aboutInput) {
+        aboutInput.value = currentUser.about || '';
+        if (aboutCharCount) aboutCharCount.textContent = `${aboutInput.value.length}/60`;
+    }
+    if (colorInput) {
+        colorInput.value = currentUser.color || '#dcf8c6';
+        if (hexLabel) hexLabel.textContent = colorInput.value;
+        if (liveBubble) liveBubble.style.backgroundColor = colorInput.value;
+    }
+
+    // Highlight active preset avatar if matches
+    document.querySelectorAll('.avatar-preset-item').forEach(img => {
+        if (img.src === currentUser.avatar) {
+            img.classList.add('active');
+        } else {
+            img.classList.remove('active');
+        }
+    });
+
+    // Highlight active color swatch
+    document.querySelectorAll('.color-swatch-btn').forEach(btn => {
+        if (btn.dataset.color.toLowerCase() === (currentUser.color || '#dcf8c6').toLowerCase()) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+}
+
+// Attach inputs & quick action listeners for profile screen
+const profileRandomBtn = document.getElementById('profile-btn-random-avatar');
+if (profileRandomBtn) {
+    profileRandomBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        hapticFeedback('medium');
+        const randomSeed = Math.random().toString(36).substring(2, 8);
+        const styles = ['bottts', 'adventurer', 'lorelei', 'fun-emoji', 'personas', 'spark'];
+        const randomStyle = styles[Math.floor(Math.random() * styles.length)];
+        const newUrl = `https://api.dicebear.com/7.x/${randomStyle}/svg?seed=${randomSeed}`;
+        currentUser.avatar = newUrl;
+        
+        syncUserAvatarUI();
+        document.querySelectorAll('.avatar-preset-item').forEach(el => el.classList.remove('active'));
+        saveUserLocally();
+        if (socket) socket.emit('update profile', currentUser);
+        showToast('🎲 Random avatar generated!');
+    };
+}
+
+const profileUploadBtn = document.getElementById('profile-btn-upload-avatar');
+if (profileUploadBtn) {
+    profileUploadBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        document.getElementById('profile-pic-upload').click();
+    };
+}
+
+// Quick status chips listener
+document.querySelectorAll('.status-chip-btn').forEach(chip => {
+    chip.onclick = (e) => {
+        e.preventDefault();
+        hapticFeedback('light');
+        const statusText = chip.dataset.status;
+        const aboutInput = document.getElementById('settings-about');
+        const aboutCharCount = document.getElementById('about-char-count');
+        if (aboutInput) {
+            aboutInput.value = statusText;
+            if (aboutCharCount) aboutCharCount.textContent = `${statusText.length}/60`;
+        }
+    };
+});
+
+// Color Swatches listener
+document.querySelectorAll('.color-swatch-btn').forEach(swatch => {
+    swatch.onclick = (e) => {
+        e.preventDefault();
+        hapticFeedback('light');
+        const chosenColor = swatch.dataset.color;
+        const colorInput = document.getElementById('settings-bubble-color');
+        const hexLabel = document.getElementById('bubble-color-hex');
+        const liveBubble = document.getElementById('profile-live-bubble-preview');
+
+        if (colorInput) colorInput.value = chosenColor;
+        if (hexLabel) hexLabel.textContent = chosenColor;
+        if (liveBubble) liveBubble.style.backgroundColor = chosenColor;
+
+        document.querySelectorAll('.color-swatch-btn').forEach(s => s.classList.remove('active'));
+        swatch.classList.add('active');
+    };
+});
+
+// Username real-time preview sync
+const settingsUsernameInput = document.getElementById('settings-username');
+if (settingsUsernameInput) {
+    settingsUsernameInput.addEventListener('input', (e) => {
+        const val = e.target.value;
+        const nameCharCount = document.getElementById('name-char-count');
+        const liveName = document.getElementById('profile-live-preview-name');
+        if (nameCharCount) nameCharCount.textContent = `${val.length}/20`;
+        if (liveName) liveName.textContent = val.trim() || 'User';
+    });
+}
+
+// About status real-time counter sync
+const settingsAboutInput = document.getElementById('settings-about');
+if (settingsAboutInput) {
+    settingsAboutInput.addEventListener('input', (e) => {
+        const val = e.target.value;
+        const aboutCharCount = document.getElementById('about-char-count');
+        if (aboutCharCount) aboutCharCount.textContent = `${val.length}/60`;
+    });
+}
+
+// Bubble color hex & live preview sync
+const bubbleColorInput = document.getElementById('settings-bubble-color');
+const bubbleHexLabel = document.getElementById('bubble-color-hex');
+if (bubbleColorInput && bubbleHexLabel) {
+    bubbleColorInput.value = currentUser.color || '#dcf8c6';
+    bubbleHexLabel.textContent = bubbleColorInput.value;
+    bubbleColorInput.addEventListener('input', (e) => {
+        const chosenVal = e.target.value;
+        bubbleHexLabel.textContent = chosenVal;
+        const liveBubble = document.getElementById('profile-live-bubble-preview');
+        if (liveBubble) liveBubble.style.backgroundColor = chosenVal;
+
+        // Deselect swatches if custom color doesn't match any swatch
+        document.querySelectorAll('.color-swatch-btn').forEach(s => {
+            if (s.dataset.color.toLowerCase() === chosenVal.toLowerCase()) {
+                s.classList.add('active');
+            } else {
+                s.classList.remove('active');
+            }
+        });
+    });
 }
 
 // Avatar Presets selection
@@ -310,128 +614,251 @@ if (avatarPresetsRow) {
             avatarPresetsRow.querySelectorAll('.avatar-preset-item').forEach(el => el.classList.remove('active'));
             item.classList.add('active');
             currentUser.avatar = item.src;
-            document.getElementById('settings-avatar-preview').src = item.src;
+            const avatarPreview = document.getElementById('settings-avatar-preview');
             if (avatarPreview) avatarPreview.src = item.src;
+            const mainAvatarPreview = document.getElementById('avatar-preview');
+            if (mainAvatarPreview) mainAvatarPreview.src = item.src;
+            const lobbyAvatar = document.getElementById('lobby-user-avatar');
+            if (lobbyAvatar) lobbyAvatar.src = item.src;
             saveUserLocally();
         }
     });
 }
 
-// Bubble color hex sync
-const bubbleColorInput = document.getElementById('settings-bubble-color');
-const bubbleHexLabel = document.getElementById('bubble-color-hex');
-if (bubbleColorInput && bubbleHexLabel) {
-    bubbleColorInput.value = currentUser.color || '#dcf8c6';
-    bubbleHexLabel.textContent = bubbleColorInput.value;
-    bubbleColorInput.addEventListener('input', (e) => {
-        bubbleHexLabel.textContent = e.target.value;
-    });
+const btnOpenProfile = document.getElementById('btn-open-profile');
+if (btnOpenProfile) {
+    btnOpenProfile.onclick = () => {
+        hapticFeedback('light');
+        updateProfileScreenUI();
+        if (settingsScreen) settingsScreen.classList.add('hidden');
+        if (roomListScreen) roomListScreen.classList.add('hidden'); 
+        if (profileScreen) profileScreen.classList.remove('hidden'); 
+        try { history.pushState({screen: 'profile'}, '', '#profile'); } catch(e){}
+    };
 }
 
-// Sound effects toggle
-const soundToggle = document.getElementById('toggle-sound-effects');
-if (soundToggle) {
-    soundToggle.addEventListener('change', (e) => {
-        localStorage.setItem('chitchat_sound_enabled', e.target.checked);
-        if (e.target.checked) playUiSound('send');
-    });
+const lobbyProfileBtn = document.getElementById('lobby-profile-btn');
+if (lobbyProfileBtn) {
+    lobbyProfileBtn.onclick = () => {
+        hapticFeedback('light');
+        updateProfileScreenUI();
+        if (roomListScreen) roomListScreen.classList.add('hidden');
+        if (settingsScreen) settingsScreen.classList.add('hidden');
+        if (chatScreen) chatScreen.classList.add('hidden');
+        if (profileScreen) profileScreen.classList.remove('hidden');
+        try { history.pushState({screen: 'profile'}, '', '#profile'); } catch(e){}
+    };
 }
 
-// Haptic feedback toggle
-const hapticToggle = document.getElementById('toggle-haptic-feedback');
-if (hapticToggle) {
-    hapticToggle.addEventListener('change', (e) => {
-        localStorage.setItem('chitchat_haptic_enabled', e.target.checked);
-        if (e.target.checked) hapticFeedback('heavy');
-    });
+const btnLogout = document.getElementById('btn-logout');
+if (btnLogout) {
+    btnLogout.onclick = () => { if(confirm("Are you sure you want to completely reset the app and log out? 😿")) { localStorage.clear(); window.location.reload(); } };
 }
 
-// App passcode lock toggle
-const lockToggle = document.getElementById('toggle-app-lock');
-if (lockToggle) {
-    lockToggle.addEventListener('change', (e) => {
-        localStorage.setItem('chitchat_lock_enabled', e.target.checked);
-        if (e.target.checked) {
-            alert('🔒 App Passcode Lock enabled! Your chat session is protected.');
-        } else {
-            alert('🔓 App Passcode Lock disabled.');
-        }
-    });
+const closeProfileBtn = document.getElementById('close-profile-btn');
+if (closeProfileBtn) {
+    closeProfileBtn.onclick = (e) => { 
+        e.preventDefault(); 
+        hapticFeedback('light'); 
+        if (profileScreen) profileScreen.classList.add('hidden'); 
+        if (settingsScreen) settingsScreen.classList.remove('hidden'); 
+        updateSettingsModalUI();
+        try { history.pushState({screen: 'settings'}, '', '#settings'); } catch(e){}
+    };
 }
 
-document.getElementById('btn-open-profile').onclick = () => {
-    appSettingsModal.classList.add('hidden');
-    roomListScreen.classList.add('hidden'); profileScreen.classList.remove('hidden'); 
-    history.pushState({screen: 'profile'}, '', '#profile');
-};
-
-document.getElementById('btn-logout').onclick = () => { if(confirm("Are you sure you want to completely reset the app and log out? 😿")) { localStorage.clear(); window.location.reload(); } };
-
-document.getElementById('close-profile-btn').onclick = (e) => { 
-    e.preventDefault(); hapticFeedback('light'); profileScreen.classList.add('hidden'); roomListScreen.classList.remove('hidden'); history.pushState({screen: 'lobby'}, '', '#lobby');
-};
-
-document.getElementById('back-btn').onclick = (e) => { 
-    e.preventDefault(); e.stopPropagation(); hapticFeedback('light'); chatScreen.classList.add('hidden'); roomListScreen.classList.remove('hidden'); 
-    socket.emit('leave room'); activeRoomId = null; isGhostMode = false; ghostBtn.classList.remove('active'); currentlyTyping.clear();
-    history.pushState({screen: 'lobby'}, '', '#lobby');
-};
+const backBtn = document.getElementById('back-btn');
+if (backBtn) {
+    backBtn.onclick = (e) => { 
+        e.preventDefault(); e.stopPropagation(); hapticFeedback('light'); 
+        if (chatScreen) chatScreen.classList.add('hidden'); 
+        if (roomListScreen) roomListScreen.classList.remove('hidden'); 
+        if (socket) socket.emit('leave room'); 
+        activeRoomId = null; isGhostMode = false; 
+        if (ghostBtn) ghostBtn.classList.remove('active'); 
+        currentlyTyping.clear();
+        try { history.pushState({screen: 'lobby'}, '', '#lobby'); } catch(e){}
+    };
+}
 
 window.addEventListener('popstate', (e) => {
     const state = e.state ? e.state.screen : '';
-    if (state === 'lobby') {
+    if (state === 'settings') {
+        if (chatScreen) chatScreen.classList.add('hidden');
+        if (profileScreen) profileScreen.classList.add('hidden');
+        if (roomListScreen) roomListScreen.classList.add('hidden');
+        if (settingsScreen) settingsScreen.classList.remove('hidden');
+        updateSettingsModalUI();
+    } else if (state === 'profile') {
+        if (settingsScreen) settingsScreen.classList.add('hidden');
+        if (roomListScreen) roomListScreen.classList.add('hidden');
+        if (chatScreen) chatScreen.classList.add('hidden');
+        if (profileScreen) profileScreen.classList.remove('hidden');
+        updateProfileScreenUI();
+    } else if (state === 'lobby') {
         if (activeRoomId) {
-            chatScreen.classList.add('hidden'); roomListScreen.classList.remove('hidden');
-            socket.emit('leave room'); activeRoomId = null; isGhostMode = false; ghostBtn.classList.remove('active'); currentlyTyping.clear();
-        } else if (!profileScreen.classList.contains('hidden')) {
-            profileScreen.classList.add('hidden'); roomListScreen.classList.remove('hidden');
+            if (chatScreen) chatScreen.classList.add('hidden'); 
+            if (roomListScreen) roomListScreen.classList.remove('hidden');
+            if (socket) socket.emit('leave room'); activeRoomId = null; isGhostMode = false; 
+            if (ghostBtn) ghostBtn.classList.remove('active'); currentlyTyping.clear();
         }
+        if (profileScreen) profileScreen.classList.add('hidden');
+        if (settingsScreen) settingsScreen.classList.add('hidden');
+        if (roomListScreen) roomListScreen.classList.remove('hidden');
     } else if (state === 'exit') {
-        if (!roomListScreen.classList.contains('hidden')) { if (confirm("Are you sure you want to exit Chit Chat? 😿")) history.back(); else history.pushState({screen: 'lobby'}, '', '#lobby'); 
+        if (roomListScreen && !roomListScreen.classList.contains('hidden')) { if (confirm("Are you sure you want to exit Chit Chat? 😿")) history.back(); else try { history.pushState({screen: 'lobby'}, '', '#lobby'); } catch(e){} 
         } else { history.back(); }
     }
 });
 
-document.getElementById('save-profile-btn').onclick = () => {
-    if(document.getElementById('settings-username').value.trim()) currentUser.name = document.getElementById('settings-username').value.trim();
-    if(document.getElementById('settings-about').value.trim()) currentUser.about = document.getElementById('settings-about').value.trim();
-    currentUser.color = document.getElementById('settings-bubble-color').value; 
-    socket.emit('update profile', currentUser);
-    saveUserLocally(); profileScreen.classList.add('hidden'); roomListScreen.classList.remove('hidden');
-};
+const saveProfileBtn = document.getElementById('save-profile-btn');
+if (saveProfileBtn) {
+    saveProfileBtn.onclick = () => {
+        hapticFeedback('medium');
+        const setUsername = document.getElementById('settings-username');
+        const setAbout = document.getElementById('settings-about');
+        const setBubbleColor = document.getElementById('settings-bubble-color');
+        if(setUsername && setUsername.value.trim()) currentUser.name = setUsername.value.trim();
+        if(setAbout && setAbout.value.trim()) currentUser.about = setAbout.value.trim();
+        if (setBubbleColor) currentUser.color = setBubbleColor.value; 
+        syncUserAvatarUI();
+        if (socket) socket.emit('update profile', currentUser);
+        saveUserLocally(); 
+        showToast('✨ Profile updated successfully!');
+        if (profileScreen) profileScreen.classList.add('hidden'); 
+        if (settingsScreen) settingsScreen.classList.remove('hidden');
+        updateSettingsModalUI();
+        try { history.pushState({screen: 'settings'}, '', '#settings'); } catch(e){}
+    };
+}
+
+let currentCategoryFilter = 'all';
 
 function renderRoomList() {
-    roomsUl.innerHTML = '';
-    globalRoomList.forEach(room => {
-        const li = document.createElement('li'); li.className = 'room-item';
-        const logoUrl = room.logo || `https://api.dicebear.com/7.x/shapes/svg?seed=${room.id}`;
-        const unreadCount = unreadCounts[room.id] || 0;
-        const badgeHTML = unreadCount > 0 ? `<span class="unread-badge">${unreadCount}</span>` : '';
-        li.innerHTML = `<img src="${escapeHTML(logoUrl)}"><div class="room-info"><span class="room-name">${escapeHTML(room.name)}</span><span class="room-status">${room.isPrivate ? '🔒 Private' : '🌐 Public'}</span></div>${badgeHTML}`;
-        li.onclick = () => joinRoomPrompt(room);
-        roomsUl.appendChild(li);
+    const listEl = document.getElementById('rooms-ul') || roomsUl;
+    if (!listEl) return;
+    listEl.innerHTML = '';
+    
+    // Update lobby header user avatar
+    const lobbyAvatar = document.getElementById('lobby-user-avatar');
+    if (lobbyAvatar && currentUser && currentUser.avatar) {
+        lobbyAvatar.src = currentUser.avatar;
+    }
+
+    const listToRender = (globalRoomList && globalRoomList.length > 0) ? globalRoomList : defaultRooms;
+    
+    const emptyState = document.getElementById('empty-rooms-state');
+    if (!listToRender || listToRender.length === 0) {
+        if (emptyState) emptyState.classList.remove('hidden');
+    } else {
+        if (emptyState) emptyState.classList.add('hidden');
+        
+        listToRender.forEach(room => {
+            const li = document.createElement('li'); 
+            li.className = 'room-card-item';
+            
+            const roomNameLower = (room.name || '').toLowerCase();
+            const isAI = roomNameLower.includes('ai') || roomNameLower.includes('bot') || roomNameLower.includes('lounge');
+            const logoUrl = room.logo || `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(room.id || 'room')}`;
+            const unreadCount = unreadCounts[room.id] || 0;
+            const badgeHTML = unreadCount > 0 ? `<span class="unread-badge-pill">${unreadCount}</span>` : '';
+
+            let subtitleText = '';
+            if (isAI) {
+                subtitleText = `24/7 Smart Companion • Ask anything`;
+            } else if (room.isPrivate) {
+                subtitleText = `Passcode protected room`;
+            } else {
+                subtitleText = `Public group • Tap to join chat`;
+            }
+
+            li.innerHTML = `
+                <div class="room-avatar-box ${isAI ? 'ai-glow' : ''}">
+                    <img src="${logoUrl}" alt="Room Avatar" class="room-avatar-img">
+                    <span class="room-status-dot ${room.isPrivate ? 'private-dot' : 'online-dot'}"></span>
+                </div>
+                <div class="room-card-info">
+                    <div class="room-card-top-row">
+                        <span class="room-card-name">${escapeHTML(room.name || 'Chat Room')}</span>
+                    </div>
+                    <div class="room-card-sub-row">
+                        <span class="room-card-subtitle">${subtitleText}</span>
+                    </div>
+                </div>
+                <div class="room-card-right">
+                    ${badgeHTML}
+                    <span class="room-chevron">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </span>
+                </div>
+            `;
+            
+            li.onclick = () => joinRoomPrompt(room);
+            listEl.appendChild(li);
+        });
+    }
+}
+
+if (socket) {
+    socket.on('room list', (rooms) => { 
+        globalRoomList = (rooms && rooms.length > 0) ? rooms : defaultRooms; 
+        renderRoomList(); 
+    });
+    socket.on('global room alert', (roomId) => { 
+        if (activeRoomId !== roomId) { 
+            unreadCounts[roomId] = (unreadCounts[roomId] || 0) + 1; 
+            renderRoomList(); 
+        } 
     });
 }
 
-socket.on('room list', (rooms) => { globalRoomList = rooms; renderRoomList(); });
-socket.on('global room alert', (roomId) => { if (activeRoomId !== roomId) { unreadCounts[roomId] = (unreadCounts[roomId] || 0) + 1; renderRoomList(); } });
+const showCreateRoomBtn = document.getElementById('show-create-room-btn');
+if (showCreateRoomBtn) showCreateRoomBtn.onclick = () => { hapticFeedback('light'); if (createRoomModal) createRoomModal.classList.remove('hidden'); };
 
-document.getElementById('show-create-room-btn').onclick = () => { hapticFeedback('light'); createRoomModal.classList.remove('hidden'); }
-document.getElementById('new-room-private').onchange = (e) => document.getElementById('password-input-container').classList.toggle('hidden', !e.target.checked);
-document.getElementById('create-room-submit').onclick = () => {
-    const name = document.getElementById('new-room-name').value;
-    const isPrivate = document.getElementById('new-room-private').checked;
-    const password = document.getElementById('new-room-pass').value;
-    if(name) { socket.emit('create room', { name, isPrivate, password }); createRoomModal.classList.add('hidden'); }
-};
+const newRoomPrivate = document.getElementById('new-room-private');
+if (newRoomPrivate) {
+    newRoomPrivate.onchange = (e) => {
+        const passContainer = document.getElementById('password-input-container');
+        if (passContainer) passContainer.classList.toggle('hidden', !e.target.checked);
+    };
+}
+
+const createRoomSubmit = document.getElementById('create-room-submit');
+if (createRoomSubmit) {
+    createRoomSubmit.onclick = () => {
+        const nameInp = document.getElementById('new-room-name');
+        const privInp = document.getElementById('new-room-private');
+        const passInp = document.getElementById('new-room-pass');
+        const name = nameInp ? nameInp.value : '';
+        const isPrivate = privInp ? privInp.checked : false;
+        const password = passInp ? passInp.value : '';
+        if(name) { 
+            if (socket) socket.emit('create room', { name, isPrivate, password }); 
+            if (createRoomModal) createRoomModal.classList.add('hidden'); 
+        }
+    };
+}
 
 let pendingJoinRoom = null;
 function joinRoomPrompt(room) {
     hapticFeedback('light'); 
-    if(room.isPrivate) { pendingJoinRoom = room; document.getElementById('join-room-pass').value = ''; passwordModal.classList.remove('hidden');
+    if(room.isPrivate) { 
+        pendingJoinRoom = room; 
+        const joinPass = document.getElementById('join-room-pass');
+        if (joinPass) joinPass.value = ''; 
+        if (passwordModal) passwordModal.classList.remove('hidden');
     } else { currentRoomPassword = ''; joinRoom(room.id, '', false); }
 }
-document.getElementById('join-room-submit').onclick = () => { currentRoomPassword = document.getElementById('join-room-pass').value; joinRoom(pendingJoinRoom.id, currentRoomPassword, false); passwordModal.classList.add('hidden'); };
+
+const joinRoomSubmit = document.getElementById('join-room-submit');
+if (joinRoomSubmit) {
+    joinRoomSubmit.onclick = () => { 
+        const joinPass = document.getElementById('join-room-pass');
+        currentRoomPassword = joinPass ? joinPass.value : ''; 
+        if (pendingJoinRoom) joinRoom(pendingJoinRoom.id, currentRoomPassword, false); 
+        if (passwordModal) passwordModal.classList.add('hidden'); 
+    };
+}
 
 function joinRoom(roomId, password, isReconnect) { socket.emit('join room', { roomId, password, user: currentUser, isReconnect }); }
 
@@ -449,6 +876,10 @@ socket.on('chat history', (data) => {
     roomListScreen.classList.add('hidden'); chatScreen.classList.remove('hidden');
     
     const isRoomSwitch = activeRoomId !== data.room.id;
+    if (isRoomSwitch) {
+        currentlyTyping.clear();
+        updateHeaderSubtitle();
+    }
     activeRoomId = data.room.id; 
     unreadCounts[activeRoomId] = 0; 
     renderRoomList();
@@ -457,8 +888,7 @@ socket.on('chat history', (data) => {
     
     updateGroupHeader(data.room);
     const savedWallpaper = localStorage.getItem('wallpaper_' + activeRoomId);
-    if (savedWallpaper) chatScreen.style.backgroundImage = `url(${savedWallpaper})`;
-    else { chatScreen.style.backgroundImage = ''; }
+    applyChatWallpaper(savedWallpaper);
 
     if (isRoomSwitch || messages.querySelectorAll('li').length === 0) {
         messages.innerHTML = '';
@@ -551,21 +981,67 @@ function checkEmptyMessages() {
     }
 }
 
+const floatingTypingBubble = document.getElementById('floating-typing-bubble');
+const floatingTypingAvatar = document.getElementById('floating-typing-avatar');
+const floatingTypingName = document.getElementById('floating-typing-name');
+
+if (floatingTypingBubble) {
+    floatingTypingBubble.addEventListener('click', () => {
+        hapticFeedback('light');
+        if (messages) messages.scrollTop = messages.scrollHeight;
+    });
+}
+
 function updateHeaderSubtitle() {
-    const typingBanner = document.getElementById('typing-indicator');
-    const typingText = document.getElementById('typing-text');
     if (currentlyTyping.size > 0) {
-        const names = Array.from(currentlyTyping).join(', ');
-        onlineUsersText.textContent = `${names} is typing...`;
+        const users = Array.from(currentlyTyping.values());
+        const namesList = users.map(u => u.name);
+        
+        let subtitleText = '';
+        if (namesList.length === 1) {
+            subtitleText = `${namesList[0]} is typing...`;
+        } else if (namesList.length === 2) {
+            subtitleText = `${namesList[0]} & ${namesList[1]} are typing...`;
+        } else {
+            subtitleText = `${namesList[0]} & ${namesList.length - 1} others are typing...`;
+        }
+
+        onlineUsersText.textContent = subtitleText;
         onlineUsersText.classList.add('typing-text-active');
-        if (typingBanner && typingText) {
-            typingText.textContent = `${names} is typing...`;
-            typingBanner.classList.remove('hidden');
+
+        // Update Floating Animated Typing Bubble
+        if (floatingTypingBubble && floatingTypingAvatar && floatingTypingName) {
+            const firstUser = users[users.length - 1]; // most recent typing user
+            floatingTypingAvatar.src = firstUser.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(firstUser.name)}`;
+            
+            const statusLabel = floatingTypingBubble.querySelector('.typing-status-label');
+
+            if (users.length === 1) {
+                floatingTypingName.textContent = firstUser.name;
+                if (statusLabel) statusLabel.textContent = 'is typing';
+            } else if (users.length === 2) {
+                floatingTypingName.textContent = `${users[0].name} & ${users[1].name}`;
+                if (statusLabel) statusLabel.textContent = 'are typing';
+            } else {
+                floatingTypingName.textContent = `${firstUser.name} & ${users.length - 1} others`;
+                if (statusLabel) statusLabel.textContent = 'are typing';
+            }
+
+            if (floatingTypingBubble.classList.contains('hidden')) {
+                floatingTypingBubble.classList.remove('hidden');
+                // Scroll down if user is near bottom
+                if (messages && (messages.scrollHeight - messages.scrollTop - messages.clientHeight < 120)) {
+                    messages.scrollTop = messages.scrollHeight;
+                }
+            }
         }
     } else {
         onlineUsersText.textContent = baseOnlineText;
         onlineUsersText.classList.remove('typing-text-active');
-        if (typingBanner) typingBanner.classList.add('hidden');
+
+        if (floatingTypingBubble) {
+            floatingTypingBubble.classList.add('hidden');
+        }
     }
 }
 
@@ -574,40 +1050,152 @@ socket.on('room users', (usersList) => {
     updateHeaderSubtitle();
 });
 
-socket.on('user typing', (data) => { if (data.isTyping) currentlyTyping.add(data.name); else currentlyTyping.delete(data.name); updateHeaderSubtitle(); });
+socket.on('user typing', (data) => {
+    if (data.isTyping) {
+        currentlyTyping.set(data.name, {
+            name: data.name,
+            avatar: data.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(data.name)}`
+        });
+    } else {
+        currentlyTyping.delete(data.name);
+    }
+    updateHeaderSubtitle();
+});
 
 [createRoomModal, passwordModal, msgOptionsModal, viewProfileModal, groupInfoModal, createPollModal, appSettingsModal].forEach(modal => {
-    modal.addEventListener('click', (e) => { if(e.target === modal) modal.classList.add('hidden'); });
+    if (modal) {
+        modal.addEventListener('click', (e) => { if(e.target === modal) modal.classList.add('hidden'); });
+    }
 });
 
-function updateGroupHeader(room) { currentRoomName.textContent = room.name; currentRoomLogo.src = room.logo || `https://api.dicebear.com/7.x/shapes/svg?seed=${room.id}`; }
-socket.on('group info updated', updateGroupHeader);
+function updateGroupHeader(room) { 
+    if (currentRoomName) currentRoomName.textContent = room.name; 
+    if (currentRoomLogo) currentRoomLogo.src = room.logo || `https://api.dicebear.com/7.x/shapes/svg?seed=${room.id}`; 
+}
+if (socket) socket.on('group info updated', updateGroupHeader);
 
-headerClickArea.onclick = () => { hapticFeedback('light'); infoRoomLogo.src = currentRoomLogo.src; infoRoomName.value = currentRoomName.textContent; groupInfoModal.classList.remove('hidden'); };
-document.getElementById('save-group-info-btn').onclick = () => { const newName = infoRoomName.value.trim(); if(newName) { socket.emit('update group info', { roomId: activeRoomId, name: newName }); groupInfoModal.classList.add('hidden'); } };
-groupPicUpload.addEventListener('change', function() { if (this.files[0]) { const reader = new FileReader(); reader.onload = (e) => { infoRoomLogo.src = e.target.result; socket.emit('update group info', { roomId: activeRoomId, logo: e.target.result }); }; reader.readAsDataURL(this.files[0]); } });
+if (headerClickArea) {
+    headerClickArea.onclick = () => { 
+        hapticFeedback('light'); 
+        if (infoRoomLogo && currentRoomLogo) infoRoomLogo.src = currentRoomLogo.src; 
+        if (infoRoomName && currentRoomName) infoRoomName.value = currentRoomName.textContent; 
+        if (groupInfoModal) groupInfoModal.classList.remove('hidden'); 
+    };
+}
 
-document.getElementById('btn-change-wallpaper').onclick = () => wallpaperUpload.click();
-wallpaperUpload.addEventListener('change', function() { if (this.files[0]) { const reader = new FileReader(); reader.onload = (e) => { localStorage.setItem('wallpaper_' + activeRoomId, e.target.result); chatScreen.style.backgroundImage = `url(${e.target.result})`; groupInfoModal.classList.add('hidden'); }; reader.readAsDataURL(this.files[0]); } });
-document.getElementById('btn-reset-wallpaper').onclick = () => { localStorage.removeItem('wallpaper_' + activeRoomId); chatScreen.style.backgroundImage = ''; groupInfoModal.classList.add('hidden'); };
+const saveGroupInfoBtn = document.getElementById('save-group-info-btn');
+if (saveGroupInfoBtn) {
+    saveGroupInfoBtn.onclick = () => { 
+        const newName = infoRoomName ? infoRoomName.value.trim() : ''; 
+        if(newName) { 
+            if (socket) socket.emit('update group info', { roomId: activeRoomId, name: newName }); 
+            if (groupInfoModal) groupInfoModal.classList.add('hidden'); 
+        } 
+    };
+}
 
-document.getElementById('btn-open-search').onclick = () => { groupInfoModal.classList.add('hidden'); chatSearchContainer.classList.remove('hidden'); chatSearchInput.focus(); };
-document.getElementById('close-search-btn').onclick = () => { chatSearchContainer.classList.add('hidden'); chatSearchInput.value = ''; document.querySelectorAll('#messages li').forEach(li => { li.style.display = 'flex'; const txtNode = li.querySelector('.message-text'); if(txtNode) txtNode.innerHTML = txtNode.innerHTML.replace(/<span class="highlight">(.*?)<\/span>/g, '$1'); }); };
-
-chatSearchInput.addEventListener('input', (e) => {
-    const query = e.target.value.toLowerCase();
-    document.querySelectorAll('#messages li').forEach(li => {
-        if(li.classList.contains('system-message')) { li.style.display = query ? 'none' : 'flex'; return; }
-        const textNode = li.querySelector('.message-text');
-        if(!textNode) return; 
-        let rawText = textNode.textContent.replace('(edited)', '').trim();
-        if (query === '') { li.style.display = 'flex'; textNode.innerHTML = escapeHTML(rawText) + (li.innerHTML.includes('(edited)') ? `<span class="edited-tag">(edited)</span>` : '');
-        } else if (rawText.toLowerCase().includes(query)) { li.style.display = 'flex'; const regex = new RegExp(`(${query})`, "gi"); textNode.innerHTML = escapeHTML(rawText).replace(regex, `<span class="highlight">$1</span>`) + (li.innerHTML.includes('(edited)') ? `<span class="edited-tag">(edited)</span>` : '');
-        } else { li.style.display = 'none'; }
+if (groupPicUpload) {
+    groupPicUpload.addEventListener('change', function() { 
+        if (this.files && this.files[0]) { 
+            const reader = new FileReader(); 
+            reader.onload = (e) => { 
+                if (infoRoomLogo) infoRoomLogo.src = e.target.result; 
+                if (socket) socket.emit('update group info', { roomId: activeRoomId, logo: e.target.result }); 
+            }; 
+            reader.readAsDataURL(this.files[0]); 
+        } 
     });
-});
+}
 
-ghostBtn.onclick = () => { hapticFeedback('medium'); isGhostMode = !isGhostMode; ghostBtn.classList.toggle('active', isGhostMode); };
+function applyChatWallpaper(wallpaperUrl) {
+    if (!chatScreen) return;
+    if (wallpaperUrl) {
+        chatScreen.style.backgroundImage = `url(${wallpaperUrl})`;
+        chatScreen.style.backgroundSize = 'cover';
+        chatScreen.style.backgroundPosition = 'center';
+        chatScreen.style.backgroundRepeat = 'no-repeat';
+        chatScreen.style.backgroundAttachment = 'fixed';
+        chatScreen.classList.add('has-custom-wallpaper');
+    } else {
+        chatScreen.style.backgroundImage = '';
+        chatScreen.style.backgroundSize = '';
+        chatScreen.style.backgroundPosition = '';
+        chatScreen.style.backgroundRepeat = '';
+        chatScreen.style.backgroundAttachment = '';
+        chatScreen.classList.remove('has-custom-wallpaper');
+    }
+}
+
+const btnChangeWallpaper = document.getElementById('btn-change-wallpaper');
+if (btnChangeWallpaper) {
+    btnChangeWallpaper.onclick = () => { if (wallpaperUpload) wallpaperUpload.click(); };
+}
+
+if (wallpaperUpload) {
+    wallpaperUpload.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const dataUrl = e.target.result;
+                localStorage.setItem('wallpaper_' + activeRoomId, dataUrl);
+                applyChatWallpaper(dataUrl);
+                if (groupInfoModal) groupInfoModal.classList.add('hidden');
+            };
+            reader.readAsDataURL(this.files[0]);
+            this.value = '';
+        }
+    });
+}
+
+const btnResetWallpaper = document.getElementById('btn-reset-wallpaper');
+if (btnResetWallpaper) {
+    btnResetWallpaper.onclick = () => {
+        localStorage.removeItem('wallpaper_' + activeRoomId);
+        applyChatWallpaper(null);
+        if (groupInfoModal) groupInfoModal.classList.add('hidden');
+    };
+}
+
+const btnOpenSearch = document.getElementById('btn-open-search');
+if (btnOpenSearch) {
+    btnOpenSearch.onclick = () => { 
+        if (groupInfoModal) groupInfoModal.classList.add('hidden'); 
+        if (chatSearchContainer) chatSearchContainer.classList.remove('hidden'); 
+        if (chatSearchInput) chatSearchInput.focus(); 
+    };
+}
+
+const closeSearchBtn = document.getElementById('close-search-btn');
+if (closeSearchBtn) {
+    closeSearchBtn.onclick = () => { 
+        if (chatSearchContainer) chatSearchContainer.classList.add('hidden'); 
+        if (chatSearchInput) chatSearchInput.value = ''; 
+        document.querySelectorAll('#messages li').forEach(li => { 
+            li.style.display = 'flex'; 
+            const txtNode = li.querySelector('.message-text'); 
+            if(txtNode) txtNode.innerHTML = txtNode.innerHTML.replace(/<span class="highlight">(.*?)<\/span>/g, '$1'); 
+        }); 
+    };
+}
+
+if (chatSearchInput) {
+    chatSearchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase();
+        document.querySelectorAll('#messages li').forEach(li => {
+            if(li.classList.contains('system-message')) { li.style.display = query ? 'none' : 'flex'; return; }
+            const textNode = li.querySelector('.message-text');
+            if(!textNode) return; 
+            let rawText = textNode.textContent.replace('(edited)', '').trim();
+            if (query === '') { li.style.display = 'flex'; textNode.innerHTML = escapeHTML(rawText) + (li.innerHTML.includes('(edited)') ? `<span class="edited-tag">(edited)</span>` : '');
+            } else if (rawText.toLowerCase().includes(query)) { li.style.display = 'flex'; const regex = new RegExp(`(${query})`, "gi"); textNode.innerHTML = escapeHTML(rawText).replace(regex, `<span class="highlight">$1</span>`) + (li.innerHTML.includes('(edited)') ? `<span class="edited-tag">(edited)</span>` : '');
+            } else { li.style.display = 'none'; }
+        });
+    });
+}
+
+if (ghostBtn) {
+    ghostBtn.onclick = () => { hapticFeedback('medium'); isGhostMode = !isGhostMode; ghostBtn.classList.toggle('active', isGhostMode); };
+}
 
 function updatePollOptionNumbers() {
     const rows = pollOptionsContainer.querySelectorAll('.poll-opt-row');
@@ -658,7 +1246,7 @@ pollBtn.onclick = () => { hapticFeedback('light'); createPollModal.classList.rem
 addPollOptBtn.onclick = () => {
     const currentRows = pollOptionsContainer.querySelectorAll('.poll-opt-row');
     if (currentRows.length >= 8) {
-        alert('Maximum 8 options allowed per poll!');
+        showToast('Maximum 8 options allowed per poll!');
         return;
     }
     hapticFeedback('light');
@@ -687,12 +1275,13 @@ sendPollBtn.onclick = () => {
             text: '',
             poll: pollData,
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            isGhost: isGhostMode
+            isGhost: isGhostMode,
+            roomId: activeRoomId || 'lobby'
         });
         createPollModal.classList.add('hidden');
         resetPollForm();
     } else {
-        alert('Please enter a question and at least 2 options!');
+        showToast('Please enter a question and at least 2 options!');
     }
 };
 
@@ -714,48 +1303,64 @@ function setSendBtnState(state) {
     }
 }
 
-input.addEventListener('input', () => { 
-    if (editingMsgId) { 
-        setSendBtnState('check'); 
-    } else if (input.value.trim() || activeRoomId === 'ai_lounge') { 
-        setSendBtnState('send'); 
-    } else { 
-        setSendBtnState('mic'); 
-    }
+if (input) {
+    const handleInputChange = () => { 
+        if (editingMsgId) { 
+            setSendBtnState('check'); 
+        } else if ((input.value && input.value.trim()) || activeRoomId === 'ai_lounge') { 
+            setSendBtnState('send'); 
+        } else { 
+            setSendBtnState('mic'); 
+        }
 
-    if (!typingSent) {
-        socket.emit('typing', true);
-        typingSent = true;
-    }
+        if (!typingSent) {
+            if (socket) socket.emit('typing', true);
+            typingSent = true;
+        }
 
-    clearTimeout(typingTimeout);
-    typingTimeout = setTimeout(() => {
-        socket.emit('typing', false);
-        typingSent = false;
-    }, 1500);
-});
+        clearTimeout(typingTimeout);
+        typingTimeout = setTimeout(() => {
+            if (socket) socket.emit('typing', false);
+            typingSent = false;
+        }, 1500);
+    };
 
-// ==========================
-// ✅ SEND MESSAGE FIX
-// ==========================
+    input.addEventListener('input', handleInputChange);
+    input.addEventListener('keyup', handleInputChange);
+
+    const handleEnterKey = (e) => { 
+        if (e.key === 'Enter' && !e.shiftKey) { 
+            e.preventDefault(); 
+            sendMessage(); 
+        } 
+    };
+
+    input.addEventListener('keypress', handleEnterKey);
+    input.addEventListener('keydown', handleEnterKey);
+}
+
 function sendMessage() {
-    const text = input.value.trim();
+    if (!input) return;
+    const text = input.value ? input.value.trim() : '';
     if (!text && !editingMsgId && activeRoomId !== 'ai_lounge') return;
 
-    socket.emit('typing', false); 
+    if (socket) socket.emit('typing', false); 
+
+    const targetRoomId = activeRoomId || 'lobby';
 
     if (editingMsgId) { 
-        socket.emit('edit message', { msgId: editingMsgId, newText: text }); 
+        if (socket) socket.emit('edit message', { msgId: editingMsgId, newText: text, roomId: targetRoomId }); 
         editingMsgId = null;
     } else { 
-        socket.emit('chat message', { 
-            user: currentUser.name, 
-            avatar: currentUser.avatar, 
-            color: currentUser.color, 
+        if (socket) socket.emit('chat message', { 
+            user: currentUser.name || 'Guest', 
+            avatar: currentUser.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(currentUser.name || 'Guest')}`, 
+            color: currentUser.color || '#dcf8c6', 
             text, 
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), 
             replyTo: replyingTo, 
-            isGhost: isGhostMode 
+            isGhost: isGhostMode,
+            roomId: targetRoomId
         }); 
         playUiSound('send');
     }
@@ -763,51 +1368,50 @@ function sendMessage() {
     input.value = ''; 
     setSendBtnState(activeRoomId === 'ai_lounge' ? 'send' : 'mic'); 
     replyingTo = null; 
-    replyPreviewContainer.classList.add('hidden');
+    if (replyPreviewContainer) replyPreviewContainer.classList.add('hidden');
 }
-
-input.addEventListener('keypress', (e) => { 
-    if (e.key === 'Enter') { 
-        e.preventDefault(); 
-        sendMessage(); 
-    } 
-});
 
 // ==========================
 // ✅ SAFE FILE UPLOAD CHECK
 // ==========================
-attachBtn.onclick = () => { hapticFeedback('light'); imageUpload.click(); };
-imageUpload.addEventListener('change', function() {
-    if (this.files[0]) {
-        const file = this.files[0];
-        
-        if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
-            alert('Unsupported file type!');
-            return;
-        }
+if (attachBtn) {
+    attachBtn.onclick = () => { hapticFeedback('light'); if (imageUpload) imageUpload.click(); };
+}
 
-        hapticFeedback('heavy'); const reader = new FileReader(); 
-        reader.onload = (e) => {
-            const fileData = e.target.result;
-            if (file.type.startsWith('video/')) {
-                if (file.size > 20 * 1024 * 1024) return alert('Video is too large! Limit is 20MB.');
-                socket.emit('chat message', { user: currentUser.name, avatar: currentUser.avatar, color: currentUser.color, text: '', uploadedImage: fileData, isVideo: true, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), isGhost: isGhostMode });
-            } else if (file.type === 'image/gif') {
-                socket.emit('chat message', { user: currentUser.name, avatar: currentUser.avatar, color: currentUser.color, text: '', uploadedImage: fileData, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), isGhost: isGhostMode });
-            } else {
-                const img = new Image(); img.src = fileData;
-                img.onload = () => {
-                    const canvas = document.createElement('canvas'); let w = img.width, h = img.height;
-                    if(w > 600) { h *= 600/w; w = 600; } canvas.width = w; canvas.height = h;
-                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                    socket.emit('chat message', { user: currentUser.name, avatar: currentUser.avatar, color: currentUser.color, text: '', uploadedImage: canvas.toDataURL('image/jpeg', 0.8), time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), isGhost: isGhostMode });
-                };
+if (imageUpload) {
+    imageUpload.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            const file = this.files[0];
+            const targetRoomId = activeRoomId || 'lobby';
+            
+            if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+                showToast('Unsupported file type!');
+                return;
             }
-            imageUpload.value = '';
-        }; 
-        reader.readAsDataURL(file);
-    }
-});
+
+            hapticFeedback('heavy'); const reader = new FileReader(); 
+            reader.onload = (e) => {
+                const fileData = e.target.result;
+                if (file.type.startsWith('video/')) {
+                    if (file.size > 20 * 1024 * 1024) return showToast('Video is too large! Limit is 20MB.');
+                    if (socket) socket.emit('chat message', { user: currentUser.name, avatar: currentUser.avatar, color: currentUser.color, text: '', uploadedImage: fileData, isVideo: true, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), isGhost: isGhostMode, roomId: targetRoomId });
+                } else if (file.type === 'image/gif') {
+                    if (socket) socket.emit('chat message', { user: currentUser.name, avatar: currentUser.avatar, color: currentUser.color, text: '', uploadedImage: fileData, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), isGhost: isGhostMode, roomId: targetRoomId });
+                } else {
+                    const img = new Image(); img.src = fileData;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas'); let w = img.width, h = img.height;
+                        if(w > 600) { h *= 600/w; w = 600; } canvas.width = w; canvas.height = h;
+                        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                        if (socket) socket.emit('chat message', { user: currentUser.name, avatar: currentUser.avatar, color: currentUser.color, text: '', uploadedImage: canvas.toDataURL('image/jpeg', 0.8), time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), isGhost: isGhostMode, roomId: targetRoomId });
+                    };
+                }
+                imageUpload.value = '';
+            }; 
+            reader.readAsDataURL(file);
+        }
+    });
+}
 
 let pressTimer;
 messages.addEventListener('touchstart', (e) => {
@@ -875,13 +1479,17 @@ messages.addEventListener('touchend', () => {
 });
 
 document.querySelectorAll('.react-btn').forEach(btn => {
-    btn.onclick = (e) => { hapticFeedback('light'); socket.emit('react message', { msgId: selectedMsgId, emoji: e.target.innerText }); msgOptionsModal.classList.add('hidden'); };
+    btn.onclick = (e) => { hapticFeedback('light'); if (socket) socket.emit('react message', { msgId: selectedMsgId, emoji: e.target.innerText }); if (msgOptionsModal) msgOptionsModal.classList.add('hidden'); };
 });
 
-document.getElementById('opt-delete').onclick = () => { socket.emit('delete message', selectedMsgId); msgOptionsModal.classList.add('hidden'); };
-document.getElementById('opt-pin').onclick = () => { const li = document.getElementById(`msg-${selectedMsgId}`); socket.emit('pin message', { msg: { user: li.dataset.sender, text: li.querySelector('.message-text')?.innerText || 'Attachment' }}); msgOptionsModal.classList.add('hidden'); };
+const optDelete = document.getElementById('opt-delete');
+if (optDelete) optDelete.onclick = () => { if (socket) socket.emit('delete message', selectedMsgId); if (msgOptionsModal) msgOptionsModal.classList.add('hidden'); };
 
-document.getElementById('opt-star').onclick = () => {
+const optPin = document.getElementById('opt-pin');
+if (optPin) optPin.onclick = () => { const li = document.getElementById(`msg-${selectedMsgId}`); if (li && socket) socket.emit('pin message', { msg: { user: li.dataset.sender, text: li.querySelector('.message-text')?.innerText || 'Attachment' }}); if (msgOptionsModal) msgOptionsModal.classList.add('hidden'); };
+
+const optStar = document.getElementById('opt-star');
+if (optStar) optStar.onclick = () => {
     const li = document.getElementById(`msg-${selectedMsgId}`);
     if (!li) return;
     hapticFeedback('medium');
@@ -909,31 +1517,37 @@ document.getElementById('opt-star').onclick = () => {
         }
     }
     localStorage.setItem('starred_messages_' + activeRoomId, JSON.stringify(starred));
-    msgOptionsModal.classList.add('hidden');
+    if (msgOptionsModal) msgOptionsModal.classList.add('hidden');
 };
 
-document.getElementById('btn-view-starred').onclick = () => {
-    groupInfoModal.classList.add('hidden');
+const btnViewStarred = document.getElementById('btn-view-starred');
+if (btnViewStarred) btnViewStarred.onclick = () => {
+    if (groupInfoModal) groupInfoModal.classList.add('hidden');
     const listEl = document.getElementById('starred-messages-list');
     let starred = JSON.parse(localStorage.getItem('starred_messages_' + activeRoomId) || '[]');
-    if (starred.length === 0) {
-        listEl.innerHTML = `<p style="text-align: center; color: var(--text-secondary); font-size: 13.5px; padding: 20px 0;">No starred messages yet. Long-press any message to star it! ⭐</p>`;
-    } else {
-        listEl.innerHTML = starred.map(m => `
-            <div class="starred-item-card" onclick="document.getElementById('starred-messages-modal').classList.add('hidden'); scrollToQuoteMessage('msg-${m.id}')" style="background: var(--input-bg); padding: 10px 14px; border-radius: 12px; cursor: pointer; display: flex; flex-direction: column; gap: 4px;">
-                <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: var(--accent);">
-                    <span>${escapeHTML(m.user)}</span>
-                    <span style="color: var(--text-secondary); font-size: 11px;">${escapeHTML(m.time)}</span>
+    if (listEl) {
+        if (starred.length === 0) {
+            listEl.innerHTML = `<p style="text-align: center; color: var(--text-secondary); font-size: 13.5px; padding: 20px 0;">No starred messages yet. Long-press any message to star it! ⭐</p>`;
+        } else {
+            listEl.innerHTML = starred.map(m => `
+                <div class="starred-item-card" onclick="const sm = document.getElementById('starred-messages-modal'); if(sm) sm.classList.add('hidden'); scrollToQuoteMessage('msg-${m.id}')" style="background: var(--input-bg); padding: 10px 14px; border-radius: 12px; cursor: pointer; display: flex; flex-direction: column; gap: 4px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: var(--accent);">
+                        <span>${escapeHTML(m.user)}</span>
+                        <span style="color: var(--text-secondary); font-size: 11px;">${escapeHTML(m.time)}</span>
+                    </div>
+                    <div style="font-size: 13.5px; color: var(--text-primary);">${escapeHTML(m.text)}</div>
                 </div>
-                <div style="font-size: 13.5px; color: var(--text-primary);">${escapeHTML(m.text)}</div>
-            </div>
-        `).join('');
+            `).join('');
+        }
     }
-    document.getElementById('starred-messages-modal').classList.remove('hidden');
+    const starredModal = document.getElementById('starred-messages-modal');
+    if (starredModal) starredModal.classList.remove('hidden');
 };
 
-document.getElementById('close-starred-modal-btn').onclick = () => {
-    document.getElementById('starred-messages-modal').classList.add('hidden');
+const closeStarredModalBtn = document.getElementById('close-starred-modal-btn');
+if (closeStarredModalBtn) closeStarredModalBtn.onclick = () => {
+    const starredModal = document.getElementById('starred-messages-modal');
+    if (starredModal) starredModal.classList.add('hidden');
 };
 
 const scrollBottomBtn = document.getElementById('scroll-bottom-btn');
@@ -941,32 +1555,52 @@ const unreadBadge = document.getElementById('unread-count-badge');
 let unreadScrolledCount = 0;
 
 if (scrollBottomBtn) {
-    messages.addEventListener('scroll', () => {
-        const isScrolledUp = messages.scrollHeight - messages.scrollTop - messages.clientHeight > 150;
-        if (isScrolledUp) {
-            scrollBottomBtn.classList.add('visible');
-        } else {
-            scrollBottomBtn.classList.remove('visible');
-            unreadScrolledCount = 0;
-            if (unreadBadge) unreadBadge.classList.add('hidden');
-        }
-    });
+    if (messages) {
+        messages.addEventListener('scroll', () => {
+            const isScrolledUp = messages.scrollHeight - messages.scrollTop - messages.clientHeight > 150;
+            if (isScrolledUp) {
+                scrollBottomBtn.classList.add('visible');
+            } else {
+                scrollBottomBtn.classList.remove('visible');
+                unreadScrolledCount = 0;
+                if (unreadBadge) unreadBadge.classList.add('hidden');
+            }
+        });
+    }
 
     scrollBottomBtn.onclick = () => {
         hapticFeedback('light');
-        messages.scrollTo({ top: messages.scrollHeight, behavior: 'smooth' });
+        if (messages) messages.scrollTo({ top: messages.scrollHeight, behavior: 'smooth' });
         unreadScrolledCount = 0;
         if (unreadBadge) unreadBadge.classList.add('hidden');
     };
 }
-document.getElementById('opt-edit').onclick = () => { const li = document.getElementById(`msg-${selectedMsgId}`); input.value = li.querySelector('.message-text').innerText.replace('(edited)', '').trim(); editingMsgId = selectedMsgId; sendMicBtn.innerHTML = '✔'; input.focus(); msgOptionsModal.classList.add('hidden'); };
-document.getElementById('opt-reply').onclick = () => { 
+
+const optEdit = document.getElementById('opt-edit');
+if (optEdit) optEdit.onclick = () => { 
     const li = document.getElementById(`msg-${selectedMsgId}`); 
-    triggerReplyForMessage(li);
-    msgOptionsModal.classList.add('hidden'); 
+    if (li && input) {
+        const textEl = li.querySelector('.message-text');
+        if (textEl) input.value = textEl.innerText.replace('(edited)', '').trim();
+    }
+    editingMsgId = selectedMsgId; 
+    setSendBtnState('check'); 
+    if (input) input.focus(); 
+    if (msgOptionsModal) msgOptionsModal.classList.add('hidden'); 
 };
-document.getElementById('cancel-reply-btn').onclick = () => { replyingTo = null; replyPreviewContainer.classList.add('hidden'); };
-document.getElementById('unpin-btn').onclick = () => socket.emit('unpin message');
+
+const optReply = document.getElementById('opt-reply');
+if (optReply) optReply.onclick = () => { 
+    const li = document.getElementById(`msg-${selectedMsgId}`); 
+    if (li) triggerReplyForMessage(li);
+    if (msgOptionsModal) msgOptionsModal.classList.add('hidden'); 
+};
+
+const cancelReplyBtn = document.getElementById('cancel-reply-btn');
+if (cancelReplyBtn) cancelReplyBtn.onclick = () => { replyingTo = null; if (replyPreviewContainer) replyPreviewContainer.classList.add('hidden'); };
+
+const unpinBtn = document.getElementById('unpin-btn');
+if (unpinBtn) unpinBtn.onclick = () => { if (socket) socket.emit('unpin message'); };
 
 window.scrollToQuoteMessage = function(targetId) {
     if (!targetId) return;
@@ -1021,7 +1655,20 @@ socket.on('update reactions', (data) => {
     } 
 });
 
-socket.on('message edited', (data) => { const el = document.getElementById(`msg-${data.id}`); if (el) { const textNode = el.querySelector('.message-text'); textNode.innerHTML = escapeHTML(data.newText) + `<span class="edited-tag">(edited)</span>`; } });
+socket.on('message edited', (data) => {
+    const el = document.getElementById(`msg-${data.id}`);
+    if (el) {
+        const textNode = el.querySelector('.message-text');
+        if (textNode) {
+            textNode.innerHTML = escapeHTML(data.newText) + `<span class="edited-tag">(edited)</span>`;
+        } else {
+            const bubble = el.querySelector('.msg-bubble');
+            if (bubble) {
+                bubble.innerHTML = `<span class="message-text">${escapeHTML(data.newText)} <span class="edited-tag">(edited)</span></span>`;
+            }
+        }
+    }
+});
 
 function formatAudioTime(seconds) {
     if (!seconds || isNaN(seconds) || !isFinite(seconds)) return '0:00';
@@ -1332,23 +1979,9 @@ document.getElementById('messages').addEventListener('click', (e) => {
     if(e.target.classList.contains('avatar-small')) { const friendName = e.target.dataset.name; socket.emit('get user info', friendName); }
 });
 
-// Lobby search filter
+// Lobby search & Category filters
 const lobbySearchInput = document.getElementById('lobby-search-input');
-if (lobbySearchInput) {
-    lobbySearchInput.addEventListener('input', (e) => {
-        const query = e.target.value.toLowerCase().trim();
-        const items = roomsUl.querySelectorAll('.room-item');
-        items.forEach(item => {
-            const name = item.querySelector('.room-name').textContent.toLowerCase();
-            const status = item.querySelector('.room-status').textContent.toLowerCase();
-            if (name.includes(query) || status.includes(query)) {
-                item.style.display = 'flex';
-            } else {
-                item.style.display = 'none';
-            }
-        });
-    });
-}
+const clearLobbySearchBtn = document.getElementById('clear-lobby-search-btn');
 
 // Quick Emoji Drawer
 const emojiBtn = document.getElementById('emoji-btn');
@@ -1373,30 +2006,37 @@ document.querySelectorAll('.emoji-item').forEach(item => {
         hapticFeedback('light');
         input.value += item.textContent;
         input.focus();
-        const sendMicIcon = document.getElementById('send-mic-icon');
-        if (sendMicIcon) sendMicIcon.textContent = '➤';
+        input.dispatchEvent(new Event('input', { bubbles: true }));
     });
 });
 
-const availableThemes = ['light', 'dark', 'pink']; let currentThemeIndex = 0;
-const savedTheme = localStorage.getItem('chitchat_theme') || 'light';
-currentThemeIndex = availableThemes.indexOf(savedTheme); if(currentThemeIndex === -1) currentThemeIndex = 0;
-applyTheme(availableThemes[currentThemeIndex]);
+const availableThemes = ['emerald', 'light', 'dark', 'pink']; 
+let currentThemeIndex = 0;
+const savedTheme = localStorage.getItem('chitchat_theme') || 'emerald';
+currentThemeIndex = availableThemes.indexOf(savedTheme); 
+if(currentThemeIndex === -1) currentThemeIndex = 0;
 
-document.getElementById('btn-theme-cycle').onclick = () => {
-    hapticFeedback('light'); currentThemeIndex = (currentThemeIndex + 1) % availableThemes.length;
-    const newTheme = availableThemes[currentThemeIndex]; applyTheme(newTheme); localStorage.setItem('chitchat_theme', newTheme);
+const THEME_ICONS_SVG = {
+    emerald: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="emHGrad" x1="0" y1="0" x2="24" y2="24"><stop offset="0%" stop-color="#34d399"/><stop offset="100%" stop-color="#059669"/></linearGradient></defs><path d="M12 3.5C12 3.5 18 7.5 18 13C18 16.3137 15.3137 19 12 19C8.68629 19 6 16.3137 6 13C6 7.5 12 3.5 12 3.5Z" stroke="url(#emHGrad)" stroke-width="2" stroke-linecap="round"/><path d="M12 7V19M12 13L15.5 9.5M12 15.5L8.5 12" stroke="url(#emHGrad)" stroke-width="1.8" stroke-linecap="round"/></svg>`,
+    
+    light: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="sunHGrad" x1="0" y1="0" x2="24" y2="24"><stop offset="0%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#d97706"/></linearGradient></defs><circle cx="12" cy="12" r="4.5" fill="url(#sunHGrad)"/><path d="M12 1.5V3.5M12 20.5V22.5M1.5 12H3.5M20.5 12H22.5M4.57 4.57L5.99 5.99M18.01 18.01L19.43 19.43M4.57 19.43L5.99 18.01M18.01 5.99L19.43 4.57" stroke="url(#sunHGrad)" stroke-width="2.2" stroke-linecap="round"/></svg>`,
+    
+    dark: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="moonHGrad" x1="0" y1="0" x2="24" y2="24"><stop offset="0%" stop-color="#818cf8"/><stop offset="100%" stop-color="#4f46e5"/></linearGradient></defs><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" fill="url(#moonHGrad)"/><path d="M19 4L19.6 5.4L21 6L19.6 6.6L19 8L18.4 6.6L17 6L18.4 5.4L19 4Z" fill="#a5b4fc"/></svg>`,
+    
+    pink: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="roseHGrad" x1="0" y1="0" x2="24" y2="24"><stop offset="0%" stop-color="#f472b6"/><stop offset="100%" stop-color="#db2777"/></linearGradient></defs><path d="M12 3C12 3 16.5 7 16.5 11C16.5 13.4853 14.4853 15.5 12 15.5C9.51472 15.5 7.5 13.4853 7.5 11C7.5 7 12 3 12 3Z" fill="url(#roseHGrad)"/><path d="M5 13.5C2.5 12 2 9.5 3.5 7.5C5 5.5 7.5 6 9 8.5C9 8.5 7.5 11.5 5 13.5Z" fill="url(#roseHGrad)" opacity="0.75"/><path d="M19 13.5C21.5 12 22 9.5 20.5 7.5C19 5.5 16.5 6 15 8.5C15 8.5 16.5 11.5 19 13.5Z" fill="url(#roseHGrad)" opacity="0.75"/></svg>`
 };
 
 function applyTheme(themeName) {
     document.body.setAttribute('data-theme', themeName);
     localStorage.setItem('chitchat_theme', themeName);
+    currentThemeIndex = availableThemes.indexOf(themeName);
+    if (currentThemeIndex === -1) currentThemeIndex = 0;
+
     const themeIcon = document.getElementById('theme-btn-icon');
     if (themeIcon) {
-        if (themeName === 'dark') themeIcon.innerHTML = '🌙';
-        else if (themeName === 'pink') themeIcon.innerHTML = '🌸';
-        else themeIcon.innerHTML = '☀️';
+        themeIcon.innerHTML = THEME_ICONS_SVG[themeName] || THEME_ICONS_SVG.emerald;
     }
+
     document.querySelectorAll('.login-theme-pills .theme-pill').forEach(pill => {
         if (pill.dataset.themeChoice === themeName) {
             pill.classList.add('active');
@@ -1404,7 +2044,37 @@ function applyTheme(themeName) {
             pill.classList.remove('active');
         }
     });
+
+    document.querySelectorAll('.theme-selector-grid .theme-card-btn').forEach(btn => {
+        if (btn.dataset.themeVal === themeName) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
 }
+
+applyTheme(availableThemes[currentThemeIndex]);
+
+const btnThemeCycle = document.getElementById('btn-theme-cycle');
+if (btnThemeCycle) {
+    btnThemeCycle.onclick = () => {
+        hapticFeedback('light'); 
+        currentThemeIndex = (currentThemeIndex + 1) % availableThemes.length;
+        const newTheme = availableThemes[currentThemeIndex]; 
+        applyTheme(newTheme);
+    };
+}
+
+document.querySelectorAll('.theme-selector-grid .theme-card-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        hapticFeedback('light');
+        const themeVal = btn.dataset.themeVal;
+        if (themeVal) {
+            applyTheme(themeVal);
+        }
+    });
+});
 
 let mediaRecorder; 
 let audioChunks = []; 
@@ -1481,7 +2151,8 @@ async function startRecording(e) {
                         uploadedImage: event.target.result, 
                         isAudio: true, 
                         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), 
-                        isGhost: isGhostMode 
+                        isGhost: isGhostMode,
+                        roomId: activeRoomId || 'lobby'
                     }); 
                 };
                 reader.readAsDataURL(audioBlob); 
@@ -1508,7 +2179,7 @@ async function startRecording(e) {
     } catch(err) { 
         isRecording = false; 
         console.error('Microphone access error:', err);
-        alert("Please allow Microphone access in your browser to send Voice Notes! 🎤"); 
+        showToast("Please allow Microphone access to send Voice Notes! 🎤"); 
     }
 }
 
@@ -1545,7 +2216,8 @@ if (sendRecBtn) {
 // ==========================
 sendMicBtn.addEventListener('click', (e) => {
     e.preventDefault();
-    if (sendMicBtn.dataset.state === 'send' || sendMicBtn.dataset.state === 'check') {
+    const hasText = input && input.value && input.value.trim().length > 0;
+    if (hasText || sendMicBtn.dataset.state === 'send' || sendMicBtn.dataset.state === 'check') {
         sendMessage();
     } else if (sendMicBtn.dataset.state === 'mic') {
         if (!isRecording) {
