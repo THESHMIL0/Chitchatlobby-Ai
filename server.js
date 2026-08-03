@@ -79,8 +79,8 @@ function sendPushToAllExceptSender(senderEndpoint, senderName, roomName, roomId,
     const payload = JSON.stringify({
         title: `${senderName}${roomName ? ' in ' + roomName : ''}`,
         body: summaryText || 'Sent a message',
-        icon: avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=ChitChat',
-        badge: '/icon.svg',
+        icon: '/icon-192.png',
+        badge: '/icon-192.png',
         url: `/?room=${roomId}`,
         roomId: roomId
     });
@@ -146,8 +146,8 @@ app.post('/api/push/send-test', (req, res) => {
     const payload = JSON.stringify({
         title: 'ChitChat Push Test 🔔',
         body: `Hello ${userName || 'Friend'}! Web Push is working in background! 🎉`,
-        icon: 'https://api.dicebear.com/7.x/bottts/svg?seed=ChitChat',
-        badge: '/icon.svg',
+        icon: '/icon-192.png',
+        badge: '/icon-192.png',
         url: '/',
         roomId: 'lobby'
     });

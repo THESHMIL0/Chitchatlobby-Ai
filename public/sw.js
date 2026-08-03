@@ -18,8 +18,8 @@ self.addEventListener('push', (event) => {
     let data = {
         title: 'ChitChat Notification',
         body: 'You have a new message!',
-        icon: '/icon.svg',
-        badge: '/icon.svg',
+        icon: '/icon-192.png',
+        badge: '/icon-192.png',
         url: '/',
         roomId: 'lobby'
     };
@@ -32,10 +32,16 @@ self.addEventListener('push', (event) => {
         }
     }
 
+    // Ensure icon uses PNG format for Android / Mobile NotificationManager compatibility
+    let notifIcon = '/icon-192.png';
+    if (data.icon && typeof data.icon === 'string' && !data.icon.endsWith('.svg') && !data.icon.includes('/svg')) {
+        notifIcon = data.icon;
+    }
+
     const options = {
         body: data.body,
-        icon: data.icon || '/icon.svg',
-        badge: data.badge || '/icon.svg',
+        icon: notifIcon,
+        badge: '/icon-192.png',
         data: {
             url: data.url || '/',
             roomId: data.roomId

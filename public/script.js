@@ -1137,12 +1137,18 @@ async function registerWebPushSubscription() {
         const convertedVapidKey = urlBase64ToUint8Array(publicKey);
 
         let subscription = await registration.pushManager.getSubscription();
-        if (!subscription) {
-            subscription = await registration.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: convertedVapidKey
-            });
+        if (subscription) {
+            try {
+                await subscription.unsubscribe();
+            } catch (e) {
+                console.warn('Error unsubscribing old push subscription:', e);
+            }
         }
+
+        subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: convertedVapidKey
+        });
 
         if (subscription && subscription.endpoint) {
             currentPushEndpoint = subscription.endpoint;
