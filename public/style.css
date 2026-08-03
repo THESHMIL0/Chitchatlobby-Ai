@@ -2413,22 +2413,29 @@ li.system-message {
    📊 UPGRADED POLL STYLING
 ==================================== */
 .poll-card {
-    background: var(--header-card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 18px;
-    padding: 14px 16px;
-    margin: 4px 0;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 2px 0;
+    margin: 2px 0;
     min-width: 250px;
     max-width: 320px;
-    box-shadow: 0 3px 10px var(--shadow-color);
-    backdrop-filter: blur(8px);
+    box-shadow: none;
+    backdrop-filter: none;
 }
 
 .poll-header {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
     margin-bottom: 12px;
+}
+
+.poll-badge-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
 }
 
 .poll-badge {
@@ -2440,7 +2447,34 @@ li.system-message {
     border: 1px solid var(--border-color);
     padding: 2px 8px;
     border-radius: 10px;
-    align-self: flex-start;
+}
+
+.poll-type-tag, .poll-anon-tag, .poll-closed-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+.poll-type-tag {
+    background: rgba(59, 130, 246, 0.12);
+    color: #3b82f6;
+    border: 1px solid rgba(59, 130, 246, 0.25);
+}
+
+.poll-anon-tag {
+    background: rgba(139, 92, 246, 0.12);
+    color: #8b5cf6;
+    border: 1px solid rgba(139, 92, 246, 0.25);
+}
+
+.poll-closed-tag {
+    background: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.25);
 }
 
 .poll-question {
@@ -2471,13 +2505,29 @@ li.system-message {
     display: block;
 }
 
-.poll-option-btn:active {
+.poll-option-btn:active:not(:disabled) {
     transform: scale(0.985);
 }
 
 .poll-option-btn.selected-option {
     border-color: var(--accent);
     box-shadow: 0 0 0 1px var(--accent);
+}
+
+.poll-option-btn.winning-option:not(.disabled-option) {
+    border-color: rgba(245, 158, 11, 0.6);
+}
+
+.poll-option-btn.disabled-option {
+    cursor: default;
+    opacity: 0.85;
+}
+
+.poll-crown-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 2px;
 }
 
 .poll-option-btn .poll-bar {
@@ -2516,7 +2566,9 @@ li.system-message {
 }
 
 .poll-radio-icon {
-    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0;
 }
 
@@ -2530,7 +2582,42 @@ li.system-message {
 }
 
 .poll-opt-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     flex-shrink: 0;
+}
+
+.poll-opt-voters-avatars {
+    display: flex;
+    align-items: center;
+    margin-right: 2px;
+}
+
+.poll-voter-dot {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #ffffff;
+    font-size: 9px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: -5px;
+    border: 1.5px solid var(--header-card-bg);
+}
+
+.poll-voter-dot:first-child {
+    margin-left: 0;
+}
+
+.poll-voter-more {
+    font-size: 9.5px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    margin-left: 2px;
 }
 
 .poll-opt-count {
@@ -2552,6 +2639,68 @@ li.system-message {
     font-size: 11.5px;
     font-weight: 600;
     color: var(--text-secondary);
+}
+
+.poll-total-votes {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.poll-footer-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-view-poll-votes, .btn-close-poll {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-view-poll-votes:hover {
+    background: var(--border-color);
+    color: var(--accent);
+}
+
+.btn-close-poll:hover {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* Preset Chips */
+.poll-preset-chip {
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 14px;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.poll-preset-chip:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-1px);
+}
+
+.poll-preset-chip:active {
+    transform: translateY(0);
 }
 
 /* Modal Poll Creator */
@@ -3676,7 +3825,7 @@ li.system-message {
 
 .wallpaper-preset-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 8px;
 }
 
@@ -3706,27 +3855,33 @@ li.system-message {
 
 .wp-preview {
     width: 100%;
-    height: 48px;
+    height: 54px;
     border-radius: 8px;
-    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.15);
+    background-color: var(--input-bg);
 }
 
 .wp-pattern-default {
-    background: radial-gradient(#22c55e 1.2px, transparent 1.2px);
+    background-image: radial-gradient(var(--text-secondary) 1.2px, transparent 1.2px);
     background-size: 12px 12px;
-    background-color: #f4fbf7;
 }
 
-.wp-cute-mint {
-    background: linear-gradient(135deg, #a7f3d0 0%, #6ee7b7 100%);
+.wp-pattern-sweetheart {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200' width='200' height='200'%3E%3Cdefs%3E%3CradialGradient id='hg' cx='40%25' cy='35%25' r='65%25'%3E%3Cstop offset='0%25' stop-color='%234ade80' stop-opacity='0.95'/%3E%3Cstop offset='50%25' stop-color='%2322c55e' stop-opacity='0.85'/%3E%3Cstop offset='100%25' stop-color='%2315803d' stop-opacity='0.75'/%3E%3C/radialGradient%3E%3ClinearGradient id='hh' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23ffffff' stop-opacity='0.5'/%3E%3Cstop offset='45%25' stop-color='%23ffffff' stop-opacity='0.15'/%3E%3Cstop offset='100%25' stop-color='%23000000' stop-opacity='0.15'/%3E%3C/linearGradient%3E%3Cfilter id='f' x='-20%25' y='-20%25' width='140%25' height='140%25'%3E%3CfeGaussianBlur stdDeviation='5' result='b'/%3E%3CfeComposite in='SourceGraphic' in2='b' operator='over'/%3E%3C/filter%3E%3C/defs%3E%3Cpath d='M 100 68 C 75 32, 35 42, 35 85 C 35 125, 100 162, 100 162 C 100 162, 165 125, 165 85 C 165 42, 125 32, 100 68 Z' fill='url(%23hg)' filter='url(%23f)'/%3E%3Cpath d='M 100 68 C 75 32, 35 42, 35 85 C 35 125, 100 162, 100 162 C 100 162, 165 125, 165 85 C 165 42, 125 32, 100 68 Z' fill='url(%23hh)'/%3E%3Cg transform='translate(136, 68)'%3E%3Cpath d='M 0 -13 Q 0 0 13 0 Q 0 0 0 13 Q 0 0 -13 0 Q 0 0 0 -13 Z' fill='%23ffffff' opacity='0.95'/%3E%3Ccircle cx='0' cy='0' r='2.5' fill='%23ffffff'/%3E%3C/g%3E%3Cg transform='translate(78, 120)'%3E%3Cpath d='M 0 -10 Q 0 0 10 0 Q 0 0 0 10 Q 0 0 -10 0 Q 0 0 0 -10 Z' fill='%23ffffff' opacity='0.95'/%3E%3Ccircle cx='0' cy='0' r='2' fill='%23ffffff'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 38px 38px;
+    background-position: center center;
+    background-repeat: no-repeat;
 }
 
-.wp-pastel-grad {
-    background: linear-gradient(135deg, #fef08a 0%, #fbcfe8 50%, #c084fc 100%);
+.wp-pattern-flirt {
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
 }
 
-.wp-dark-galaxy {
-    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+.wp-pattern-thinking-of-you {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Cpath d='M22 20 C17 12, 6 14, 6 24 C6 34, 22 46, 22 46 C22 46, 38 34, 38 24 C38 14, 27 12, 22 20 Z' fill='rgba(96,165,250,0.65)'/%3E%3Cpath d='M48 38 C44 32, 35 33, 35 40 C35 47, 48 56, 48 56 C48 56, 61 47, 61 40 C61 33, 52 32, 48 38 Z' fill='rgba(168,85,247,0.55)'/%3E%3Cg transform='translate(46, 14)'%3E%3Ccircle cx='0' cy='0' r='2' fill='rgba(255,255,255,0.7)'/%3E%3Ccircle cx='0' cy='-5' r='2.2' fill='none' stroke='rgba(255,255,255,0.7)' stroke-width='1'/%3E%3Ccircle cx='5' cy='0' r='2.2' fill='none' stroke='rgba(255,255,255,0.7)' stroke-width='1'/%3E%3Ccircle cx='0' cy='5' r='2.2' fill='none' stroke='rgba(255,255,255,0.7)' stroke-width='1'/%3E%3Ccircle cx='-5' cy='0' r='2.2' fill='none' stroke='rgba(255,255,255,0.7)' stroke-width='1'/%3E%3C/g%3E%3Cg transform='translate(12, 48)'%3E%3Ccircle cx='0' cy='0' r='1.8' fill='rgba(255,255,255,0.6)'/%3E%3Ccircle cx='0' cy='-4.5' r='2' fill='none' stroke='rgba(255,255,255,0.6)' stroke-width='1'/%3E%3Ccircle cx='4.5' cy='0' r='2' fill='none' stroke='rgba(255,255,255,0.6)' stroke-width='1'/%3E%3Ccircle cx='0' cy='4.5' r='2' fill='none' stroke='rgba(255,255,255,0.6)' stroke-width='1'/%3E%3Ccircle cx='-4.5' cy='0' r='2' fill='none' stroke='rgba(255,255,255,0.6)' stroke-width='1'/%3E%3C/g%3E%3Cpath d='M26 44 Q 34 40, 40 48 T 52 44' fill='none' stroke='rgba(255,255,255,0.5)' stroke-width='1.2' stroke-linecap='round'/%3E%3Cpath d='M10 26 Q 16 18, 26 12' fill='none' stroke='rgba(255,255,255,0.45)' stroke-width='1' stroke-dasharray='2,2'/%3E%3Ccircle cx='28' cy='12' r='1.2' fill='rgba(192,132,252,0.8)'/%3E%3C/svg%3E");
+    background-size: 38px 38px;
 }
 
 .cust-custom-wp-row {
@@ -3845,6 +4000,62 @@ li.system-message {
 @keyframes particleFly {
     0% { opacity: 1; transform: translate(0, 0) scale(0.6) rotate(0deg); }
     100% { opacity: 0; transform: translate(var(--dx, 20px), var(--dy, -60px)) scale(1.4) rotate(20deg); }
+}
+
+/* ====================================
+   💋 INSTAGRAM-STYLE 3 GLOWING KISS ANIMATION
+==================================== */
+.kiss-animation-container {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 999999;
+    overflow: hidden;
+}
+
+.kiss-overlay-backdrop {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 50%, rgba(244, 63, 94, 0.25) 0%, rgba(236, 72, 153, 0.12) 50%, transparent 80%);
+    animation: kissBackdropGlow 3.2s ease-out forwards;
+}
+
+@keyframes kissBackdropGlow {
+    0% { opacity: 0; transform: scale(0.7); }
+    20% { opacity: 1; transform: scale(1.05); }
+    70% { opacity: 0.85; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1.2); }
+}
+
+/* Floating Kiss Emojis Shower (💋, 💖, 💕, 🌸, ✨) */
+.floating-kiss-emoji {
+    position: absolute;
+    pointer-events: none;
+    user-select: none;
+    will-change: transform, opacity;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    animation: floatKissUp linear forwards;
+    text-shadow: 0 2px 10px rgba(255, 105, 180, 0.45);
+}
+
+@keyframes floatKissUp {
+    0% {
+        opacity: 0;
+        transform: translate3d(0, 0, 0) scale(0.6) rotate(var(--init-rot, -15deg));
+    }
+    15% {
+        opacity: 0.95;
+    }
+    75% {
+        opacity: 0.9;
+    }
+    100% {
+        opacity: 0;
+        transform: translate3d(var(--sway), -125vh, 0) scale(1) rotate(var(--end-rot, 15deg));
+    }
 }
 
 

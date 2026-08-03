@@ -398,12 +398,42 @@ io.on('connection', (socket) => {
         const item = historyStore.find(h => h.id === msgId);
         if (item) {
             const data = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
-            if (data.poll && data.poll.options[optionIndex]) {
+            if (data.poll && !data.poll.isClosed && data.poll.options[optionIndex]) {
                 const user = activeUsersById[socket.id]?.name || 'Guest';
-                data.poll.options.forEach(opt => {
-                    opt.votes = opt.votes.filter(v => v !== user);
-                });
-                data.poll.options[optionIndex].votes.push(user);
+                const opt = data.poll.options[optionIndex];
+                opt.votes = opt.votes || [];
+
+                if (data.poll.isMultiple) {
+                    // Toggle choice in multiple choice poll
+                    if (opt.votes.includes(user)) {
+                        opt.votes = opt.votes.filter(v => v !== user);
+                    } else {
+                        opt.votes.push(user);
+                    }
+                } else {
+                    // Single choice poll
+                    const alreadySelected = opt.votes.includes(user);
+                    // Clear user vote from all options
+                    data.poll.options.forEach(o => {
+                        o.votes = (o.votes || []).filter(v => v !== user);
+                    });
+                    // If it wasn't selected, select it (toggle/switch)
+                    if (!alreadySelected) {
+                        opt.votes.push(user);
+                    }
+                }
+                item.data = JSON.stringify(data);
+                io.to(data.roomId).emit('poll updated', data);
+            }
+        }
+    });
+
+    socket.on('close poll', ({ msgId }) => {
+        const item = historyStore.find(h => h.id === msgId);
+        if (item) {
+            const data = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
+            if (data.poll) {
+                data.poll.isClosed = true;
                 item.data = JSON.stringify(data);
                 io.to(data.roomId).emit('poll updated', data);
             }

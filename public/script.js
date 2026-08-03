@@ -197,6 +197,145 @@ if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Loc
     try { Notification.requestPermission(); } catch(e){}
 }
 
+function getSweetheartSvgDataUrl(customColor) {
+    const currentTheme = (typeof document !== 'undefined' && document.body) ? (document.body.getAttribute('data-theme') || 'emerald') : 'emerald';
+    let c1 = '#4ade80', c2 = '#22c55e', c3 = '#15803d';
+
+    if (customColor && customColor.startsWith('#')) {
+        c1 = customColor; c2 = customColor; c3 = customColor;
+    } else if (currentTheme === 'pink') {
+        c1 = '#fb7185'; c2 = '#f43f5e'; c3 = '#be123c';
+    } else if (currentTheme === 'dark') {
+        c1 = '#34d399'; c2 = '#10b981'; c3 = '#047857';
+    } else if (currentTheme === 'light') {
+        c1 = '#34d399'; c2 = '#10b981'; c3 = '#059669';
+    } else if (currentTheme === 'emerald') {
+        c1 = '#4ade80'; c2 = '#22c55e'; c3 = '#15803d';
+    } else {
+        const computedAccent = (typeof document !== 'undefined' && document.body) ? getComputedStyle(document.body).getPropertyValue('--accent').trim() : '';
+        c1 = computedAccent || '#10b981';
+        c2 = c1;
+        c3 = c1;
+    }
+
+    const enc1 = encodeURIComponent(c1);
+    const enc2 = encodeURIComponent(c2);
+    const enc3 = encodeURIComponent(c3);
+
+    return `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200' width='200' height='200'%3E%3Cdefs%3E%3CradialGradient id='hg' cx='40%25' cy='35%25' r='65%25'%3E%3Cstop offset='0%25' stop-color='${enc1}' stop-opacity='0.9'/%3E%3Cstop offset='50%25' stop-color='${enc2}' stop-opacity='0.8'/%3E%3Cstop offset='100%25' stop-color='${enc3}' stop-opacity='0.7'/%3E%3C/radialGradient%3E%3ClinearGradient id='hh' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23ffffff' stop-opacity='0.45'/%3E%3Cstop offset='45%25' stop-color='%23ffffff' stop-opacity='0.1'/%3E%3Cstop offset='100%25' stop-color='%23000000' stop-opacity='0.2'/%3E%3C/linearGradient%3E%3Cfilter id='f' x='-20%25' y='-20%25' width='140%25' height='140%25'%3E%3CfeGaussianBlur stdDeviation='5' result='b'/%3E%3CfeComposite in='SourceGraphic' in2='b' operator='over'/%3E%3C/filter%3E%3C/defs%3E%3Cpath d='M 100 68 C 75 32, 35 42, 35 85 C 35 125, 100 162, 100 162 C 100 162, 165 125, 165 85 C 165 42, 125 32, 100 68 Z' fill='url(%23hg)' filter='url(%23f)'/%3E%3Cpath d='M 100 68 C 75 32, 35 42, 35 85 C 35 125, 100 162, 100 162 C 100 162, 165 125, 165 85 C 165 42, 125 32, 100 68 Z' fill='url(%23hh)'/%3E%3Cg transform='translate(136, 68)'%3E%3Cpath d='M 0 -13 Q 0 0 13 0 Q 0 0 0 13 Q 0 0 -13 0 Q 0 0 0 -13 Z' fill='%23ffffff' opacity='0.95'/%3E%3Ccircle cx='0' cy='0' r='2.5' fill='%23ffffff'/%3E%3C/g%3E%3Cg transform='translate(78, 120)'%3E%3Cpath d='M 0 -10 Q 0 0 10 0 Q 0 0 0 10 Q 0 0 -10 0 Q 0 0 0 -10 Z' fill='%23ffffff' opacity='0.95'/%3E%3Ccircle cx='0' cy='0' r='2' fill='%23ffffff'/%3E%3C/g%3E%3C/svg%3E")`;
+}
+
+function getFlirtSvgDataUrl(customColor) {
+    const currentTheme = (typeof document !== 'undefined' && document.body) ? (document.body.getAttribute('data-theme') || 'emerald') : 'emerald';
+    let pFill = '#22c55e', pShadow = '#14532d', sFill = '#4ade80', sShadow = '#166534', txtColor = 'rgba(255,255,255,0.95)';
+    
+    if (customColor && customColor.startsWith('#')) {
+        pFill = customColor; pShadow = customColor;
+        sFill = customColor; sShadow = customColor;
+    } else if (currentTheme === 'pink') {
+        pFill = '#f43f5e'; pShadow = '#881337';
+        sFill = '#fb7185'; sShadow = '#9f1239';
+    } else if (currentTheme === 'dark') {
+        pFill = '#10b981'; pShadow = '#022c22';
+        sFill = '#34d399'; sShadow = '#064e3b';
+    } else if (currentTheme === 'light') {
+        pFill = '#10b981'; pShadow = '#065f46';
+        sFill = '#34d399'; sShadow = '#047857';
+    } else if (currentTheme === 'emerald') {
+        pFill = '#22c55e'; pShadow = '#14532d';
+        sFill = '#4ade80'; sShadow = '#166534';
+    } else {
+        const computedAccent = (typeof document !== 'undefined' && document.body) ? getComputedStyle(document.body).getPropertyValue('--accent').trim() : '';
+        if (computedAccent) {
+            pFill = computedAccent; pShadow = computedAccent;
+            sFill = computedAccent; sShadow = computedAccent;
+        }
+    }
+
+    const epFill = encodeURIComponent(pFill);
+    const epShadow = encodeURIComponent(pShadow);
+    const esFill = encodeURIComponent(sFill);
+    const esShadow = encodeURIComponent(sShadow);
+    const etxt = encodeURIComponent(txtColor);
+
+    const hD = "M 0 -18 C -22 -38, -44 -16, -44 8 C -44 32, 0 62, 0 62 C 0 62, 44 32, 44 8 C 44 -16, 22 -38, 0 -18 Z";
+
+    const svg = `%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25' viewBox='0 0 320 480' preserveAspectRatio='xMidYMid slice'%3E` +
+        `%3Cdefs%3E` +
+        `%3ClinearGradient id='hl' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E` +
+        `%3Cstop offset='0%25' stop-color='%23ffffff' stop-opacity='0.42'/%3E` +
+        `%3Cstop offset='100%25' stop-color='%23000000' stop-opacity='0.22'/%3E` +
+        `%3C/linearGradient%3E` +
+        `%3C/defs%3E` +
+        `%3Cg transform='translate(135, 205) rotate(-10) scale(1.35)'%3E` +
+        `%3Cpath d='${hD}' fill='${epShadow}' transform='translate(6, 8)'/%3E` +
+        `%3Cpath d='${hD}' fill='${epFill}'/%3E` +
+        `%3Cpath d='${hD}' fill='url(%23hl)'/%3E` +
+        `%3C/g%3E` +
+        `%3Cg transform='translate(205, 305) rotate(12) scale(0.95)'%3E` +
+        `%3Cpath d='${hD}' fill='${esShadow}' transform='translate(5, 6.5)'/%3E` +
+        `%3Cpath d='${hD}' fill='${esFill}'/%3E` +
+        `%3Cpath d='${hD}' fill='url(%23hl)'/%3E` +
+        `%3Ctext x='0' y='8' font-size='15' font-weight='900' font-family='sans-serif' fill='${etxt}' text-anchor='middle' letter-spacing='1'%3Exoxo%3C/text%3E` +
+        `%3C/g%3E` +
+        `%3Cg transform='translate(125, 400) rotate(-6) scale(0.9)'%3E` +
+        `%3Cpath d='${hD}' fill='${epShadow}' transform='translate(4.5, 6)'/%3E` +
+        `%3Cpath d='${hD}' fill='${epFill}'/%3E` +
+        `%3Cpath d='${hD}' fill='url(%23hl)'/%3E` +
+        `%3C/g%3E` +
+        `%3Cg transform='translate(225, 115) rotate(14) scale(1.0)'%3E` +
+        `%3Cpath d='${hD}' fill='${esShadow}' transform='translate(5, 6.5)'/%3E` +
+        `%3Cpath d='${hD}' fill='${esFill}'/%3E` +
+        `%3Cpath d='${hD}' fill='url(%23hl)'/%3E` +
+        `%3C/g%3E` +
+        `%3Cg transform='translate(85, 75) rotate(-14) scale(0.85)'%3E` +
+        `%3Cpath d='${hD}' fill='${epShadow}' transform='translate(4, 5)'/%3E` +
+        `%3Cpath d='${hD}' fill='${epFill}'/%3E` +
+        `%3Cpath d='${hD}' fill='url(%23hl)'/%3E` +
+        `%3C/g%3E` +
+        `%3Cg transform='translate(295, 215) rotate(-8) scale(0.85)'%3E` +
+        `%3Cpath d='${hD}' fill='${esShadow}' transform='translate(4, 5)'/%3E` +
+        `%3Cpath d='${hD}' fill='${esFill}'/%3E` +
+        `%3Cpath d='${hD}' fill='url(%23hl)'/%3E` +
+        `%3C/g%3E` +
+        `%3C/svg%3E`;
+
+    return `url("data:image/svg+xml,${svg}")`;
+}
+
+const WALLPAPER_PATTERNS = {
+    'default': {
+        name: 'Default Clean',
+        bgImage: 'radial-gradient(rgba(100, 116, 139, 0.22) 1.2px, transparent 1.2px)',
+        bgSize: '18px 18px',
+        bgRepeat: 'repeat'
+    },
+    'sweetheart': {
+        name: 'Sweetheart',
+        get bgImage() {
+            return getSweetheartSvgDataUrl();
+        },
+        bgSize: 'min(70vw, 280px) min(70vw, 280px)',
+        bgRepeat: 'no-repeat',
+        bgPosition: 'center center'
+    },
+    'flirt': {
+        name: 'Flirt',
+        get bgImage() {
+            return getFlirtSvgDataUrl();
+        },
+        bgSize: 'cover',
+        bgRepeat: 'no-repeat',
+        bgPosition: 'center center'
+    },
+    'thinking-of-you': {
+        name: 'Thinking of you',
+        bgImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Cpath d='M22 20 C17 12, 6 14, 6 24 C6 34, 22 46, 22 46 C22 46, 38 34, 38 24 C38 14, 27 12, 22 20 Z' fill='rgba(99,102,241,0.26)'/%3E%3Cpath d='M48 38 C44 32, 35 33, 35 40 C35 47, 48 56, 48 56 C48 56, 61 47, 61 40 C61 33, 52 32, 48 38 Z' fill='rgba(168,85,247,0.22)'/%3E%3Cg transform='translate(46, 14)'%3E%3Ccircle cx='0' cy='0' r='2' fill='rgba(140,140,170,0.35)'/%3E%3Ccircle cx='0' cy='-5' r='2.2' fill='none' stroke='rgba(140,140,170,0.35)' stroke-width='1'/%3E%3Ccircle cx='5' cy='0' r='2.2' fill='none' stroke='rgba(140,140,170,0.35)' stroke-width='1'/%3E%3Ccircle cx='0' cy='5' r='2.2' fill='none' stroke='rgba(140,140,170,0.35)' stroke-width='1'/%3E%3Ccircle cx='-5' cy='0' r='2.2' fill='none' stroke='rgba(140,140,170,0.35)' stroke-width='1'/%3E%3C/g%3E%3Cg transform='translate(12, 48)'%3E%3Ccircle cx='0' cy='0' r='1.8' fill='rgba(140,140,170,0.3)'/%3E%3Ccircle cx='0' cy='-4.5' r='2' fill='none' stroke='rgba(140,140,170,0.3)' stroke-width='1'/%3E%3Ccircle cx='4.5' cy='0' r='2' fill='none' stroke='rgba(140,140,170,0.3)' stroke-width='1'/%3E%3Ccircle cx='0' cy='4.5' r='2' fill='none' stroke='rgba(140,140,170,0.3)' stroke-width='1'/%3E%3Ccircle cx='-4.5' cy='0' r='2' fill='none' stroke='rgba(140,140,170,0.3)' stroke-width='1'/%3E%3C/g%3E%3Cpath d='M26 44 Q 34 40, 40 48 T 52 44' fill='none' stroke='rgba(140,140,170,0.25)' stroke-width='1.2' stroke-linecap='round'/%3E%3Cpath d='M10 26 Q 16 18, 26 12' fill='none' stroke='rgba(140,140,170,0.22)' stroke-width='1' stroke-dasharray='2,2'/%3E%3Ccircle cx='28' cy='12' r='1.2' fill='rgba(168,85,247,0.3)'/%3E%3C/svg%3E")`,
+        bgSize: '64px 64px',
+        bgRepeat: 'repeat'
+    }
+};
+
 function applyTheme(themeChoice) {
     if (!themeChoice || themeChoice === 'light') {
         document.body.removeAttribute('data-theme');
@@ -1114,34 +1253,63 @@ if (groupPicUpload) {
 
 function applyChatWallpaper(wallpaperVal) {
     if (!chatScreen) return;
-    if (!wallpaperVal) {
-        chatScreen.style.removeProperty('background-image');
-        chatScreen.style.removeProperty('background-color');
-        chatScreen.style.removeProperty('background-size');
-        chatScreen.style.removeProperty('background-position');
-        chatScreen.style.removeProperty('background-repeat');
-        chatScreen.style.removeProperty('background-attachment');
-        chatScreen.classList.remove('has-custom-wallpaper');
+    
+    chatScreen.style.removeProperty('background-image');
+    chatScreen.style.removeProperty('background-color');
+    chatScreen.style.removeProperty('background-size');
+    chatScreen.style.removeProperty('background-position');
+    chatScreen.style.removeProperty('background-repeat');
+    chatScreen.style.removeProperty('background-attachment');
+    chatScreen.classList.remove('has-custom-wallpaper');
+
+    if (!wallpaperVal || wallpaperVal === 'default' || wallpaperVal === 'pattern:default') {
         return;
     }
 
-    chatScreen.classList.add('has-custom-wallpaper');
-    if (wallpaperVal.startsWith('linear-gradient') || wallpaperVal.startsWith('radial-gradient')) {
-        chatScreen.style.setProperty('background-image', wallpaperVal, 'important');
-        chatScreen.style.removeProperty('background-color');
-        chatScreen.style.setProperty('background-size', 'cover', 'important');
-        chatScreen.style.setProperty('background-attachment', 'fixed', 'important');
-    } else if (wallpaperVal.startsWith('#') || wallpaperVal.startsWith('rgb')) {
-        chatScreen.style.setProperty('background-image', 'none', 'important');
-        chatScreen.style.setProperty('background-color', wallpaperVal, 'important');
-    } else {
-        chatScreen.style.setProperty('background-image', `url("${wallpaperVal}")`, 'important');
-        chatScreen.style.removeProperty('background-color');
-        chatScreen.style.setProperty('background-size', 'cover', 'important');
-        chatScreen.style.setProperty('background-position', 'center', 'important');
-        chatScreen.style.setProperty('background-repeat', 'no-repeat', 'important');
-        chatScreen.style.setProperty('background-attachment', 'fixed', 'important');
+    const patternKey = wallpaperVal.replace('pattern:', '');
+    if (WALLPAPER_PATTERNS[patternKey]) {
+        const p = WALLPAPER_PATTERNS[patternKey];
+        chatScreen.classList.add('has-custom-wallpaper');
+        chatScreen.style.setProperty('background-image', p.bgImage, 'important');
+        chatScreen.style.setProperty('background-size', p.bgSize, 'important');
+        chatScreen.style.setProperty('background-repeat', p.bgRepeat || 'repeat', 'important');
+        if (p.bgPosition) {
+            chatScreen.style.setProperty('background-position', p.bgPosition, 'important');
+        } else {
+            chatScreen.style.removeProperty('background-position');
+        }
+        return;
     }
+
+    if (wallpaperVal.startsWith('#') || wallpaperVal.startsWith('rgb')) {
+        chatScreen.classList.add('has-custom-wallpaper');
+        chatScreen.style.setProperty('background-color', wallpaperVal, 'important');
+        
+        // Overlay current pattern design over custom background color
+        const activeCard = document.querySelector('.wp-card.active');
+        const activeWp = activeCard ? activeCard.dataset.wp : 'default';
+        const pKey = activeWp ? activeWp.replace('pattern:', '') : 'default';
+        if (WALLPAPER_PATTERNS[pKey]) {
+            const p = WALLPAPER_PATTERNS[pKey];
+            chatScreen.style.setProperty('background-image', p.bgImage, 'important');
+            chatScreen.style.setProperty('background-size', p.bgSize, 'important');
+            chatScreen.style.setProperty('background-repeat', p.bgRepeat || 'repeat', 'important');
+            if (p.bgPosition) {
+                chatScreen.style.setProperty('background-position', p.bgPosition, 'important');
+            } else {
+                chatScreen.style.removeProperty('background-position');
+            }
+        }
+        return;
+    }
+
+    // Uploaded image wallpaper
+    chatScreen.classList.add('has-custom-wallpaper');
+    chatScreen.style.setProperty('background-image', `url("${wallpaperVal}")`, 'important');
+    chatScreen.style.setProperty('background-size', 'cover', 'important');
+    chatScreen.style.setProperty('background-position', 'center', 'important');
+    chatScreen.style.setProperty('background-repeat', 'no-repeat', 'important');
+    chatScreen.style.setProperty('background-attachment', 'fixed', 'important');
 }
 
 function setAndSaveWallpaper(wallpaperVal) {
@@ -1230,10 +1398,18 @@ if (ghostBtn) {
     ghostBtn.onclick = () => { hapticFeedback('medium'); isGhostMode = !isGhostMode; ghostBtn.classList.toggle('active', isGhostMode); };
 }
 
+const pollToggleMultiple = document.getElementById('poll-toggle-multiple');
+const pollToggleAnonymous = document.getElementById('poll-toggle-anonymous');
+const closePollModalBtn = document.getElementById('close-poll-modal-btn');
+
+if (closePollModalBtn) {
+    closePollModalBtn.onclick = () => { createPollModal.classList.add('hidden'); };
+}
+
 function updatePollOptionNumbers() {
     const rows = pollOptionsContainer.querySelectorAll('.poll-opt-row');
     const badge = document.getElementById('poll-count-badge');
-    if (badge) badge.textContent = `${rows.length} / 8`;
+    if (badge) badge.textContent = `${rows.length} / 10`;
     rows.forEach((row, i) => {
         const numSpan = row.querySelector('.poll-opt-num');
         if (numSpan) numSpan.textContent = i + 1;
@@ -1248,6 +1424,8 @@ function updatePollOptionNumbers() {
 
 function resetPollForm() {
     pollQuestion.value = '';
+    if (pollToggleMultiple) pollToggleMultiple.checked = false;
+    if (pollToggleAnonymous) pollToggleAnonymous.checked = false;
     pollOptionsContainer.innerHTML = `
         <div class="poll-opt-row">
             <span class="poll-opt-num">1</span>
@@ -1262,6 +1440,27 @@ function resetPollForm() {
     `;
     updatePollOptionNumbers();
 }
+
+// Preset Chips Click Handler
+document.querySelectorAll('.poll-preset-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+        hapticFeedback('light');
+        const q = chip.dataset.q;
+        const opts = (chip.dataset.opts || '').split(',');
+        if (q) pollQuestion.value = q;
+        if (opts.length >= 2) {
+            pollOptionsContainer.innerHTML = opts.map((optText, i) => `
+                <div class="poll-opt-row">
+                    <span class="poll-opt-num">${i + 1}</span>
+                    <input type="text" class="premium-input poll-opt-input" value="${escapeHTML(optText.trim())}" placeholder="Option ${i + 1}" style="margin-bottom:0;">
+                    <button type="button" class="poll-opt-remove-btn" title="Remove option">✕</button>
+                </div>
+            `).join('');
+            updatePollOptionNumbers();
+        }
+        showToast('⚡ Preset loaded!');
+    });
+});
 
 pollOptionsContainer.addEventListener('click', (e) => {
     if (e.target.classList.contains('poll-opt-remove-btn')) {
@@ -1278,8 +1477,8 @@ pollBtn.onclick = () => { hapticFeedback('light'); createPollModal.classList.rem
 
 addPollOptBtn.onclick = () => {
     const currentRows = pollOptionsContainer.querySelectorAll('.poll-opt-row');
-    if (currentRows.length >= 8) {
-        showToast('Maximum 8 options allowed per poll!');
+    if (currentRows.length >= 10) {
+        showToast('Maximum 10 options allowed per poll!');
         return;
     }
     hapticFeedback('light');
@@ -1300,7 +1499,15 @@ sendPollBtn.onclick = () => {
     const opts = Array.from(document.querySelectorAll('.poll-opt-input')).map(i => i.value.trim()).filter(v => v);
     if (q && opts.length >= 2) {
         hapticFeedback('heavy');
-        const pollData = { question: q, options: opts.map(o => ({ text: o, votes: [] })) };
+        const isMultiple = pollToggleMultiple ? pollToggleMultiple.checked : false;
+        const isAnonymous = pollToggleAnonymous ? pollToggleAnonymous.checked : false;
+        const pollData = { 
+            question: q, 
+            options: opts.map(o => ({ text: o, votes: [] })),
+            isMultiple,
+            isAnonymous,
+            isClosed: false
+        };
         socket.emit('chat message', {
             user: currentUser.name,
             avatar: currentUser.avatar,
@@ -1703,6 +1910,9 @@ socket.on('message edited', (data) => {
             }
         }
     }
+    if (data && data.newText && typeof data.newText === 'string' && /theshmil|galliya/i.test(data.newText)) {
+        triggerKissAnimation();
+    }
 });
 
 function formatAudioTime(seconds) {
@@ -1758,30 +1968,69 @@ function getMessageInnerHTML(data, isMe, isStacked) {
     
     let content = '';
     if (data.poll) {
-        let totalVotes = data.poll.options.reduce((sum, opt) => sum + (opt.votes ? opt.votes.length : 0), 0);
-        let userVotedOptIdx = -1;
+        const isMultiple = !!data.poll.isMultiple;
+        const isAnonymous = !!data.poll.isAnonymous;
+        const isClosed = !!data.poll.isClosed;
+
+        // Unique voters set
+        const uniqueVoters = new Set();
+        data.poll.options.forEach(opt => {
+            if (opt.votes) opt.votes.forEach(v => uniqueVoters.add(v));
+        });
+        const totalVotersCount = uniqueVoters.size;
+        const totalVotesCast = data.poll.options.reduce((sum, opt) => sum + (opt.votes ? opt.votes.length : 0), 0);
+        const maxVotes = Math.max(...data.poll.options.map(o => o.votes ? o.votes.length : 0));
+
+        // User's voted option indices
+        const userVotedIndices = [];
         data.poll.options.forEach((opt, idx) => {
             if (opt.votes && opt.votes.includes(currentUser.name)) {
-                userVotedOptIdx = idx;
+                userVotedIndices.push(idx);
             }
         });
-        let maxVotes = Math.max(...data.poll.options.map(o => o.votes ? o.votes.length : 0));
 
         let pollOptsHTML = data.poll.options.map((opt, idx) => {
-            let voteCount = opt.votes ? opt.votes.length : 0;
-            let percent = totalVotes > 0 ? Math.round((voteCount / totalVotes) * 100) : 0;
-            let isSelected = idx === userVotedOptIdx;
-            let isWinning = totalVotes > 0 && voteCount === maxVotes;
+            const voteCount = opt.votes ? opt.votes.length : 0;
+            const percent = totalVotesCast > 0 ? Math.round((voteCount / totalVotesCast) * 100) : 0;
+            const isSelected = userVotedIndices.includes(idx);
+            const isWinning = totalVotesCast > 0 && voteCount > 0 && voteCount === maxVotes;
+
+            let icon = '';
+            if (isMultiple) {
+                icon = isSelected 
+                    ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="6" fill="var(--accent)"/><path d="m7 12 3.5 3.5 7-7" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+                    : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="6"/></svg>`;
+            } else {
+                icon = isSelected 
+                    ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9.5" stroke="var(--accent)" stroke-width="2"/><circle cx="12" cy="12" r="5" fill="var(--accent)"/></svg>`
+                    : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2"><circle cx="12" cy="12" r="9.5"/></svg>`;
+            }
+
+            // Voter avatars preview for public polls
+            let voterAvatarsHTML = '';
+            if (!isAnonymous && opt.votes && opt.votes.length > 0) {
+                const previewVoters = opt.votes.slice(0, 3);
+                const extraCount = opt.votes.length - 3;
+                voterAvatarsHTML = `
+                    <div class="poll-opt-voters-avatars">
+                        ${previewVoters.map(vName => `<span class="poll-voter-dot" title="${escapeHTML(vName)}">${escapeHTML(vName.charAt(0).toUpperCase())}</span>`).join('')}
+                        ${extraCount > 0 ? `<span class="poll-voter-more">+${extraCount}</span>` : ''}
+                    </div>
+                `;
+            }
 
             return `
-                <button class="poll-option-btn ${isSelected ? 'selected-option' : ''} ${isWinning ? 'winning-option' : ''}" data-msgid="${data.id}" data-optidx="${idx}">
+                <button class="poll-option-btn ${isSelected ? 'selected-option' : ''} ${isWinning ? 'winning-option' : ''} ${isClosed ? 'disabled-option' : ''}" 
+                        data-msgid="${data.id}" data-optidx="${idx}" ${isClosed ? 'disabled' : ''}>
                     <div class="poll-bar" style="width: ${percent}%;"></div>
                     <div class="poll-text-row">
                         <div class="poll-opt-left">
-                            <span class="poll-radio-icon">${isSelected ? '✅' : '⚪'}</span>
+                            <span class="poll-radio-icon">${icon}</span>
                             <span class="poll-opt-text">${escapeHTML(opt.text)}</span>
+                            ${isWinning ? `<span class="poll-crown-badge" title="Leading Option"><svg width="13" height="13" viewBox="0 0 24 24" fill="#f59e0b" stroke="#d97706" stroke-width="1.5"><path d="M2 20h20v-2H2v2zm1-3h18l-3-9-4 4-3-7-3 7-4-4-3 9z"/></svg></span>` : ''}
                         </div>
                         <div class="poll-opt-right">
+                            ${voterAvatarsHTML}
                             <span class="poll-opt-count">${percent}% ${voteCount > 0 ? `(${voteCount})` : ''}</span>
                         </div>
                     </div>
@@ -1789,16 +2038,44 @@ function getMessageInnerHTML(data, isMe, isStacked) {
             `;
         }).join('');
 
+        const isCreator = data.user === currentUser.name;
+
         content = `
-            <div class="poll-card">
+            <div class="poll-card ${isClosed ? 'poll-card-closed' : ''}" data-msgid="${data.id}">
                 <div class="poll-header">
-                    <span class="poll-badge">POLL</span>
+                    <div class="poll-badge-row">
+                        <span class="poll-badge">POLL</span>
+                        <span class="poll-type-tag">
+                            ${isMultiple 
+                                ? `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="m9 12 2 2 4-4"/></svg> Multi-choice`
+                                : `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4" fill="currentColor"/></svg> Single-choice`}
+                        </span>
+                        ${isAnonymous ? `
+                            <span class="poll-anon-tag">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Anonymous
+                            </span>` : ''}
+                        ${isClosed ? `
+                            <span class="poll-closed-tag">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Closed
+                            </span>` : ''}
+                    </div>
                     <div class="poll-question">${escapeHTML(data.poll.question)}</div>
                 </div>
                 <div class="poll-options-list">${pollOptsHTML}</div>
                 <div class="poll-footer">
-                    <span class="poll-total-votes">👥 ${totalVotes} ${totalVotes === 1 ? 'vote' : 'votes'}</span>
-                    <span class="poll-vote-status">${userVotedOptIdx !== -1 ? '✓ Voted' : 'Tap option to vote'}</span>
+                    <span class="poll-total-votes">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        ${totalVotersCount} ${totalVotersCount === 1 ? 'voter' : 'voters'}
+                    </span>
+                    <div class="poll-footer-actions">
+                        <button class="btn-view-poll-votes" data-msgid="${data.id}" title="View Voter Breakdown" type="button">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Results
+                        </button>
+                        ${isCreator && !isClosed ? `
+                            <button class="btn-close-poll" data-msgid="${data.id}" title="End voting for this poll" type="button">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> End
+                            </button>` : ''}
+                    </div>
                 </div>
             </div>
         `;
@@ -1876,8 +2153,178 @@ function getMessageInnerHTML(data, isMe, isStacked) {
 // ==========================
 // ✅ GHOST MODE FIX
 // ==========================
+// ==========================
+// 📊 POLL MESSAGES & VOTERS BREAKDOWN MODAL
+// ==========================
+const pollMessagesMap = new Map();
+let currentViewPollId = null;
+
+const pollVotersModal = document.getElementById('poll-voters-modal');
+const closePvModalBtn = document.getElementById('close-pv-modal-btn');
+const pollVotersList = document.getElementById('poll-voters-list');
+
+if (closePvModalBtn && pollVotersModal) {
+    closePvModalBtn.onclick = () => {
+        pollVotersModal.classList.add('hidden');
+        currentViewPollId = null;
+    };
+    pollVotersModal.addEventListener('click', (e) => {
+        if (e.target === pollVotersModal) {
+            pollVotersModal.classList.add('hidden');
+            currentViewPollId = null;
+        }
+    });
+}
+
+function openPollVotersModal(msgData) {
+    if (!msgData || !msgData.poll) return;
+    currentViewPollId = msgData.id;
+    
+    const pvTitle = document.getElementById('pv-modal-title');
+    const pvSub = document.getElementById('pv-modal-sub');
+    
+    if (pvTitle) pvTitle.textContent = msgData.poll.question || 'Poll Results';
+    if (pvSub) {
+        pvSub.innerHTML = msgData.poll.isAnonymous 
+            ? `<span style="display:inline-flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Anonymous Poll (Voters hidden)</span>` 
+            : `<span style="display:inline-flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> ${msgData.poll.isMultiple ? 'Multiple Choice Breakdown' : 'Single Choice Breakdown'}</span>`;
+    }
+
+    renderPollVotersList(msgData.poll);
+    if (pollVotersModal) pollVotersModal.classList.remove('hidden');
+}
+
+function renderPollVotersList(poll) {
+    if (!pollVotersList) return;
+    if (poll.isAnonymous) {
+        pollVotersList.innerHTML = `
+            <div style="text-align: center; padding: 24px 16px; color: var(--text-secondary); background: var(--input-bg); border-radius: 16px; border: 1px dashed var(--border-color);">
+                <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(139, 92, 246, 0.12); color: #8b5cf6; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px auto;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="0.5" fill="currentColor"/></svg>
+                </div>
+                <strong style="font-size: 15px; color: var(--text-primary); display: block;">Anonymous Poll</strong>
+                <p style="font-size: 12.5px; margin-top: 4px; color: var(--text-secondary);">Individual names and avatars are kept private for this poll.</p>
+            </div>
+        `;
+        return;
+    }
+
+    pollVotersList.innerHTML = poll.options.map((opt, i) => {
+        const votes = opt.votes || [];
+        return `
+            <div style="background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 14px;">
+                    <span style="color: var(--text-primary);">${i + 1}. ${escapeHTML(opt.text)}</span>
+                    <span style="color: var(--accent); font-size: 13px; background: rgba(16, 185, 129, 0.12); padding: 2px 8px; border-radius: 10px;">${votes.length} ${votes.length === 1 ? 'vote' : 'votes'}</span>
+                </div>
+                ${votes.length > 0 ? `
+                    <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px;">
+                        ${votes.map(vName => `
+                            <div style="display: flex; align-items: center; gap: 6px; background: var(--bg-screen); border: 1px solid var(--border-color); padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; color: var(--text-primary);">
+                                <img src="https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(vName)}" style="width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--border-color);">
+                                <span>${escapeHTML(vName)}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : `<div style="font-size: 12px; color: var(--text-secondary); font-style: italic;">No votes yet for this option</div>`}
+            </div>
+        `;
+    }).join('');
+}
+
+if (socket) {
+    socket.on('poll updated', (data) => {
+        if (data && data.poll) {
+            pollMessagesMap.set(data.id, data);
+            const li = document.getElementById(`msg-${data.id}`);
+            if (li) {
+                const isMe = data.user === currentUser.name;
+                const isStacked = li.classList.contains('stacked');
+                li.innerHTML = getMessageInnerHTML(data, isMe, isStacked);
+                playUiSound('pop');
+            }
+            if (currentViewPollId === data.id) {
+                renderPollVotersList(data.poll);
+            }
+        }
+    });
+}
+
+// ==========================
+// 💋 INSTAGRAM-STYLE FLOATING KISS EMOJI ANIMATION
+// ==========================
+function triggerKissAnimation() {
+    try {
+        hapticFeedback('heavy');
+        playUiSound('pop');
+    } catch(e){}
+
+    const existing = document.getElementById('kiss-animation-container');
+    if (existing) existing.remove();
+
+    const container = document.createElement('div');
+    container.id = 'kiss-animation-container';
+    container.className = 'kiss-animation-container';
+
+    // Ambient pink backdrop glow
+    const backdrop = document.createElement('div');
+    backdrop.className = 'kiss-overlay-backdrop';
+    container.appendChild(backdrop);
+
+    // Cute emoji selection for a sweet aesthetic shower
+    const cuteEmojis = ['💋', '💋', '💋', '💖', '💕', '🌸', '✨', '💗', '🎀'];
+    
+    // Generate 14 lightweight floating emojis floating up from bottom to top
+    const kissCount = 14;
+    for (let i = 0; i < kissCount; i++) {
+        const el = document.createElement('div');
+        el.className = 'floating-kiss-emoji';
+        el.textContent = cuteEmojis[Math.floor(Math.random() * cuteEmojis.length)];
+        
+        // Cute sizing & smooth bottom-to-top floating parameters
+        const left = Math.random() * 88 + 6; // 6% to 94%
+        const startBottom = -(Math.random() * 12 + 6); // -6vh to -18vh (starting below bottom)
+        const fontSize = Math.floor(Math.random() * 18 + 24); // 24px to 42px
+        const duration = (Math.random() * 1.0 + 3.0).toFixed(2); // 3.0s to 4.0s (smooth constant speed)
+        const delay = (Math.random() * 0.8).toFixed(2); // 0s to 0.8s delay
+        const initRot = (Math.random() * 30 - 15).toFixed(1); // -15deg to +15deg
+        const endRot = (Math.random() * 40 - 20).toFixed(1); // -20deg to +20deg
+        const sway = (Math.random() * 40 - 20).toFixed(1); // -20px to +20px sway
+
+        el.style.left = `${left}%`;
+        el.style.bottom = `${startBottom}vh`;
+        el.style.fontSize = `${fontSize}px`;
+        el.style.animationDuration = `${duration}s`;
+        el.style.animationDelay = `${delay}s`;
+        el.style.setProperty('--sway', `${sway}px`);
+        el.style.setProperty('--init-rot', `${initRot}deg`);
+        el.style.setProperty('--end-rot', `${endRot}deg`);
+
+        container.appendChild(el);
+    }
+
+    document.body.appendChild(container);
+
+    setTimeout(() => {
+        if (container && container.parentNode) {
+            container.remove();
+        }
+    }, 5500);
+}
+
 function displayMessage(data, isHistory) {
     checkEmptyMessages();
+    if (data && data.poll) {
+        pollMessagesMap.set(data.id, data);
+    }
+
+    // 💋 Trigger Instagram-style kiss animation when "Theshmil" or "Galliya" is sent/received
+    if (!isHistory && data && data.text && typeof data.text === 'string') {
+        if (/theshmil|galliya/i.test(data.text)) {
+            triggerKissAnimation();
+        }
+    }
+
     const li = document.createElement('li'); li.id = `msg-${data.id}`; li.dataset.sender = data.user;
     if (data.type === 'system') { li.className = 'system-message'; li.textContent = data.text; messages.appendChild(li); messages.scrollTop = messages.scrollHeight; return; }
 
@@ -2009,7 +2456,34 @@ document.getElementById('messages').addEventListener('click', (e) => {
 
 document.getElementById('messages').addEventListener('click', (e) => { 
     const pollOpt = e.target.closest('.poll-option-btn');
-    if (pollOpt) { hapticFeedback('light'); socket.emit('vote poll', { msgId: pollOpt.dataset.msgid, optionIndex: parseInt(pollOpt.dataset.optidx) }); return; }
+    if (pollOpt) {
+        if (pollOpt.classList.contains('disabled-option') || pollOpt.disabled) {
+            showToast('This poll is closed 🔒');
+            return;
+        }
+        hapticFeedback('light'); 
+        socket.emit('vote poll', { msgId: pollOpt.dataset.msgid, optionIndex: parseInt(pollOpt.dataset.optidx) }); 
+        return; 
+    }
+
+    const closePollBtn = e.target.closest('.btn-close-poll');
+    if (closePollBtn) {
+        hapticFeedback('medium');
+        socket.emit('close poll', { msgId: closePollBtn.dataset.msgid });
+        showToast('Poll voting closed 🔒');
+        return;
+    }
+
+    const viewVotesBtn = e.target.closest('.btn-view-poll-votes');
+    if (viewVotesBtn) {
+        hapticFeedback('light');
+        const msgId = viewVotesBtn.dataset.msgid;
+        const msgData = pollMessagesMap.get(msgId);
+        if (msgData) {
+            openPollVotersModal(msgData);
+        }
+        return;
+    }
 
     if(e.target.classList.contains('chat-image')) { document.getElementById('lightbox-img').src = e.target.src; document.getElementById('lightbox').classList.remove('hidden'); } 
     if(e.target.classList.contains('avatar-small')) { const friendName = e.target.dataset.name; socket.emit('get user info', friendName); }
@@ -2063,31 +2537,51 @@ const THEME_ICONS_SVG = {
 };
 
 function applyTheme(themeName) {
-    document.body.setAttribute('data-theme', themeName);
-    localStorage.setItem('chitchat_theme', themeName);
-    currentThemeIndex = availableThemes.indexOf(themeName);
-    if (currentThemeIndex === -1) currentThemeIndex = 0;
+    if (!themeName || themeName === 'light') {
+        document.body.removeAttribute('data-theme');
+        localStorage.setItem('chitchat_theme', 'light');
+    } else {
+        document.body.setAttribute('data-theme', themeName);
+        localStorage.setItem('chitchat_theme', themeName);
+    }
+
+    if (typeof availableThemes !== 'undefined') {
+        currentThemeIndex = availableThemes.indexOf(themeName);
+        if (currentThemeIndex === -1) currentThemeIndex = 0;
+    }
 
     const themeIcon = document.getElementById('theme-btn-icon');
-    if (themeIcon) {
+    if (themeIcon && typeof THEME_ICONS_SVG !== 'undefined') {
         themeIcon.innerHTML = THEME_ICONS_SVG[themeName] || THEME_ICONS_SVG.emerald;
     }
 
     document.querySelectorAll('.login-theme-pills .theme-pill').forEach(pill => {
-        if (pill.dataset.themeChoice === themeName) {
-            pill.classList.add('active');
-        } else {
-            pill.classList.remove('active');
-        }
+        const isMatch = pill.dataset.themeChoice === themeName || (!pill.dataset.themeChoice && themeName === 'light');
+        pill.classList.toggle('active', isMatch);
     });
 
     document.querySelectorAll('.theme-selector-grid .theme-card-btn').forEach(btn => {
-        if (btn.dataset.themeVal === themeName) {
-            btn.classList.add('active');
-        } else {
-            btn.classList.remove('active');
-        }
+        btn.classList.toggle('active', btn.dataset.themeVal === themeName);
     });
+
+    // Update sweetheart & flirt preview cards in customization studio modal
+    const sweetheartPreview = document.querySelector('.wp-pattern-sweetheart');
+    if (sweetheartPreview) {
+        sweetheartPreview.style.backgroundImage = getSweetheartSvgDataUrl();
+    }
+    const flirtPreview = document.querySelector('.wp-pattern-flirt');
+    if (flirtPreview) {
+        flirtPreview.style.backgroundImage = getFlirtSvgDataUrl();
+    }
+
+    // Refresh active wallpaper if sweetheart or flirt is active
+    const savedWallpaper = (typeof activeRoomId !== 'undefined' && activeRoomId && localStorage.getItem('wallpaper_' + activeRoomId)) || localStorage.getItem('chitchat_global_wallpaper');
+    const activeCard = document.querySelector('.wp-card.active');
+    const activeWp = activeCard ? activeCard.dataset.wp : (savedWallpaper ? savedWallpaper.replace('pattern:', '') : '');
+    
+    if ((activeWp === 'sweetheart' || activeWp === 'flirt') && typeof applyChatWallpaper === 'function') {
+        applyChatWallpaper('pattern:' + activeWp);
+    }
 }
 
 applyTheme(availableThemes[currentThemeIndex]);
@@ -2305,41 +2799,28 @@ if (closeCustomizationModal) {
     };
 }
 
-// Wallpaper preset buttons
+// Wallpaper preset pattern buttons
 document.querySelectorAll('.wp-card').forEach(card => {
     card.onclick = () => {
         document.querySelectorAll('.wp-card').forEach(c => c.classList.remove('active'));
         card.classList.add('active');
         hapticFeedback('light');
         const wpType = card.dataset.wp;
-        if (wpType === 'default') {
-            setAndSaveWallpaper(null);
-            showToast('Default doodle wallpaper applied!');
-        } else if (wpType === 'cute-mint') {
-            const grad = 'linear-gradient(135deg, #a7f3d0 0%, #6ee7b7 100%)';
-            setAndSaveWallpaper(grad);
-            showToast('Cute Mint wallpaper applied!');
-        } else if (wpType === 'pastel-gradient') {
-            const grad = 'linear-gradient(135deg, #fef08a 0%, #fbcfe8 50%, #c084fc 100%)';
-            setAndSaveWallpaper(grad);
-            showToast('Pastel Sunset wallpaper applied!');
-        } else if (wpType === 'dark-galaxy') {
-            const grad = 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)';
-            setAndSaveWallpaper(grad);
-            showToast('Cosmic Night wallpaper applied!');
-        }
+        const val = (wpType === 'default') ? null : `pattern:${wpType}`;
+        setAndSaveWallpaper(val);
+        const name = WALLPAPER_PATTERNS[wpType] ? WALLPAPER_PATTERNS[wpType].name : 'Pattern';
+        showToast(`✨ ${name} design applied!`);
     };
 });
 
-// Solid color wallpaper apply
+// Solid color wallpaper tint apply
 const btnApplyColorWp = document.getElementById('btn-apply-color-wp');
 const custColorPicker = document.getElementById('cust-color-picker');
 if (btnApplyColorWp && custColorPicker) {
     btnApplyColorWp.onclick = () => {
         const color = custColorPicker.value;
         setAndSaveWallpaper(color);
-        document.querySelectorAll('.wp-card').forEach(c => c.classList.remove('active'));
-        showToast('Color wallpaper applied!');
+        showToast('🎨 Custom color tint applied!');
     };
 }
 
