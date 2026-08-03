@@ -494,6 +494,10 @@ io.on('connection', (socket) => {
         data.roomId = roomId; 
         data.type = data.type || 'chat'; 
         data.status = 'delivered';
+        data.senderSocketId = socket.id;
+        if (!data.userId) {
+            data.userId = 'anon_' + socket.id;
+        }
 
         socket.join(roomId);
         if (activeUsersById[socket.id]) {

@@ -73,7 +73,13 @@ const wallpaperUpload = document.getElementById('wallpaper-upload');
 const lightbox = document.getElementById('lightbox');
 const lightboxImg = document.getElementById('lightbox-img');
 
-let currentUser = { name: '', avatar: '', about: 'Hey there! I am using Chit Chat.', color: '#dcf8c6' }; 
+let savedUserId = localStorage.getItem('chitchat_user_id');
+if (!savedUserId) {
+    savedUserId = 'usr_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+    localStorage.setItem('chitchat_user_id', savedUserId);
+}
+
+let currentUser = { id: savedUserId, name: '', avatar: '', about: 'Hey there! I am using Chit Chat.', color: '#dcf8c6' }; 
 let activeRoomId = null;
 let currentRoomPassword = ''; 
 let replyingTo = null;
@@ -355,7 +361,8 @@ try { history.replaceState({screen: 'exit'}, '', '#exit'); } catch(e){}
 const savedUser = localStorage.getItem('chitchat_user');
 if (savedUser) {
     try {
-        currentUser = JSON.parse(savedUser);
+        const parsedUser = JSON.parse(savedUser);
+        currentUser = { ...currentUser, ...parsedUser, id: savedUserId };
         if (usernameInput) usernameInput.value = currentUser.name || '';
         syncUserAvatarUI();
         const setUsername = document.getElementById('settings-username');
@@ -1795,6 +1802,7 @@ sendPollBtn.onclick = () => {
             isClosed: false
         };
         socket.emit('chat message', {
+            userId: currentUser.id,
             user: currentUser.name,
             avatar: currentUser.avatar,
             color: currentUser.color,
@@ -1881,6 +1889,7 @@ function sendMessage() {
         editingMsgId = null;
     } else { 
         if (socket) socket.emit('chat message', { 
+            userId: currentUser.id,
             user: currentUser.name || 'Guest', 
             avatar: currentUser.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(currentUser.name || 'Guest')}`, 
             color: currentUser.color || '#dcf8c6', 
@@ -1923,16 +1932,16 @@ if (imageUpload) {
                 const fileData = e.target.result;
                 if (file.type.startsWith('video/')) {
                     if (file.size > 20 * 1024 * 1024) return showToast('Video is too large! Limit is 20MB.');
-                    if (socket) socket.emit('chat message', { user: currentUser.name, avatar: currentUser.avatar, color: currentUser.color, text: '', uploadedImage: fileData, isVideo: true, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), isGhost: isGhostMode, roomId: targetRoomId });
+                    if (socket) socket.emit('chat message', { userId: currentUser.id, user: currentUser.name, avatar: currentUser.avatar, color: currentUser.color, text: '', uploadedImage: fileData, isVideo: true, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), isGhost: isGhostMode, roomId: targetRoomId });
                 } else if (file.type === 'image/gif') {
-                    if (socket) socket.emit('chat message', { user: currentUser.name, avatar: currentUser.avatar, color: currentUser.color, text: '', uploadedImage: fileData, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), isGhost: isGhostMode, roomId: targetRoomId });
+                    if (socket) socket.emit('chat message', { userId: currentUser.id, user: currentUser.name, avatar: currentUser.avatar, color: currentUser.color, text: '', uploadedImage: fileData, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), isGhost: isGhostMode, roomId: targetRoomId });
                 } else {
                     const img = new Image(); img.src = fileData;
                     img.onload = () => {
                         const canvas = document.createElement('canvas'); let w = img.width, h = img.height;
                         if(w > 600) { h *= 600/w; w = 600; } canvas.width = w; canvas.height = h;
                         canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                        if (socket) socket.emit('chat message', { user: currentUser.name, avatar: currentUser.avatar, color: currentUser.color, text: '', uploadedImage: canvas.toDataURL('image/jpeg', 0.8), time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), isGhost: isGhostMode, roomId: targetRoomId });
+                        if (socket) socket.emit('chat message', { userId: currentUser.id, user: currentUser.name, avatar: currentUser.avatar, color: currentUser.color, text: '', uploadedImage: canvas.toDataURL('image/jpeg', 0.8), time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), isGhost: isGhostMode, roomId: targetRoomId });
                     };
                 }
                 imageUpload.value = '';
@@ -2607,6 +2616,29 @@ function triggerKissAnimation() {
     }, 5200);
 }
 
+function checkIsMe(data) {
+    if (!data) return false;
+    
+    // 1. Live socket sender match (exact socket connection that sent the message)
+    if (data.senderSocketId && socket && socket.id && data.senderSocketId === socket.id) {
+        return true;
+    }
+    
+    // 2. Permanent unique user ID match
+    if (data.userId && currentUser && currentUser.id && data.userId === currentUser.id) {
+        return true;
+    }
+    
+    // 3. Custom username match (case-insensitive, ignoring generic "guest")
+    const senderName = data.user ? String(data.user).trim() : '';
+    const myName = currentUser && currentUser.name ? String(currentUser.name).trim() : '';
+    if (senderName && myName && senderName.toLowerCase() === myName.toLowerCase() && senderName.toLowerCase() !== 'guest' && senderName.toLowerCase() !== 'guest user') {
+        return true;
+    }
+    
+    return false;
+}
+
 function displayMessage(data, isHistory) {
     checkEmptyMessages();
     if (data && data.poll) {
@@ -2623,7 +2655,7 @@ function displayMessage(data, isHistory) {
     const li = document.createElement('li'); li.id = `msg-${data.id}`; li.dataset.sender = data.user;
     if (data.type === 'system') { li.className = 'system-message'; li.textContent = data.text; messages.appendChild(li); messages.scrollTop = messages.scrollHeight; return; }
 
-    const isMe = data.user === currentUser.name;
+    const isMe = checkIsMe(data);
     const lastMsg = messages.lastElementChild;
     const isStacked = (lastMsg && !lastMsg.classList.contains('system-message') && lastMsg.dataset.sender === data.user);
 
@@ -2969,6 +3001,7 @@ async function startRecording(e) {
                 const reader = new FileReader();
                 reader.onload = (event) => { 
                     socket.emit('chat message', { 
+                        userId: currentUser.id,
                         user: currentUser.name, 
                         avatar: currentUser.avatar, 
                         color: currentUser.color, 
