@@ -1176,6 +1176,49 @@ input { user-select: auto; -webkit-user-select: auto; }
     flex-shrink: 0;
 }
 
+/* Instagram-Style Message Content Wrapper & Top Header Above Bubble */
+.msg-content-wrapper {
+    display: flex;
+    flex-direction: column;
+    max-width: 100%;
+    position: relative;
+}
+
+.msg-content-wrapper.other-wrapper {
+    align-items: flex-start;
+}
+
+.msg-content-wrapper.my-wrapper {
+    align-items: flex-end;
+}
+
+.msg-top-header {
+    font-size: 11.5px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 3.5px;
+    padding: 0 4px;
+    line-height: 1.25;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.msg-top-header .msg-header-name {
+    font-weight: 700;
+    color: var(--text-primary);
+    opacity: 0.9;
+}
+
+.msg-top-header .reply-action-label {
+    font-weight: 400;
+    color: var(--text-secondary);
+    opacity: 0.8;
+}
+
 .msg-bubble {
     padding: 10px 14px;
     border-radius: 20px;

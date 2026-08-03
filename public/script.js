@@ -2192,7 +2192,13 @@ socket.on('update reactions', (data) => {
     if(li) {
         let badge = li.querySelector('.reaction-badge');
         let reactString = Object.entries(data.reactions).map(([emoji, count]) => `${emoji} ${count}`).join(' ');
-        if (!badge) { badge = document.createElement('div'); badge.className = 'reaction-badge'; badge.id = `reaction-count-${data.id}`; li.appendChild(badge); }
+        let bubble = li.querySelector('.msg-bubble') || li;
+        if (!badge) { 
+            badge = document.createElement('div'); 
+            badge.className = 'reaction-badge'; 
+            badge.id = `reaction-count-${data.id}`; 
+            bubble.appendChild(badge); 
+        }
         badge.innerHTML = reactString;
     } 
 });
@@ -2413,6 +2419,20 @@ function getMessageInnerHTML(data, isMe, isStacked) {
         content += `<a href="${escapeHTML(data.linkPreview.url)}" target="_blank" class="link-preview-card">${data.linkPreview.img ? `<img src="${escapeHTML(data.linkPreview.img)}" class="link-preview-img" style="display:block;">` : ''}<div class="link-preview-content"><div class="link-preview-title">${escapeHTML(data.linkPreview.title)}</div>${data.linkPreview.desc ? `<div class="link-preview-desc">${escapeHTML(data.linkPreview.desc)}</div>` : ''}</div></a>`;
     }
     
+    let topHeaderHTML = '';
+    let senderDisplayName = isMe ? (currentUser.name || 'You') : (data.user || 'Guest');
+
+    if (data.replyTo && data.replyTo.user) {
+        let targetUser = data.replyTo.user;
+        let targetDisplayName = (targetUser === currentUser.name && !isMe) 
+            ? 'you' 
+            : ((targetUser === currentUser.name && isMe) ? 'yourself' : targetUser);
+        
+        topHeaderHTML = `<span class="msg-header-name">${escapeHTML(senderDisplayName)}</span> <span class="reply-action-label">replied to</span> <span class="msg-header-name">${escapeHTML(targetDisplayName)}</span>`;
+    } else if (!isMe && !isStacked) {
+        topHeaderHTML = `<span class="msg-header-name">${escapeHTML(data.user)}</span>`;
+    }
+
     let replyHTML = ''; 
     if (data.replyTo && data.replyTo.user) {
         const targetId = data.replyTo.msgId ? (data.replyTo.msgId.startsWith('msg-') ? data.replyTo.msgId : 'msg-' + data.replyTo.msgId) : '';
@@ -2430,10 +2450,13 @@ function getMessageInnerHTML(data, isMe, isStacked) {
     
     if (isMe) {
         return `
-            <div class="msg-bubble">
-                ${replyHTML}${content}
-                <div class="meta-row"><span>${data.isGhost ? '⏱️ ' : ''}${data.time}</span><span class="ticks ${tickClass}">✔✔</span></div>
-                ${reactionsHTML}
+            <div class="msg-content-wrapper my-wrapper">
+                ${topHeaderHTML ? `<div class="msg-top-header">${topHeaderHTML}</div>` : ''}
+                <div class="msg-bubble">
+                    ${replyHTML}${content}
+                    <div class="meta-row"><span>${data.isGhost ? '⏱️ ' : ''}${data.time}</span><span class="ticks ${tickClass}">✔✔</span></div>
+                    ${reactionsHTML}
+                </div>
             </div>`;
     } else {
         const avatarHTML = !isStacked 
@@ -2441,11 +2464,13 @@ function getMessageInnerHTML(data, isMe, isStacked) {
             : `<div class="avatar-placeholder"></div>`;
         return `
             ${avatarHTML}
-            <div class="msg-bubble">
-                ${!isStacked ? `<span class="sender-name">${escapeHTML(data.user)}</span>` : ''}
-                ${replyHTML}${content}
-                <div class="meta-row"><span>${data.isGhost ? '⏱️ ' : ''}${data.time}</span></div>
-                ${reactionsHTML}
+            <div class="msg-content-wrapper other-wrapper">
+                ${topHeaderHTML ? `<div class="msg-top-header">${topHeaderHTML}</div>` : ''}
+                <div class="msg-bubble">
+                    ${replyHTML}${content}
+                    <div class="meta-row"><span>${data.isGhost ? '⏱️ ' : ''}${data.time}</span></div>
+                    ${reactionsHTML}
+                </div>
             </div>`;
     }
 }
