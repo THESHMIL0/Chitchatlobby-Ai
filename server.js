@@ -3,9 +3,57 @@ const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
 const { GoogleGenAI } = require('@google/genai');
+const webPush = require('web-push');
 
 const app = express();
 const server = http.createServer(app);
+
+// Setup Web Push VAPID keys
+let vapidKeys = {
+    publicKey: process.env.VAPID_PUBLIC_KEY,
+    privateKey: process.env.VAPID_PRIVATE_KEY
+};
+
+if (!vapidKeys.publicKey || !vapidKeys.privateKey) {
+    vapidKeys = webPush.generateVAPIDKeys();
+}
+
+try {
+    webPush.setVapidDetails(
+        'mailto:support@chitchat.app',
+        vapidKeys.publicKey,
+        vapidKeys.privateKey
+    );
+} catch (e) {
+    console.error('VAPID setup error:', e);
+}
+
+// Push subscriptions in-memory store
+const pushSubscriptions = new Map(); // endpoint -> { userName, subscription }
+
+function sendPushToAllExceptSender(senderName, roomName, roomId, summaryText, avatar) {
+    const payload = JSON.stringify({
+        title: `${senderName}${roomName ? ' in ' + roomName : ''}`,
+        body: summaryText || 'Sent a message',
+        icon: avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=ChitChat',
+        badge: '/icon.svg',
+        url: `/?room=${roomId}`,
+        roomId: roomId
+    });
+
+    pushSubscriptions.forEach(({ userName, subscription }, endpoint) => {
+        if (userName !== senderName) {
+            webPush.sendNotification(subscription, payload).catch(err => {
+                if (err.statusCode === 404 || err.statusCode === 410) {
+                    console.log('Push subscription expired or invalid, deleting endpoint:', endpoint);
+                    pushSubscriptions.delete(endpoint);
+                } else {
+                    console.error('Error delivering Web Push notification:', err.message);
+                }
+            });
+        }
+    });
+}
 
 const io = new Server(server, { 
     maxHttpBufferSize: 1e8,
@@ -14,6 +62,30 @@ const io = new Server(server, {
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json({ limit: '10mb' }));
+
+app.get('/api/push/vapid-public-key', (req, res) => {
+    res.json({ publicKey: vapidKeys.publicKey });
+});
+
+app.post('/api/push/subscribe', (req, res) => {
+    const { userName, subscription } = req.body;
+    if (subscription && subscription.endpoint) {
+        pushSubscriptions.set(subscription.endpoint, { userName: userName || 'Guest', subscription });
+        res.status(201).json({ success: true });
+    } else {
+        res.status(400).json({ error: 'Invalid subscription' });
+    }
+});
+
+app.post('/api/push/unsubscribe', (req, res) => {
+    const { endpoint } = req.body;
+    if (endpoint) {
+        pushSubscriptions.delete(endpoint);
+        res.json({ success: true });
+    } else {
+        res.status(400).json({ error: 'Invalid endpoint' });
+    }
+});
 
 
 // In-Memory Database Store (100% pure JS, highly reliable)
@@ -372,6 +444,7 @@ io.on('connection', (socket) => {
                 id: data.id
             };
             socket.broadcast.emit('global room alert', alertData);
+            sendPushToAllExceptSender(data.user, roomName, roomId, summaryText, data.avatar);
         });
 
         // Check if message triggers Bot response (and not sent by Bot itself)

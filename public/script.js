@@ -1063,11 +1063,70 @@ function updateNotifStatusText() {
     if (!('Notification' in window)) {
         statusText.textContent = 'In-app notifications enabled';
     } else if (Notification.permission === 'granted') {
-        statusText.textContent = 'Browser & In-App Notifications Active 🔔';
+        statusText.textContent = 'Browser & Web Push Notifications Active 🔔';
     } else if (Notification.permission === 'denied') {
         statusText.textContent = 'In-app banners active (Browser permissions blocked)';
     } else {
-        statusText.textContent = 'Tap to enable Browser Notifications';
+        statusText.textContent = 'Tap to enable Web Push Notifications';
+    }
+}
+
+// Convert VAPID base64 string to Uint8Array
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding)
+        .replace(/\-/g, '+')
+        .replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+}
+
+async function registerWebPushSubscription() {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        console.log('Web Push API not supported on this browser');
+        return;
+    }
+
+    try {
+        const registration = await navigator.serviceWorker.ready;
+        
+        if (Notification.permission !== 'granted') {
+            const perm = await Notification.requestPermission();
+            updateNotifStatusText();
+            if (perm !== 'granted') return;
+        }
+
+        const res = await fetch('/api/push/vapid-public-key');
+        const { publicKey } = await res.json();
+        if (!publicKey) return;
+
+        const convertedVapidKey = urlBase64ToUint8Array(publicKey);
+
+        let subscription = await registration.pushManager.getSubscription();
+        if (!subscription) {
+            subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: convertedVapidKey
+            });
+        }
+
+        await fetch('/api/push/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userName: currentUser ? currentUser.name : 'Guest',
+                subscription: subscription
+            })
+        });
+
+        console.log('Web Push subscription registered successfully!');
+        updateNotifStatusText();
+    } catch (err) {
+        console.error('Failed to register Web Push subscription:', err);
     }
 }
 
@@ -1078,8 +1137,8 @@ if (togglePushNotifications) {
 
     togglePushNotifications.addEventListener('change', (e) => {
         localStorage.setItem('chitchat_push_notif', e.target.checked);
-        if (e.target.checked && 'Notification' in window && Notification.permission === 'default') {
-            Notification.requestPermission().then(updateNotifStatusText);
+        if (e.target.checked) {
+            registerWebPushSubscription();
         } else {
             updateNotifStatusText();
         }
@@ -1088,7 +1147,12 @@ if (togglePushNotifications) {
 
 function requestNotificationPermission() {
     if ('Notification' in window && Notification.permission === 'default') {
-        Notification.requestPermission().then(updateNotifStatusText);
+        Notification.requestPermission().then(() => {
+            updateNotifStatusText();
+            registerWebPushSubscription();
+        });
+    } else if (Notification.permission === 'granted') {
+        registerWebPushSubscription();
     }
 }
 
@@ -3018,5 +3082,25 @@ if (messagesListEl) {
     messagesListEl.addEventListener('dblclick', (e) => {
         triggerReactionParticles(e.clientX, e.clientY, '❤️');
         showToast('❤️ Reacted!');
+    });
+}
+
+// Service Worker Registration & Web Push Init
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then((reg) => {
+            console.log('Service Worker registered with scope:', reg.scope);
+            if (Notification.permission === 'granted') {
+                registerWebPushSubscription();
+            }
+        }).catch(err => {
+            console.error('Service Worker registration failed:', err);
+        });
+    });
+
+    navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'OPEN_ROOM' && event.data.roomId) {
+            openRoomById(event.data.roomId);
+        }
     });
 }
