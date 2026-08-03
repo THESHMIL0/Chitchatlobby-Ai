@@ -389,7 +389,7 @@ Follow these rules strictly:
     }
 
     if (lower.includes('time') || lower.includes('clock') || lower.includes('date')) {
-        return `The current time is ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`;
+        return `The current time is ${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}.`;
     }
 
     if (lower.includes('joke') || lower.includes('funny')) {
@@ -558,7 +558,7 @@ io.on('connection', (socket) => {
                         roomId, 
                         type: 'chat', 
                         status: 'delivered', 
-                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), 
+                        time: new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }), 
                         color: '#00a884', 
                         avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=ChitChatBot&backgroundColor=00a884',
                         replyTo: data.replyTo ? { user: data.user, text: textContent || 'Message', msgId: data.id } : null

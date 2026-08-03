@@ -1808,7 +1808,7 @@ sendPollBtn.onclick = () => {
             color: currentUser.color,
             text: '',
             poll: pollData,
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            time: formatTo12HourTime(new Date()),
             isGhost: isGhostMode,
             roomId: activeRoomId || 'lobby'
         });
@@ -1894,7 +1894,7 @@ function sendMessage() {
             avatar: currentUser.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(currentUser.name || 'Guest')}`, 
             color: currentUser.color || '#dcf8c6', 
             text, 
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), 
+            time: formatTo12HourTime(new Date()), 
             replyTo: replyingTo, 
             isGhost: isGhostMode,
             roomId: targetRoomId,
@@ -1932,16 +1932,16 @@ if (imageUpload) {
                 const fileData = e.target.result;
                 if (file.type.startsWith('video/')) {
                     if (file.size > 20 * 1024 * 1024) return showToast('Video is too large! Limit is 20MB.');
-                    if (socket) socket.emit('chat message', { userId: currentUser.id, user: currentUser.name, avatar: currentUser.avatar, color: currentUser.color, text: '', uploadedImage: fileData, isVideo: true, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), isGhost: isGhostMode, roomId: targetRoomId });
+                    if (socket) socket.emit('chat message', { userId: currentUser.id, user: currentUser.name, avatar: currentUser.avatar, color: currentUser.color, text: '', uploadedImage: fileData, isVideo: true, time: formatTo12HourTime(new Date()), isGhost: isGhostMode, roomId: targetRoomId });
                 } else if (file.type === 'image/gif') {
-                    if (socket) socket.emit('chat message', { userId: currentUser.id, user: currentUser.name, avatar: currentUser.avatar, color: currentUser.color, text: '', uploadedImage: fileData, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), isGhost: isGhostMode, roomId: targetRoomId });
+                    if (socket) socket.emit('chat message', { userId: currentUser.id, user: currentUser.name, avatar: currentUser.avatar, color: currentUser.color, text: '', uploadedImage: fileData, time: formatTo12HourTime(new Date()), isGhost: isGhostMode, roomId: targetRoomId });
                 } else {
                     const img = new Image(); img.src = fileData;
                     img.onload = () => {
                         const canvas = document.createElement('canvas'); let w = img.width, h = img.height;
                         if(w > 600) { h *= 600/w; w = 600; } canvas.width = w; canvas.height = h;
                         canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                        if (socket) socket.emit('chat message', { userId: currentUser.id, user: currentUser.name, avatar: currentUser.avatar, color: currentUser.color, text: '', uploadedImage: canvas.toDataURL('image/jpeg', 0.8), time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), isGhost: isGhostMode, roomId: targetRoomId });
+                        if (socket) socket.emit('chat message', { userId: currentUser.id, user: currentUser.name, avatar: currentUser.avatar, color: currentUser.color, text: '', uploadedImage: canvas.toDataURL('image/jpeg', 0.8), time: formatTo12HourTime(new Date()), isGhost: isGhostMode, roomId: targetRoomId });
                     };
                 }
                 imageUpload.value = '';
@@ -2447,6 +2447,7 @@ function getMessageInnerHTML(data, isMe, isStacked) {
     }
     let reactionsHTML = ''; if (data.reactions && Object.keys(data.reactions).length > 0) reactionsHTML = `<div class="reaction-badge" id="reaction-count-${data.id}">${Object.entries(data.reactions).map(([e, c]) => `${e} ${c}`).join(' ')}</div>`;
     let tickClass = data.status === 'read' ? 'read' : 'delivered';
+    const displayTimeStr = formatTo12HourTime(data.time);
     
     if (isMe) {
         return `
@@ -2454,7 +2455,7 @@ function getMessageInnerHTML(data, isMe, isStacked) {
                 ${topHeaderHTML ? `<div class="msg-top-header">${topHeaderHTML}</div>` : ''}
                 <div class="msg-bubble">
                     ${replyHTML}${content}
-                    <div class="meta-row"><span>${data.isGhost ? '⏱️ ' : ''}${data.time}</span><span class="ticks ${tickClass}">✔✔</span></div>
+                    <div class="meta-row"><span>${data.isGhost ? '⏱️ ' : ''}${displayTimeStr}</span><span class="ticks ${tickClass}">✔✔</span></div>
                     ${reactionsHTML}
                 </div>
             </div>`;
@@ -2468,7 +2469,7 @@ function getMessageInnerHTML(data, isMe, isStacked) {
                 ${topHeaderHTML ? `<div class="msg-top-header">${topHeaderHTML}</div>` : ''}
                 <div class="msg-bubble">
                     ${replyHTML}${content}
-                    <div class="meta-row"><span>${data.isGhost ? '⏱️ ' : ''}${data.time}</span></div>
+                    <div class="meta-row"><span>${data.isGhost ? '⏱️ ' : ''}${displayTimeStr}</span></div>
                     ${reactionsHTML}
                 </div>
             </div>`;
@@ -2639,6 +2640,37 @@ function triggerKissAnimation() {
             container.remove();
         }
     }, 5200);
+}
+
+function formatTo12HourTime(timeInput) {
+    if (!timeInput) {
+        return new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+    }
+    if (timeInput instanceof Date) {
+        return timeInput.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+    }
+
+    const str = String(timeInput).trim();
+    if (/am|pm/i.test(str)) {
+        return str;
+    }
+
+    const match = str.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+    if (match) {
+        let hours = parseInt(match[1], 10);
+        const minutes = match[2];
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        if (hours === 0) hours = 12;
+        return `${hours}:${minutes} ${ampm}`;
+    }
+
+    const parsedDate = new Date(str);
+    if (!isNaN(parsedDate.getTime())) {
+        return parsedDate.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+    }
+
+    return str;
 }
 
 function checkIsMe(data) {
@@ -3033,7 +3065,7 @@ async function startRecording(e) {
                         text: '', 
                         uploadedImage: event.target.result, 
                         isAudio: true, 
-                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), 
+                        time: formatTo12HourTime(new Date()), 
                         isGhost: isGhostMode,
                         roomId: activeRoomId || 'lobby'
                     }); 
