@@ -2,20 +2,36 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
+const fs = require('fs');
 const { GoogleGenAI } = require('@google/genai');
 const webPush = require('web-push');
 
 const app = express();
 const server = http.createServer(app);
 
-// Setup Web Push VAPID keys
+// Setup Web Push VAPID keys with file persistence
+const VAPID_KEY_FILE = path.join(__dirname, 'vapid-keys.json');
 let vapidKeys = {
     publicKey: process.env.VAPID_PUBLIC_KEY,
     privateKey: process.env.VAPID_PRIVATE_KEY
 };
 
 if (!vapidKeys.publicKey || !vapidKeys.privateKey) {
-    vapidKeys = webPush.generateVAPIDKeys();
+    if (fs.existsSync(VAPID_KEY_FILE)) {
+        try {
+            vapidKeys = JSON.parse(fs.readFileSync(VAPID_KEY_FILE, 'utf8'));
+        } catch (e) {
+            console.error('Error reading vapid-keys.json:', e);
+        }
+    }
+    if (!vapidKeys.publicKey || !vapidKeys.privateKey) {
+        vapidKeys = webPush.generateVAPIDKeys();
+        try {
+            fs.writeFileSync(VAPID_KEY_FILE, JSON.stringify(vapidKeys, null, 2));
+        } catch (e) {
+            console.error('Error writing vapid-keys.json:', e);
+        }
+    }
 }
 
 try {
@@ -28,10 +44,38 @@ try {
     console.error('VAPID setup error:', e);
 }
 
-// Push subscriptions in-memory store
+// Push subscriptions with disk persistence
+const SUB_FILE = path.join(__dirname, 'push-subscriptions.json');
 const pushSubscriptions = new Map(); // endpoint -> { userName, subscription }
 
-function sendPushToAllExceptSender(senderName, roomName, roomId, summaryText, avatar) {
+function loadPushSubscriptions() {
+    if (fs.existsSync(SUB_FILE)) {
+        try {
+            const data = JSON.parse(fs.readFileSync(SUB_FILE, 'utf8'));
+            data.forEach(item => {
+                if (item && item.subscription && item.subscription.endpoint) {
+                    pushSubscriptions.set(item.subscription.endpoint, item);
+                }
+            });
+            console.log(`Loaded ${pushSubscriptions.size} push subscriptions.`);
+        } catch (e) {
+            console.error('Error loading push subscriptions:', e);
+        }
+    }
+}
+
+function savePushSubscriptions() {
+    try {
+        const data = Array.from(pushSubscriptions.values());
+        fs.writeFileSync(SUB_FILE, JSON.stringify(data, null, 2));
+    } catch (e) {
+        console.error('Error saving push subscriptions:', e);
+    }
+}
+
+loadPushSubscriptions();
+
+function sendPushToAllExceptSender(senderEndpoint, senderName, roomName, roomId, summaryText, avatar) {
     const payload = JSON.stringify({
         title: `${senderName}${roomName ? ' in ' + roomName : ''}`,
         body: summaryText || 'Sent a message',
@@ -41,12 +85,16 @@ function sendPushToAllExceptSender(senderName, roomName, roomId, summaryText, av
         roomId: roomId
     });
 
+    let dirty = false;
     pushSubscriptions.forEach(({ userName, subscription }, endpoint) => {
-        if (userName !== senderName) {
+        // Send to every active subscription EXCEPT the exact endpoint that sent the message
+        if (!senderEndpoint || endpoint !== senderEndpoint) {
             webPush.sendNotification(subscription, payload).catch(err => {
                 if (err.statusCode === 404 || err.statusCode === 410) {
-                    console.log('Push subscription expired or invalid, deleting endpoint:', endpoint);
+                    console.log('Push subscription expired or invalid, removing endpoint:', endpoint);
                     pushSubscriptions.delete(endpoint);
+                    dirty = true;
+                    savePushSubscriptions();
                 } else {
                     console.error('Error delivering Web Push notification:', err.message);
                 }
@@ -71,7 +119,8 @@ app.post('/api/push/subscribe', (req, res) => {
     const { userName, subscription } = req.body;
     if (subscription && subscription.endpoint) {
         pushSubscriptions.set(subscription.endpoint, { userName: userName || 'Guest', subscription });
-        res.status(201).json({ success: true });
+        savePushSubscriptions();
+        res.status(201).json({ success: true, totalSubscriptions: pushSubscriptions.size });
     } else {
         res.status(400).json({ error: 'Invalid subscription' });
     }
@@ -81,10 +130,33 @@ app.post('/api/push/unsubscribe', (req, res) => {
     const { endpoint } = req.body;
     if (endpoint) {
         pushSubscriptions.delete(endpoint);
+        savePushSubscriptions();
         res.json({ success: true });
     } else {
         res.status(400).json({ error: 'Invalid endpoint' });
     }
+});
+
+app.post('/api/push/send-test', (req, res) => {
+    const { endpoint, userName } = req.body;
+    const subObj = pushSubscriptions.get(endpoint);
+    if (!subObj) {
+        return res.status(404).json({ error: 'Subscription not found on server. Please re-subscribe.' });
+    }
+    const payload = JSON.stringify({
+        title: 'ChitChat Test Push 🔔',
+        body: `Hello ${userName || 'Friend'}! Web Push notifications are connected and working! 🎉`,
+        icon: 'https://api.dicebear.com/7.x/bottts/svg?seed=ChitChat',
+        badge: '/icon.svg',
+        url: '/',
+        roomId: 'lobby'
+    });
+    webPush.sendNotification(subObj.subscription, payload)
+        .then(() => res.json({ success: true }))
+        .catch(err => {
+            console.error('Test push error:', err);
+            res.status(500).json({ error: err.message });
+        });
 });
 
 
@@ -444,7 +516,7 @@ io.on('connection', (socket) => {
                 id: data.id
             };
             socket.broadcast.emit('global room alert', alertData);
-            sendPushToAllExceptSender(data.user, roomName, roomId, summaryText, data.avatar);
+            sendPushToAllExceptSender(data.senderEndpoint, data.user, roomName, roomId, summaryText, data.avatar);
         });
 
         // Check if message triggers Bot response (and not sent by Bot itself)

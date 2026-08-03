@@ -1057,6 +1057,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden && ac
 // ==========================
 const togglePushNotifications = document.getElementById('toggle-push-notifications');
 const btnRequestPushPermission = document.getElementById('btn-request-push-permission');
+let currentPushEndpoint = localStorage.getItem('chitchat_push_endpoint') || null;
 
 function updateNotifStatusText() {
     const statusText = document.getElementById('notif-permission-status-text');
@@ -1068,7 +1069,7 @@ function updateNotifStatusText() {
     } else if (Notification.permission === 'granted') {
         statusText.textContent = 'Browser & Web Push Notifications Active 🔔';
         if (btnRequestPushPermission) {
-            btnRequestPushPermission.textContent = 'Test Push Notification 🔔';
+            btnRequestPushPermission.textContent = 'Test Server Push 🔔';
             btnRequestPushPermission.style.display = 'inline-block';
         }
     } else if (Notification.permission === 'denied') {
@@ -1143,6 +1144,11 @@ async function registerWebPushSubscription() {
             });
         }
 
+        if (subscription && subscription.endpoint) {
+            currentPushEndpoint = subscription.endpoint;
+            localStorage.setItem('chitchat_push_endpoint', subscription.endpoint);
+        }
+
         await fetch('/api/push/subscribe', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1176,10 +1182,32 @@ if (togglePushNotifications) {
 }
 
 if (btnRequestPushPermission) {
-    btnRequestPushPermission.addEventListener('click', () => {
+    btnRequestPushPermission.addEventListener('click', async () => {
         if ('Notification' in window && Notification.permission === 'granted') {
-            triggerSystemNotification('ChitChat Test', 'Lobby', 'Test Web Push Notification working! 🎉', currentUser ? currentUser.avatar : null, 'lobby');
-            showToast('🔔 Sent test push notification!');
+            if (currentPushEndpoint) {
+                try {
+                    const res = await fetch('/api/push/send-test', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            endpoint: currentPushEndpoint,
+                            userName: currentUser ? currentUser.name : 'Guest'
+                        })
+                    });
+                    const resData = await res.json();
+                    if (resData.success) {
+                        showToast('🔔 Web Push sent to server! Watch for notification.');
+                    } else {
+                        showToast('⚠️ Test push: ' + (resData.error || 'Re-subscribing...'));
+                        registerWebPushSubscription();
+                    }
+                } catch (e) {
+                    showToast('⚠️ Error testing push notification');
+                }
+            } else {
+                triggerSystemNotification('ChitChat Test', 'Lobby', 'Test Web Push Notification working! 🎉', currentUser ? currentUser.avatar : null, 'lobby');
+                registerWebPushSubscription();
+            }
         } else {
             registerWebPushSubscription();
         }
@@ -1851,7 +1879,8 @@ function sendMessage() {
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), 
             replyTo: replyingTo, 
             isGhost: isGhostMode,
-            roomId: targetRoomId
+            roomId: targetRoomId,
+            senderEndpoint: currentPushEndpoint
         }); 
         playUiSound('send');
     }
