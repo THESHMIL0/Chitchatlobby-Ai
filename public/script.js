@@ -1184,6 +1184,9 @@ if (togglePushNotifications) {
 if (btnRequestPushPermission) {
     btnRequestPushPermission.addEventListener('click', async () => {
         if ('Notification' in window && Notification.permission === 'granted') {
+            if (!currentPushEndpoint) {
+                await registerWebPushSubscription();
+            }
             if (currentPushEndpoint) {
                 try {
                     const res = await fetch('/api/push/send-test', {
@@ -1191,12 +1194,13 @@ if (btnRequestPushPermission) {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             endpoint: currentPushEndpoint,
-                            userName: currentUser ? currentUser.name : 'Guest'
+                            userName: currentUser ? currentUser.name : 'Guest',
+                            delayMs: 4000
                         })
                     });
                     const resData = await res.json();
                     if (resData.success) {
-                        showToast('🔔 Web Push sent to server! Watch for notification.');
+                        showToast('🔔 Test push scheduled! Minimize/lock screen within 4 seconds!');
                     } else {
                         showToast('⚠️ Test push: ' + (resData.error || 'Re-subscribing...'));
                         registerWebPushSubscription();
@@ -1206,7 +1210,6 @@ if (btnRequestPushPermission) {
                 }
             } else {
                 triggerSystemNotification('ChitChat Test', 'Lobby', 'Test Web Push Notification working! 🎉', currentUser ? currentUser.avatar : null, 'lobby');
-                registerWebPushSubscription();
             }
         } else {
             registerWebPushSubscription();

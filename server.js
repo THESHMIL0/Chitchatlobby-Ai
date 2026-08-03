@@ -138,25 +138,36 @@ app.post('/api/push/unsubscribe', (req, res) => {
 });
 
 app.post('/api/push/send-test', (req, res) => {
-    const { endpoint, userName } = req.body;
+    const { endpoint, userName, delayMs } = req.body;
     const subObj = pushSubscriptions.get(endpoint);
     if (!subObj) {
         return res.status(404).json({ error: 'Subscription not found on server. Please re-subscribe.' });
     }
     const payload = JSON.stringify({
-        title: 'ChitChat Test Push 🔔',
-        body: `Hello ${userName || 'Friend'}! Web Push notifications are connected and working! 🎉`,
+        title: 'ChitChat Push Test 🔔',
+        body: `Hello ${userName || 'Friend'}! Web Push is working in background! 🎉`,
         icon: 'https://api.dicebear.com/7.x/bottts/svg?seed=ChitChat',
         badge: '/icon.svg',
         url: '/',
         roomId: 'lobby'
     });
-    webPush.sendNotification(subObj.subscription, payload)
-        .then(() => res.json({ success: true }))
-        .catch(err => {
-            console.error('Test push error:', err);
-            res.status(500).json({ error: err.message });
-        });
+
+    const delay = parseInt(delayMs, 10) || 0;
+    if (delay > 0) {
+        res.json({ success: true, delayed: true, delayMs: delay });
+        setTimeout(() => {
+            webPush.sendNotification(subObj.subscription, payload).catch(err => {
+                console.error('Delayed test push error:', err.message);
+            });
+        }, delay);
+    } else {
+        webPush.sendNotification(subObj.subscription, payload)
+            .then(() => res.json({ success: true }))
+            .catch(err => {
+                console.error('Test push error:', err);
+                res.status(500).json({ error: err.message });
+            });
+    }
 });
 
 
@@ -551,6 +562,9 @@ io.on('connection', (socket) => {
                     io.to(roomId).emit('user typing', { name: '🤖 Bot', isTyping: false });
                     db.run("INSERT INTO history VALUES (?, ?, ?, ?)", [botMsg.id, roomId, Date.now(), JSON.stringify(botMsg)]);
                     io.to(roomId).emit('chat message', botMsg);
+                    
+                    const botSummaryText = reply ? (reply.length > 80 ? reply.substring(0, 80) + '...' : reply) : 'Bot sent a message';
+                    sendPushToAllExceptSender(null, '🤖 Bot', roomName, roomId, botSummaryText, botMsg.avatar);
                 } catch (botErr) {
                     console.error("Bot generation error:", botErr);
                     io.to(roomId).emit('user typing', { name: '🤖 Bot', isTyping: false });

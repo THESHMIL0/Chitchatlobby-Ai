@@ -40,8 +40,9 @@ self.addEventListener('push', (event) => {
             url: data.url || '/',
             roomId: data.roomId
         },
-        tag: 'chitchat-msg-' + (data.roomId || 'gen'),
+        tag: 'chitchat-msg-' + Date.now(),
         renotify: true,
+        requireInteraction: false,
         vibrate: [100, 50, 100],
         actions: [
             { action: 'open', title: 'Open Chat' }
