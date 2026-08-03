@@ -2559,30 +2559,34 @@ function triggerKissAnimation() {
     // Cute emoji selection for a sweet aesthetic shower
     const cuteEmojis = ['💋', '💋', '💋', '💖', '💕', '🌸', '✨', '💗', '🎀'];
     
-    // Generate 14 lightweight floating emojis floating up from bottom to top
-    const kissCount = 14;
+    // Generate 16 floating emojis driven 100% by CSS keyframe GPU acceleration
+    const kissCount = 16;
     for (let i = 0; i < kissCount; i++) {
         const el = document.createElement('div');
         el.className = 'floating-kiss-emoji';
         el.textContent = cuteEmojis[Math.floor(Math.random() * cuteEmojis.length)];
         
-        // Cute sizing & smooth bottom-to-top floating parameters
-        const left = Math.random() * 88 + 6; // 6% to 94%
-        const startBottom = -(Math.random() * 12 + 6); // -6vh to -18vh (starting below bottom)
-        const fontSize = Math.floor(Math.random() * 18 + 24); // 24px to 42px
-        const duration = (Math.random() * 1.0 + 3.0).toFixed(2); // 3.0s to 4.0s (smooth constant speed)
-        const delay = (Math.random() * 0.8).toFixed(2); // 0s to 0.8s delay
+        // Random horizontal spawn position (5% to 92%)
+        const left = (Math.random() * 87 + 5).toFixed(2);
+        const fontSize = Math.floor(Math.random() * 16 + 26); // 26px to 42px
+        
+        // Constant linear floating speed (3.0s to 3.8s) and delay
+        const duration = (Math.random() * 0.8 + 3.0).toFixed(2);
+        const delay = (Math.random() * 0.8).toFixed(2);
+        
+        // Rotation & sway variables for CSS transform
         const initRot = (Math.random() * 30 - 15).toFixed(1); // -15deg to +15deg
+        const midRot = (Math.random() * 20 - 10).toFixed(1);
         const endRot = (Math.random() * 40 - 20).toFixed(1); // -20deg to +20deg
-        const sway = (Math.random() * 40 - 20).toFixed(1); // -20px to +20px sway
+        const sway = (Math.random() * 60 - 30).toFixed(1); // -30px to +30px sway
 
         el.style.left = `${left}%`;
-        el.style.bottom = `${startBottom}vh`;
         el.style.fontSize = `${fontSize}px`;
         el.style.animationDuration = `${duration}s`;
         el.style.animationDelay = `${delay}s`;
         el.style.setProperty('--sway', `${sway}px`);
         el.style.setProperty('--init-rot', `${initRot}deg`);
+        el.style.setProperty('--mid-rot', `${midRot}deg`);
         el.style.setProperty('--end-rot', `${endRot}deg`);
 
         container.appendChild(el);
@@ -2594,7 +2598,7 @@ function triggerKissAnimation() {
         if (container && container.parentNode) {
             container.remove();
         }
-    }, 5500);
+    }, 5200);
 }
 
 function displayMessage(data, isHistory) {

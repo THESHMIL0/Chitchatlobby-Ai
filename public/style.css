@@ -4027,9 +4027,10 @@ li.system-message {
     100% { opacity: 0; transform: scale(1.2); }
 }
 
-/* Floating Kiss Emojis Shower (💋, 💖, 💕, 🌸, ✨) */
+/* Floating Kiss Emojis Shower - Hardware Accelerated GPU Keyframes */
 .floating-kiss-emoji {
     position: absolute;
+    bottom: 0;
     pointer-events: none;
     user-select: none;
     will-change: transform, opacity;
@@ -4044,17 +4045,19 @@ li.system-message {
 @keyframes floatKissUp {
     0% {
         opacity: 0;
-        transform: translate3d(0, 0, 0) scale(0.6) rotate(var(--init-rot, -15deg));
+        transform: translate3d(0, 8vh, 0) scale(0.5) rotate(var(--init-rot, -15deg));
     }
-    15% {
-        opacity: 0.95;
+    12% {
+        opacity: 1;
+        transform: translate3d(calc(var(--sway) * 0.12), -10vh, 0) scale(0.9) rotate(var(--mid-rot, 0deg));
     }
-    75% {
-        opacity: 0.9;
+    65% {
+        opacity: 1;
+        transform: translate3d(calc(var(--sway) * 0.65), -70vh, 0) scale(1) rotate(var(--mid-rot, 0deg));
     }
     100% {
         opacity: 0;
-        transform: translate3d(var(--sway), -125vh, 0) scale(1) rotate(var(--end-rot, 15deg));
+        transform: translate3d(var(--sway), -115vh, 0) scale(1.1) rotate(var(--end-rot, 15deg));
     }
 }
 
