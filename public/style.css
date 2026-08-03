@@ -4058,6 +4058,119 @@ li.system-message {
     }
 }
 
+/* ====================================
+   🔔 IN-APP NOTIFICATION BANNER
+==================================== */
+.in-app-notif-banner {
+    position: fixed;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%) translateY(0);
+    width: calc(100% - 24px);
+    max-width: 420px;
+    background: var(--bg-card, #ffffff);
+    color: var(--text-primary, #0f172a);
+    border: 1px solid var(--border-color, rgba(0,0,0,0.12));
+    border-radius: 16px;
+    padding: 10px 14px;
+    box-shadow: 0 12px 30px -5px rgba(0, 0, 0, 0.22), 0 4px 12px -2px rgba(0, 0, 0, 0.1);
+    z-index: 100000;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: transform 0.32s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.25s ease;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.in-app-notif-banner.hidden {
+    transform: translateX(-50%) translateY(-140%);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.notif-banner-avatar-wrap {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+}
+
+.notif-banner-avatar-wrap img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--input-bg);
+}
+
+.notif-banner-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.notif-banner-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.notif-banner-sender {
+    color: var(--accent, #00a884);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.notif-banner-dot {
+    color: var(--text-secondary);
+    font-size: 10px;
+}
+
+.notif-banner-room {
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.notif-banner-text {
+    font-size: 13px;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 500;
+}
+
+.notif-banner-close {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 15px;
+    padding: 6px;
+    cursor: pointer;
+    border-radius: 50%;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.notif-banner-close:hover {
+    background: rgba(0,0,0,0.06);
+    color: var(--text-primary);
+}
+
 
 
 

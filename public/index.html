@@ -676,6 +676,19 @@
                     </label>
                 </div>
                 <div class="settings-item-row">
+                    <div class="settings-item-icon-badge badge-purple">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                    </div>
+                    <div class="settings-item-text">
+                        <span>Push & Room Notifications</span>
+                        <p id="notif-permission-status-text">Alerts when friends text in other rooms</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-push-notifications" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="settings-item-row">
                     <div class="settings-item-icon-badge badge-rose">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="3" ry="3"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
                     </div>
@@ -842,6 +855,22 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- In-App Interactive Notification Banner -->
+    <div id="in-app-notification-banner" class="in-app-notif-banner hidden">
+        <div class="notif-banner-avatar-wrap">
+            <img id="notif-banner-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=ChitChat" alt="Avatar">
+        </div>
+        <div class="notif-banner-content">
+            <div class="notif-banner-title">
+                <span id="notif-banner-sender">Sender</span>
+                <span class="notif-banner-dot">•</span>
+                <span id="notif-banner-room">Room</span>
+            </div>
+            <div id="notif-banner-text" class="notif-banner-text">Message text</div>
+        </div>
+        <button id="notif-banner-close" class="notif-banner-close" title="Dismiss" type="button">✕</button>
     </div>
 
     <!-- Lightbox for Image Viewer -->

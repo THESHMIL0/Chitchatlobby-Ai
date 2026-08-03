@@ -352,7 +352,27 @@ io.on('connection', (socket) => {
         }
         
         io.to(roomId).emit('chat message', data);
-        socket.broadcast.emit('global room alert', roomId);
+        
+        db.get(`SELECT name FROM rooms WHERE id = ?`, [roomId], (err, roomRow) => {
+            const roomName = roomRow ? roomRow.name : (rooms.get(roomId)?.name || roomId);
+            let summaryText = data.text || '';
+            if (!summaryText) {
+                if (data.isAudio) summaryText = '🎤 Voice Note';
+                else if (data.isVideo) summaryText = '🎥 Video';
+                else if (data.uploadedImage) summaryText = '📷 Photo';
+                else if (data.poll) summaryText = '📊 Poll: ' + (data.poll.question || '');
+                else summaryText = 'Sent an attachment';
+            }
+            const alertData = {
+                roomId,
+                roomName,
+                sender: data.user,
+                avatar: data.avatar,
+                text: summaryText,
+                id: data.id
+            };
+            socket.broadcast.emit('global room alert', alertData);
+        });
 
         // Check if message triggers Bot response (and not sent by Bot itself)
         const textContent = data.text || '';

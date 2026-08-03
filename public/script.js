@@ -948,10 +948,18 @@ if (socket) {
         globalRoomList = (rooms && rooms.length > 0) ? rooms : defaultRooms; 
         renderRoomList(); 
     });
-    socket.on('global room alert', (roomId) => { 
+    socket.on('global room alert', (alertData) => { 
+        const roomId = (typeof alertData === 'object' && alertData.roomId) ? alertData.roomId : alertData;
         if (activeRoomId !== roomId) { 
             unreadCounts[roomId] = (unreadCounts[roomId] || 0) + 1; 
             renderRoomList(); 
+
+            if (typeof alertData === 'object' && alertData.sender && alertData.sender !== currentUser.name) {
+                playUiSound('receive');
+                hapticFeedback('medium');
+                showInAppNotificationBanner(alertData);
+                triggerSystemNotification(alertData.sender, alertData.roomName, alertData.text, alertData.avatar, alertData.roomId);
+            }
         } 
     });
 }
@@ -1043,6 +1051,122 @@ socket.on('chat history', (data) => {
 });
 
 document.addEventListener('visibilitychange', () => { if (!document.hidden && activeRoomId) { socket.emit('mark read'); } });
+
+// ==========================
+// 🔔 NOTIFICATIONS SYSTEM
+// ==========================
+const togglePushNotifications = document.getElementById('toggle-push-notifications');
+
+function updateNotifStatusText() {
+    const statusText = document.getElementById('notif-permission-status-text');
+    if (!statusText) return;
+    if (!('Notification' in window)) {
+        statusText.textContent = 'In-app notifications enabled';
+    } else if (Notification.permission === 'granted') {
+        statusText.textContent = 'Browser & In-App Notifications Active 🔔';
+    } else if (Notification.permission === 'denied') {
+        statusText.textContent = 'In-app banners active (Browser permissions blocked)';
+    } else {
+        statusText.textContent = 'Tap to enable Browser Notifications';
+    }
+}
+
+if (togglePushNotifications) {
+    const savedPush = localStorage.getItem('chitchat_push_notif');
+    togglePushNotifications.checked = savedPush !== 'false';
+    updateNotifStatusText();
+
+    togglePushNotifications.addEventListener('change', (e) => {
+        localStorage.setItem('chitchat_push_notif', e.target.checked);
+        if (e.target.checked && 'Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission().then(updateNotifStatusText);
+        } else {
+            updateNotifStatusText();
+        }
+    });
+}
+
+function requestNotificationPermission() {
+    if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission().then(updateNotifStatusText);
+    }
+}
+
+function openRoomById(roomId) {
+    if (!roomId) return;
+    const room = globalRoomList.find(r => r.id === roomId);
+    if (room) {
+        joinRoomPrompt(room);
+    } else {
+        joinRoom(roomId, '', false);
+    }
+}
+
+function triggerSystemNotification(sender, roomName, text, avatar, roomId) {
+    const isPushEnabled = togglePushNotifications ? togglePushNotifications.checked : true;
+    if (!isPushEnabled) return;
+
+    if ('Notification' in window && Notification.permission === 'granted') {
+        try {
+            const title = `${sender}${roomName ? ' in ' + roomName : ''}`;
+            const notif = new Notification(title, {
+                body: text || 'Sent a message',
+                icon: avatar || '/icon.svg',
+                tag: 'chitchat-msg-' + roomId,
+                renotify: true
+            });
+            notif.onclick = function() {
+                window.focus();
+                if (roomId) openRoomById(roomId);
+                notif.close();
+            };
+        } catch (e) {
+            console.error('System notification error:', e);
+        }
+    } else if (window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.LocalNotifications) {
+        Capacitor.Plugins.LocalNotifications.schedule({
+            notifications: [{
+                title: `${sender} in ${roomName || 'Chat'}`,
+                body: text || "Sent a message",
+                id: Math.floor(Math.random() * 100000),
+                schedule: { at: new Date(Date.now() + 100) }
+            }]
+        });
+    }
+}
+
+let notifBannerTimer = null;
+function showInAppNotificationBanner(alertData) {
+    const banner = document.getElementById('in-app-notification-banner');
+    if (!banner) return;
+
+    const avatarImg = document.getElementById('notif-banner-avatar');
+    const senderEl = document.getElementById('notif-banner-sender');
+    const roomEl = document.getElementById('notif-banner-room');
+    const textEl = document.getElementById('notif-banner-text');
+
+    if (avatarImg) avatarImg.src = alertData.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=Guest';
+    if (senderEl) senderEl.textContent = alertData.sender || 'Friend';
+    if (roomEl) roomEl.textContent = alertData.roomName || alertData.roomId || 'Room';
+    if (textEl) textEl.textContent = alertData.text || 'Sent a message';
+
+    banner.onclick = (e) => {
+        if (e.target.closest('#notif-banner-close')) {
+            e.stopPropagation();
+            banner.classList.add('hidden');
+            return;
+        }
+        banner.classList.add('hidden');
+        if (alertData.roomId) openRoomById(alertData.roomId);
+    };
+
+    banner.classList.remove('hidden');
+
+    if (notifBannerTimer) clearTimeout(notifBannerTimer);
+    notifBannerTimer = setTimeout(() => {
+        banner.classList.add('hidden');
+    }, 4500);
+}
 
 // ==========================
 // 🔔 WEB AUDIO SYNTH & SOUNDS
@@ -1869,14 +1993,18 @@ socket.on('chat message', (data) => {
     if (data.roomId && data.roomId !== activeRoomId) return;
     displayMessage(data, false);
     
-    if (data.user !== currentUser.name && document.hidden) {
-        if (window.Capacitor && Capacitor.Plugins.LocalNotifications) {
-            Capacitor.Plugins.LocalNotifications.schedule({
-                notifications: [{ title: `${data.user} in ${currentRoomName.textContent}`, body: data.text || "Sent an attachment", id: Math.floor(Math.random() * 100000), schedule: { at: new Date(Date.now() + 100) } }]
-            });
+    if (data.user !== currentUser.name) {
+        playUiSound('receive');
+        
+        if (document.hidden) {
+            const roomObj = globalRoomList.find(r => r.id === activeRoomId);
+            const rName = roomObj ? roomObj.name : (currentRoomName ? currentRoomName.textContent : 'Room');
+            let summaryText = data.text || (data.isAudio ? '🎤 Voice Note' : (data.uploadedImage ? '📷 Photo' : 'Attachment'));
+            triggerSystemNotification(data.user, rName, summaryText, data.avatar, activeRoomId);
         }
+        
+        if (!document.hidden && activeRoomId) socket.emit('mark read');
     }
-    if (!document.hidden && activeRoomId && data.user !== currentUser.name) socket.emit('mark read');
 });
 
 socket.on('poll updated', (updatedMsg) => {
