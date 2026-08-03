@@ -1056,18 +1056,47 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden && ac
 // 🔔 NOTIFICATIONS SYSTEM
 // ==========================
 const togglePushNotifications = document.getElementById('toggle-push-notifications');
+const btnRequestPushPermission = document.getElementById('btn-request-push-permission');
 
 function updateNotifStatusText() {
     const statusText = document.getElementById('notif-permission-status-text');
     if (!statusText) return;
+
     if (!('Notification' in window)) {
-        statusText.textContent = 'In-app notifications enabled';
+        statusText.textContent = 'In-app notifications enabled (Browser Push unsupported)';
+        if (btnRequestPushPermission) btnRequestPushPermission.style.display = 'none';
     } else if (Notification.permission === 'granted') {
         statusText.textContent = 'Browser & Web Push Notifications Active 🔔';
+        if (btnRequestPushPermission) {
+            btnRequestPushPermission.textContent = 'Test Push Notification 🔔';
+            btnRequestPushPermission.style.display = 'inline-block';
+        }
     } else if (Notification.permission === 'denied') {
-        statusText.textContent = 'In-app banners active (Browser permissions blocked)';
+        statusText.textContent = 'Notifications blocked in browser settings';
+        if (btnRequestPushPermission) {
+            btnRequestPushPermission.textContent = 'Blocked in Browser Settings ⚠️';
+            btnRequestPushPermission.style.display = 'inline-block';
+        }
     } else {
-        statusText.textContent = 'Tap to enable Web Push Notifications';
+        statusText.textContent = 'Tap below to request Web Push permissions';
+        if (btnRequestPushPermission) {
+            btnRequestPushPermission.textContent = 'Request Notification Access 🔔';
+            btnRequestPushPermission.style.display = 'inline-block';
+        }
+    }
+
+    checkShowPushPromptCard();
+}
+
+function checkShowPushPromptCard() {
+    const promptCard = document.getElementById('push-permission-prompt-card');
+    if (!promptCard) return;
+
+    const isDismissed = localStorage.getItem('chitchat_push_prompt_dismissed') === 'true';
+    if ('Notification' in window && Notification.permission === 'default' && !isDismissed) {
+        promptCard.classList.remove('hidden');
+    } else {
+        promptCard.classList.add('hidden');
     }
 }
 
@@ -1124,6 +1153,7 @@ async function registerWebPushSubscription() {
         });
 
         console.log('Web Push subscription registered successfully!');
+        showToast('🔔 Web Push Notifications Enabled!');
         updateNotifStatusText();
     } catch (err) {
         console.error('Failed to register Web Push subscription:', err);
@@ -1142,6 +1172,37 @@ if (togglePushNotifications) {
         } else {
             updateNotifStatusText();
         }
+    });
+}
+
+if (btnRequestPushPermission) {
+    btnRequestPushPermission.addEventListener('click', () => {
+        if ('Notification' in window && Notification.permission === 'granted') {
+            triggerSystemNotification('ChitChat Test', 'Lobby', 'Test Web Push Notification working! 🎉', currentUser ? currentUser.avatar : null, 'lobby');
+            showToast('🔔 Sent test push notification!');
+        } else {
+            registerWebPushSubscription();
+        }
+    });
+}
+
+// Visual Push Prompt Card Actions
+const btnEnablePushPrompt = document.getElementById('btn-enable-push-prompt');
+const btnDismissPushPrompt = document.getElementById('btn-dismiss-push-prompt');
+
+if (btnEnablePushPrompt) {
+    btnEnablePushPrompt.addEventListener('click', () => {
+        registerWebPushSubscription();
+        const promptCard = document.getElementById('push-permission-prompt-card');
+        if (promptCard) promptCard.classList.add('hidden');
+    });
+}
+
+if (btnDismissPushPrompt) {
+    btnDismissPushPrompt.addEventListener('click', () => {
+        localStorage.setItem('chitchat_push_prompt_dismissed', 'true');
+        const promptCard = document.getElementById('push-permission-prompt-card');
+        if (promptCard) promptCard.classList.add('hidden');
     });
 }
 

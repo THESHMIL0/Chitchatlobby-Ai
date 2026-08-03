@@ -4171,6 +4171,105 @@ li.system-message {
     color: var(--text-primary);
 }
 
+/* Push Notification Visual Prompt Card */
+.push-prompt-card {
+    margin: 10px 14px 4px 14px;
+    padding: 12px 14px;
+    background: linear-gradient(135deg, rgba(0, 168, 132, 0.12) 0%, rgba(18, 140, 126, 0.06) 100%);
+    border: 1px solid rgba(0, 168, 132, 0.3);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: fadeIn 0.3s ease;
+}
+
+.push-prompt-card.hidden {
+    display: none !important;
+}
+
+.push-prompt-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.push-prompt-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.push-prompt-title {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+}
+
+.push-prompt-desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.35;
+    margin: 0;
+}
+
+.push-prompt-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.push-btn-primary {
+    background: var(--accent, #00a884);
+    color: #ffffff;
+    border: none;
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.push-btn-primary:hover {
+    opacity: 0.9;
+    transform: scale(1.03);
+}
+
+.push-btn-dismiss {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 14px;
+    padding: 6px;
+    cursor: pointer;
+    border-radius: 50%;
+    line-height: 1;
+}
+
+.push-btn-dismiss:hover {
+    color: var(--text-primary);
+    background: rgba(0,0,0,0.08);
+}
+
+.notif-action-btn {
+    background: var(--accent-light, rgba(0, 168, 132, 0.1));
+    color: var(--accent, #00a884);
+    border: 1px solid rgba(0, 168, 132, 0.3);
+    border-radius: 8px;
+    padding: 5px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.notif-action-btn:hover {
+    background: var(--accent, #00a884);
+    color: #ffffff;
+}
+
 
 
 
