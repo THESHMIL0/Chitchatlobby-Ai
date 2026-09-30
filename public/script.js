@@ -8,7 +8,24 @@ function hapticFeedback(type = 'light') {
     else if (type === 'heavy') navigator.vibrate([40, 60, 40]); 
 }
 
-function escapeHTML(str) { const div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
+function escapeHTML(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function sanitizeUrl(url) {
+    if (!url || typeof url !== 'string') return '';
+    const trimmed = url.trim();
+    if (trimmed.startsWith('https://') || trimmed.startsWith('http://') || trimmed.startsWith('data:image/') || trimmed.startsWith('blob:') || trimmed.startsWith('/')) {
+        return trimmed;
+    }
+    return '';
+}
 
 function showToast(msg, duration = 3000) {
     let toast = document.getElementById('custom-app-toast');
@@ -1027,7 +1044,9 @@ socket.on('connect', () => {
     if (currentUser.name && activeRoomId) joinRoom(activeRoomId, currentRoomPassword, true); 
 });
 
-socket.on('join error', (msg) => alert(msg));
+socket.on('join error', (msg) => showToast('⚠️ ' + msg, 3500));
+socket.on('action error', (msg) => showToast('🔒 ' + msg, 3500));
+socket.on('rate limit', (msg) => showToast('⏳ ' + msg, 3500));
 socket.on('chat history', (data) => {
     if (activeRoomId !== data.room.id) {
         history.pushState({screen: 'chat', roomId: data.room.id}, '', '#chat');
@@ -1959,11 +1978,36 @@ messages.addEventListener('touchstart', (e) => {
         hapticFeedback('medium'); selectedMsgId = li.id.replace('msg-', '');
         if (li.classList.contains('my-message') && li.querySelector('.message-text')) document.getElementById('opt-edit').classList.remove('hidden');
         else document.getElementById('opt-edit').classList.add('hidden');
+
+        if (li.classList.contains('my-message')) document.getElementById('opt-delete').classList.remove('hidden');
+        else document.getElementById('opt-delete').classList.add('hidden');
+
         msgOptionsModal.classList.remove('hidden');
     }, 500); 
 }, { passive: true });
 messages.addEventListener('touchend', () => clearTimeout(pressTimer));
 messages.addEventListener('touchmove', () => clearTimeout(pressTimer));
+
+// Desktop right-click message context menu
+messages.addEventListener('contextmenu', (e) => {
+    if (e.target.closest('.poll-card') || e.target.closest('.custom-audio-player') || e.target.classList.contains('avatar-small')) return;
+    const li = e.target.closest('li.my-message, li.other-message');
+    if (!li) return;
+    e.preventDefault();
+    hapticFeedback('medium');
+    selectedMsgId = li.id.replace('msg-', '');
+    if (li.classList.contains('my-message') && li.querySelector('.message-text')) {
+        document.getElementById('opt-edit').classList.remove('hidden');
+    } else {
+        document.getElementById('opt-edit').classList.add('hidden');
+    }
+    if (li.classList.contains('my-message')) {
+        document.getElementById('opt-delete').classList.remove('hidden');
+    } else {
+        document.getElementById('opt-delete').classList.add('hidden');
+    }
+    msgOptionsModal.classList.remove('hidden');
+});
 
 function triggerReplyForMessage(li) {
     if (!li) return;
@@ -2068,7 +2112,7 @@ if (btnViewStarred) btnViewStarred.onclick = () => {
             listEl.innerHTML = `<p style="text-align: center; color: var(--text-secondary); font-size: 13.5px; padding: 20px 0;">No starred messages yet. Long-press any message to star it! ⭐</p>`;
         } else {
             listEl.innerHTML = starred.map(m => `
-                <div class="starred-item-card" onclick="const sm = document.getElementById('starred-messages-modal'); if(sm) sm.classList.add('hidden'); scrollToQuoteMessage('msg-${m.id}')" style="background: var(--input-bg); padding: 10px 14px; border-radius: 12px; cursor: pointer; display: flex; flex-direction: column; gap: 4px;">
+                <div class="starred-item-card" data-target-id="msg-${escapeHTML(m.id)}" style="background: var(--input-bg); padding: 10px 14px; border-radius: 12px; cursor: pointer; display: flex; flex-direction: column; gap: 4px;">
                     <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: var(--accent);">
                         <span>${escapeHTML(m.user)}</span>
                         <span style="color: var(--text-secondary); font-size: 11px;">${escapeHTML(m.time)}</span>
@@ -2154,6 +2198,22 @@ window.scrollToQuoteMessage = function(targetId) {
         }, 1400);
     }
 };
+
+document.addEventListener('click', (e) => {
+    const quoteEl = e.target.closest('.replied-to[data-target-id]');
+    if (quoteEl) {
+        const tid = quoteEl.getAttribute('data-target-id');
+        if (tid && window.scrollToQuoteMessage) window.scrollToQuoteMessage(tid);
+        return;
+    }
+    const starredEl = e.target.closest('.starred-item-card[data-target-id]');
+    if (starredEl) {
+        const sm = document.getElementById('starred-messages-modal');
+        if (sm) sm.classList.add('hidden');
+        const tid = starredEl.getAttribute('data-target-id');
+        if (tid && window.scrollToQuoteMessage) window.scrollToQuoteMessage(tid);
+    }
+});
 
 socket.on('pinned updated', (pinnedMsg) => {
     const pinnedBanner = document.getElementById('pinned-banner');
@@ -2415,8 +2475,12 @@ function getMessageInnerHTML(data, isMe, isStacked) {
     } 
     else { content = `<span class="message-text">${contentText}</span>`; }
 
-    if (data.linkPreview) {
-        content += `<a href="${escapeHTML(data.linkPreview.url)}" target="_blank" class="link-preview-card">${data.linkPreview.img ? `<img src="${escapeHTML(data.linkPreview.img)}" class="link-preview-img" style="display:block;">` : ''}<div class="link-preview-content"><div class="link-preview-title">${escapeHTML(data.linkPreview.title)}</div>${data.linkPreview.desc ? `<div class="link-preview-desc">${escapeHTML(data.linkPreview.desc)}</div>` : ''}</div></a>`;
+    if (data.linkPreview && data.linkPreview.url) {
+        const safeUrl = sanitizeUrl(data.linkPreview.url);
+        if (safeUrl) {
+            const safeImg = data.linkPreview.img ? sanitizeUrl(data.linkPreview.img) : '';
+            content += `<a href="${escapeHTML(safeUrl)}" target="_blank" rel="noopener noreferrer" class="link-preview-card">${safeImg ? `<img src="${escapeHTML(safeImg)}" class="link-preview-img" style="display:block;">` : ''}<div class="link-preview-content"><div class="link-preview-title">${escapeHTML(data.linkPreview.title || 'Link')}</div>${data.linkPreview.desc ? `<div class="link-preview-desc">${escapeHTML(data.linkPreview.desc)}</div>` : ''}</div></a>`;
+        }
     }
     
     let topHeaderHTML = '';
@@ -2436,8 +2500,9 @@ function getMessageInnerHTML(data, isMe, isStacked) {
     let replyHTML = ''; 
     if (data.replyTo && data.replyTo.user) {
         const targetId = data.replyTo.msgId ? (data.replyTo.msgId.startsWith('msg-') ? data.replyTo.msgId : 'msg-' + data.replyTo.msgId) : '';
+        const cleanTargetId = targetId.replace(/[^a-zA-Z0-9_-]/g, '');
         replyHTML = `
-            <div class="replied-to" onclick="scrollToQuoteMessage('${targetId}')">
+            <div class="replied-to" data-target-id="${cleanTargetId}">
                 <div class="replied-to-bar"></div>
                 <div class="replied-to-body">
                     <span class="replied-to-user">${escapeHTML(data.replyTo.user)}</span>
