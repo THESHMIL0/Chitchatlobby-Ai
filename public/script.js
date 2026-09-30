@@ -3415,13 +3415,13 @@ currentThemeIndex = availableThemes.indexOf(savedTheme);
 if(currentThemeIndex === -1) currentThemeIndex = 0;
 
 const THEME_ICONS_SVG = {
-    emerald: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="leafHGrad" x1="0" y1="0" x2="24" y2="24"><stop offset="0%" stop-color="#34d399"/><stop offset="100%" stop-color="#059669"/></linearGradient></defs><path d="M12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22C12 17 16 13 21 12C21 6.5 17.5 2 12 2Z" fill="url(#leafHGrad)"/><path d="M2 12C7 12 11 16 12 21" stroke="#047857" stroke-width="2" stroke-linecap="round"/></svg>`,
+    emerald: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="leafGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#34d399"/><stop offset="50%" stop-color="#10b981"/><stop offset="100%" stop-color="#059669"/></linearGradient></defs><path d="M20.5 3.5C20.5 3.5 13.5 3 8 8.5C3.8 12.7 3.5 18.5 3.5 18.5C3.5 18.5 9.3 18.2 13.5 14C19 8.5 20.5 3.5 20.5 3.5Z" fill="url(#leafGrad)"/><path d="M3.5 18.5C7.5 14.5 11.5 11 16.5 7.5" stroke="#047857" stroke-width="2" stroke-linecap="round"/><circle cx="17" cy="7" r="1.2" fill="#ecfdf5"/></svg>`,
     
-    light: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="sunHGrad" x1="0" y1="0" x2="24" y2="24"><stop offset="0%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#d97706"/></linearGradient></defs><circle cx="12" cy="12" r="4.5" fill="url(#sunHGrad)"/><path d="M12 1.5V3.5M12 20.5V22.5M1.5 12H3.5M20.5 12H22.5M4.57 4.57L5.99 5.99M18.01 18.01L19.43 19.43M4.57 19.43L5.99 18.01M18.01 5.99L19.43 4.57" stroke="url(#sunHGrad)" stroke-width="2.2" stroke-linecap="round"/></svg>`,
+    light: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="sunGrad" x1="4" y1="4" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#fde047"/><stop offset="50%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#f59e0b"/></linearGradient><linearGradient id="sunRayGrad" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#d97706"/></linearGradient></defs><circle cx="12" cy="12" r="4.6" fill="url(#sunGrad)"/><path d="M12 2.5V4.5M12 19.5V21.5M2.5 12H4.5M19.5 12H21.5M5.28 5.28L6.7 6.7M17.3 17.3L18.72 18.72M5.28 18.72L6.7 17.3M17.3 6.7L18.72 5.28" stroke="url(#sunRayGrad)" stroke-width="2.2" stroke-linecap="round"/></svg>`,
     
-    dark: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="moonHGrad" x1="0" y1="0" x2="24" y2="24"><stop offset="0%" stop-color="#818cf8"/><stop offset="100%" stop-color="#4f46e5"/></linearGradient></defs><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" fill="url(#moonHGrad)"/><path d="M19 4L19.6 5.4L21 6L19.6 6.6L19 8L18.4 6.6L17 6L18.4 5.4L19 4Z" fill="#a5b4fc"/></svg>`,
+    dark: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="moonGrad" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#a5b4fc"/><stop offset="50%" stop-color="#818cf8"/><stop offset="100%" stop-color="#6366f1"/></linearGradient></defs><path d="M20.5 13.2A8.5 8.5 0 1 1 10.8 3.5A7 7 0 0 0 20.5 13.2Z" fill="url(#moonGrad)"/><path d="M18.5 4.5L19 5.8L20.5 6.3L19 6.8L18.5 8.1L18 6.8L16.5 6.3L18 5.8L18.5 4.5Z" fill="#c7d2fe"/><circle cx="13.5" cy="4" r="0.9" fill="#e0e7ff"/></svg>`,
     
-    pink: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="roseHGrad" x1="0" y1="0" x2="24" y2="24"><stop offset="0%" stop-color="#f472b6"/><stop offset="100%" stop-color="#db2777"/></linearGradient></defs><path d="M12 3C12 3 16.5 7 16.5 11C16.5 13.4853 14.4853 15.5 12 15.5C9.51472 15.5 7.5 13.4853 7.5 11C7.5 7 12 3 12 3Z" fill="url(#roseHGrad)"/><path d="M5 13.5C2.5 12 2 9.5 3.5 7.5C5 5.5 7.5 6 9 8.5C9 8.5 7.5 11.5 5 13.5Z" fill="url(#roseHGrad)" opacity="0.75"/><path d="M19 13.5C21.5 12 22 9.5 20.5 7.5C19 5.5 16.5 6 15 8.5C15 8.5 16.5 11.5 19 13.5Z" fill="url(#roseHGrad)" opacity="0.75"/></svg>`
+    pink: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="roseHGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#fb7185"/><stop offset="50%" stop-color="#f43f5e"/><stop offset="100%" stop-color="#e11d48"/></linearGradient><radialGradient id="roseCoreGrad" cx="12" cy="12" r="3.5" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#ffffff"/><stop offset="60%" stop-color="#fff1f2"/><stop offset="100%" stop-color="#fecdd3"/></radialGradient></defs><path d="M12 2.2C13.8 4.8 13.9 7.2 12 8.8C10.1 7.2 10.2 4.8 12 2.2Z" fill="url(#roseHGrad)"/><path d="M21.3 9C19.3 10.7 16.9 10.2 15.6 8.3C16.8 6.7 19.3 6.3 21.3 9Z" fill="url(#roseHGrad)"/><path d="M17.7 20C15.7 18.2 14.8 15.8 16.1 14C17.8 14.8 19.5 17 17.7 20Z" fill="url(#roseHGrad)"/><path d="M6.3 20C4.5 17 6.2 14.8 7.9 14C9.2 15.8 8.3 18.2 6.3 20Z" fill="url(#roseHGrad)"/><path d="M2.7 9C4.7 6.3 7.2 6.7 8.4 8.3C7.1 10.2 4.7 10.7 2.7 9Z" fill="url(#roseHGrad)"/><circle cx="12" cy="12" r="3.2" fill="url(#roseCoreGrad)" stroke="#fda4af" stroke-width="0.8"/></svg>`
 };
 
 function applyTheme(themeName) {
@@ -3441,6 +3441,21 @@ function applyTheme(themeName) {
     const themeIcon = document.getElementById('theme-btn-icon');
     if (themeIcon && typeof THEME_ICONS_SVG !== 'undefined') {
         themeIcon.innerHTML = THEME_ICONS_SVG[themeName] || THEME_ICONS_SVG.emerald;
+    }
+
+    const themeBtn = document.getElementById('btn-theme-cycle');
+    if (themeBtn && typeof availableThemes !== 'undefined') {
+        const themeLabels = {
+            emerald: 'Emerald Green',
+            light: 'Clean Light',
+            dark: 'Cosmic Dark',
+            pink: 'Sakura Pink'
+        };
+        const nextIdx = (availableThemes.indexOf(themeName) + 1) % availableThemes.length;
+        const nextTheme = availableThemes[nextIdx];
+        const nextLabel = themeLabels[nextTheme] || nextTheme;
+        themeBtn.title = `Theme: ${themeLabels[themeName] || themeName} (Click to switch to ${nextLabel})`;
+        themeBtn.setAttribute('aria-label', `Active theme: ${themeLabels[themeName] || themeName}. Click to switch to ${nextLabel}`);
     }
 
     document.querySelectorAll('.login-theme-pills .theme-pill').forEach(pill => {
@@ -3481,6 +3496,13 @@ if (btnThemeCycle) {
         currentThemeIndex = (currentThemeIndex + 1) % availableThemes.length;
         const newTheme = availableThemes[currentThemeIndex]; 
         applyTheme(newTheme);
+
+        const iconSpan = document.getElementById('theme-btn-icon');
+        if (iconSpan) {
+            iconSpan.classList.remove('theme-icon-spin');
+            void iconSpan.offsetWidth;
+            iconSpan.classList.add('theme-icon-spin');
+        }
     };
 }
 
