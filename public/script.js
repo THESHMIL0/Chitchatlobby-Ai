@@ -333,6 +333,54 @@ const WALLPAPER_PATTERNS = {
         bgSize: '18px 18px',
         bgRepeat: 'repeat'
     },
+    'doodle': {
+        name: 'Chat Doodles',
+        bgImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120' fill='none' stroke='rgba(148,163,184,0.24)' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 26a8 8 0 0 1 8-8h14a8 8 0 0 1 8 8v5a8 8 0 0 1-8 8h-5l-7 5v-5h-2a8 8 0 0 1-8-8z'/%3E%3Cpath d='M72 32l24-12-11 23-4-9z'/%3E%3Cpath d='M72 32l9 2'/%3E%3Cpath d='M18 80h16v8a7 7 0 0 1-7 7h-2a7 7 0 0 1-7-7z'/%3E%3Cpath d='M34 82a3.5 3.5 0 0 1 0 7'/%3E%3Cpath d='M88 84a3.5 3.5 0 1 0-3.5-3.5v-12l13-3.5v12a3.5 3.5 0 1 0-3.5-3.5'/%3E%3Cpath d='M58 58c-2.5-3.5-7-2.5-7 1.5 0 3.5 7 7 7 7s7-3.5 7-7c0-4-4.5-5-7-1.5z'/%3E%3Cpath d='M58 12v6M55 15h6'/%3E%3Ccircle cx='104' cy='104' r='8'/%3E%3Ccircle cx='101.5' cy='102.5' r='.8' fill='rgba(148,163,184,0.24)'/%3E%3Ccircle cx='106.5' cy='102.5' r='.8' fill='rgba(148,163,184,0.24)'/%3E%3Cpath d='M101.5 106q2.5 2 5 0'/%3E%3Cpath d='M10 52l4 4 6-8'/%3E%3Cpath d='M68 96q6-4 12 0t12 0'/%3E%3C/svg%3E")`,
+        bgSize: '120px 120px',
+        bgRepeat: 'repeat'
+    },
+    'constellation': {
+        name: 'Starry Sky',
+        bgImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100' fill='none'%3E%3Cpath d='M20 12a11 11 0 1 0 11 11 9 9 0 0 1-11-11z' fill='rgba(168,85,247,0.22)' stroke='rgba(168,85,247,0.3)' stroke-width='1'/%3E%3Cpath d='M52 24l22 10 10-14m-10 14l-6 24-18 14m18-14l18 10' stroke='rgba(148,163,184,0.2)' stroke-width='1.2' stroke-dasharray='3 2'/%3E%3Ccircle cx='52' cy='24' r='2' fill='rgba(168,85,247,0.45)'/%3E%3Ccircle cx='74' cy='34' r='2.2' fill='rgba(148,85,247,0.5)'/%3E%3Ccircle cx='84' cy='20' r='1.8' fill='rgba(168,85,247,0.4)'/%3E%3Ccircle cx='68' cy='58' r='2' fill='rgba(168,85,247,0.45)'/%3E%3Ccircle cx='50' cy='72' r='1.8' fill='rgba(168,85,247,0.4)'/%3E%3Ccircle cx='86' cy='68' r='2.2' fill='rgba(168,85,247,0.5)'/%3E%3Cpath d='M16 60q0 6-6 6 6 0 6 6 0-6 6-6-6 0-6-6z' fill='rgba(234,179,8,0.35)'/%3E%3Cpath d='M38 42q0 4-4 4 4 0 4 4 0-4 4-4-4 0-4-4z' fill='rgba(234,179,8,0.28)'/%3E%3Ccircle cx='18' cy='88' r='1' fill='rgba(148,163,184,0.25)'/%3E%3Ccircle cx='82' cy='90' r='1.2' fill='rgba(148,163,184,0.25)'/%3E%3Ccircle cx='34' cy='18' r='1' fill='rgba(148,163,184,0.25)'/%3E%3C/svg%3E")`,
+        bgSize: '100px 100px',
+        bgRepeat: 'repeat'
+    },
+    'botanical': {
+        name: 'Botanical',
+        bgImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100' fill='none' stroke='rgba(34,197,94,0.26)' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M25 85q20-25 35-55'/%3E%3Cpath d='M36 68q-10-2-12-8 8-2 15 4'/%3E%3Cpath d='M42 56q10-4 15 2-4 8-12 4'/%3E%3Cpath d='M48 44q-9-3-10-9 8-1 13 5'/%3E%3Cpath d='M54 34q8-4 12 1-3 7-10 4'/%3E%3Cpath d='M80 82c-8-12-2-22 0-28 6 6 8 16 0 28z'/%3E%3Cpath d='M80 82l-5 8'/%3E%3Cpath d='M20 22c-4-4 2-10 6-6 4-4 10 2 6 6 4 4-2 10-6 6-4 4-10-2-6-6z'/%3E%3C/svg%3E")`,
+        bgSize: '100px 100px',
+        bgRepeat: 'repeat'
+    },
+    'cute-paws': {
+        name: 'Paws & Pets',
+        bgImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80' fill='rgba(244,63,94,0.22)'%3E%3Cellipse cx='26' cy='32' rx='6' ry='5'/%3E%3Ccircle cx='18' cy='22' r='2.5'/%3E%3Ccircle cx='23.5' cy='18' r='2.5'/%3E%3Ccircle cx='29' cy='18' r='2.5'/%3E%3Ccircle cx='34' cy='22' r='2.5'/%3E%3Cg transform='rotate(25 60 58)'%3E%3Cellipse cx='60' cy='58' rx='6' ry='5'/%3E%3Ccircle cx='52' cy='48' r='2.5'/%3E%3Ccircle cx='57.5' cy='44' r='2.5'/%3E%3Ccircle cx='63' cy='44' r='2.5'/%3E%3Ccircle cx='68' cy='48' r='2.5'/%3E%3C/g%3E%3Cpath d='M62 20c-2-3-6-2-6 1.5 0 3 6 6 6 6s6-3 6-6c0-3.5-4-4.5-6-1.5z'/%3E%3Cpath d='M16 64q2-6 8-6 6 0 8 6m-16-6l-3-4 6 1m10-1l6-1-3 4' fill='none' stroke='rgba(244,63,94,0.25)' stroke-width='1.2' stroke-linecap='round'/%3E%3C/svg%3E")`,
+        bgSize: '80px 80px',
+        bgRepeat: 'repeat'
+    },
+    'cyber-grid': {
+        name: 'Cyber Mesh',
+        bgImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60' fill='none'%3E%3Cpath d='M0 30h60M30 0v60' stroke='rgba(56,189,248,0.18)' stroke-width='1'/%3E%3Cpath d='M26 30h8M30 26v8' stroke='rgba(56,189,248,0.45)' stroke-width='1.4'/%3E%3Ccircle cx='0' cy='0' r='2' fill='rgba(56,189,248,0.3)'/%3E%3Ccircle cx='60' cy='0' r='2' fill='rgba(56,189,248,0.3)'/%3E%3Ccircle cx='0' cy='60' r='2' fill='rgba(56,189,248,0.3)'/%3E%3Ccircle cx='60' cy='60' r='2' fill='rgba(56,189,248,0.3)'/%3E%3Cpath d='M8 8h6v6' stroke='rgba(56,189,248,0.25)' stroke-width='1'/%3E%3Cpath d='M52 52h-6v-6' stroke='rgba(56,189,248,0.25)' stroke-width='1'/%3E%3C/svg%3E")`,
+        bgSize: '60px 60px',
+        bgRepeat: 'repeat'
+    },
+    'waves': {
+        name: 'Zen Waves',
+        bgImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='40' viewBox='0 0 80 40' fill='none' stroke='rgba(148,163,184,0.22)' stroke-width='1.2'%3E%3Cpath d='M0 40a40 40 0 0 1 80 0'/%3E%3Cpath d='M10 40a30 30 0 0 1 60 0'/%3E%3Cpath d='M20 40a20 20 0 0 1 40 0'/%3E%3Cpath d='M30 40a10 10 0 0 1 20 0'/%3E%3Cpath d='M-40 40a40 40 0 0 1 80 0'/%3E%3Cpath d='M-30 40a30 30 0 0 1 60 0'/%3E%3Cpath d='M-20 40a20 20 0 0 1 40 0'/%3E%3Cpath d='M-10 40a10 10 0 0 1 20 0'/%3E%3Cpath d='M40 0a40 40 0 0 1 80 0'/%3E%3Cpath d='M50 0a30 30 0 0 1 60 0'/%3E%3Cpath d='M60 0a20 20 0 0 1 40 0'/%3E%3Cpath d='M70 0a10 10 0 0 1 20 0'/%3E%3Cpath d='M-40 0a40 40 0 0 1 80 0'/%3E%3Cpath d='M-30 0a30 30 0 0 1 60 0'/%3E%3Cpath d='M-20 0a20 20 0 0 1 40 0'/%3E%3Cpath d='M-10 0a10 10 0 0 1 20 0'/%3E%3C/svg%3E")`,
+        bgSize: '80px 40px',
+        bgRepeat: 'repeat'
+    },
+    'tokyo-rain': {
+        name: 'Tokyo Rain',
+        bgImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80' fill='none' stroke='rgba(96,165,250,0.24)' stroke-width='1.3' stroke-linecap='round'%3E%3Cpath d='M18 6l-6 18M54 12l-6 18M76 34l-6 18M26 48l-6 18M62 58l-6 18'/%3E%3Cellipse cx='48' cy='32' rx='7' ry='2' stroke='rgba(96,165,250,0.22)'/%3E%3Cellipse cx='20' cy='68' rx='6' ry='1.8' stroke='rgba(96,165,250,0.22)'/%3E%3Ccircle cx='12' cy='25' r='1' fill='rgba(96,165,250,0.3)'/%3E%3Ccircle cx='56' cy='78' r='1' fill='rgba(96,165,250,0.3)'/%3E%3C/svg%3E")`,
+        bgSize: '80px 80px',
+        bgRepeat: 'repeat'
+    },
+    'cozy-cafe': {
+        name: 'Cozy Cafe',
+        bgImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80' fill='none' stroke='rgba(245,158,11,0.28)' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M16 28h22v14a10 10 0 0 1-10 10h-2a10 10 0 0 1-10-10z' fill='rgba(245,158,11,0.08)'/%3E%3Cpath d='M38 32h5a4 4 0 0 1 0 8h-5'/%3E%3Cpath d='M22 18c1-4-1-6 0-10M30 18c1-4-1-6 0-10' stroke='rgba(251,191,36,0.25)' stroke-width='1.3'/%3E%3Cpath d='M58 24a7 5 30 1 0 1 7z' fill='rgba(245,158,11,0.22)' stroke='none'/%3E%3Cpath d='M56 22q4 5 1 10' stroke='rgba(254,243,199,0.25)' stroke-width='1'/%3E%3Cpath d='M50 56c6-4 14-2 18 4-4 6-12 5-18-4z' fill='rgba(245,158,11,0.1)' stroke='rgba(245,158,11,0.28)'/%3E%3Cpath d='M26 62c-2-3-6-2-6 1.5 0 3 6 6 6 6s6-3 6-6c0-3.5-4-4.5-6-1.5z' fill='rgba(245,158,11,0.14)' stroke='rgba(245,158,11,0.28)' stroke-width='1'/%3E%3C/svg%3E")`,
+        bgSize: '80px 80px',
+        bgRepeat: 'repeat'
+    },
     'sweetheart': {
         name: 'Sweetheart',
         get bgImage() {
@@ -3242,6 +3290,11 @@ if (openCustomizationBtn) {
         if (appSettingsModal) appSettingsModal.classList.add('hidden');
         hapticFeedback('medium');
         if (customizationModal) customizationModal.classList.remove('hidden');
+        const savedWp = (typeof activeRoomId !== 'undefined' && activeRoomId && localStorage.getItem('wallpaper_' + activeRoomId)) || localStorage.getItem('chitchat_global_wallpaper') || 'default';
+        const cleanKey = savedWp.startsWith('pattern:') ? savedWp.replace('pattern:', '') : (savedWp.startsWith('#') || savedWp.startsWith('rgb') || savedWp.startsWith('data:') ? '' : 'default');
+        document.querySelectorAll('.wp-card').forEach(c => {
+            c.classList.toggle('active', c.dataset.wp === cleanKey);
+        });
     };
 }
 if (closeCustomizationModal) {
