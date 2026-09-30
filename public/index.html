@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=2.7">
+    <link rel="stylesheet" href="style.css?v=2.8">
     <link rel="manifest" href="manifest.json">
     <script src="/socket.io/socket.io.js"></script>
 </head>
@@ -267,9 +267,18 @@
 
         <div id="chat-footer-controls">
             <div id="recording-overlay" class="recording-bar-overlay hidden">
-                <div class="recording-dot"></div>
-                <span id="recording-timer" class="recording-timer">0:00</span>
-                <div class="recording-waves">
+                <button id="cancel-rec-btn" class="rec-action-btn rec-cancel-btn" title="Discard voice note" type="button" aria-label="Discard voice note">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                </button>
+                <div class="recording-indicator-wrap">
+                    <div id="recording-dot" class="recording-dot"></div>
+                    <span id="recording-timer" class="recording-timer">0:00</span>
+                </div>
+                <div id="recording-waves" class="recording-waves" title="Live audio activity">
+                    <div class="rec-wave-bar"></div>
+                    <div class="rec-wave-bar"></div>
+                    <div class="rec-wave-bar"></div>
+                    <div class="rec-wave-bar"></div>
                     <div class="rec-wave-bar"></div>
                     <div class="rec-wave-bar"></div>
                     <div class="rec-wave-bar"></div>
@@ -279,11 +288,12 @@
                     <div class="rec-wave-bar"></div>
                     <div class="rec-wave-bar"></div>
                 </div>
-                <button id="cancel-rec-btn" class="rec-action-btn rec-cancel-btn" title="Cancel recording" type="button" aria-label="Cancel recording">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                <button id="pause-rec-btn" class="rec-action-btn rec-pause-btn" title="Pause or preview recording" type="button" aria-label="Pause or preview recording">
+                    <svg class="rec-pause-svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"></rect><rect x="14" y="4" width="4" height="16" rx="1"></rect></svg>
+                    <svg class="rec-play-svg hidden" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
                 </button>
                 <button id="send-rec-btn" class="rec-action-btn rec-send-btn" title="Send Voice Note" type="button" aria-label="Send Voice Note">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                 </button>
             </div>
 
@@ -954,7 +964,7 @@
         <img id="lightbox-img" class="lightbox-media-img" alt="Expanded Media Preview" title="Expanded Media Preview">
     </div>
 
-    <script src="script.js?v=2.7"></script>
+    <script src="script.js?v=2.8"></script>
     <script>
         (function() {
             var ls = document.getElementById('loading-screen');

@@ -825,6 +825,21 @@ io.on('connection', (socket) => {
             }
         }
 
+        // Validate audio metadata
+        if (data.isAudio) {
+            data.duration = (typeof data.duration === 'number' && data.duration > 0 && data.duration <= 3600)
+                ? Math.round(data.duration)
+                : 0;
+            if (Array.isArray(data.waveform)) {
+                data.waveform = data.waveform.slice(0, 48).map(n => {
+                    const val = Number(n);
+                    return isNaN(val) ? 20 : Math.max(10, Math.min(100, Math.round(val)));
+                });
+            } else {
+                delete data.waveform;
+            }
+        }
+
         // Validate and sanitize poll object
         if (data.poll && typeof data.poll === 'object') {
             if (!data.poll.question || typeof data.poll.question !== 'string') {

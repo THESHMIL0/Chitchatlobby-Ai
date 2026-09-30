@@ -3182,21 +3182,151 @@ document.querySelectorAll('.theme-selector-grid .theme-card-btn').forEach(btn =>
 let mediaRecorder; 
 let audioChunks = []; 
 let isRecording = false; 
+let isRecordingPaused = false;
 let recordingTimerInterval = null;
 let recordingSeconds = 0;
 let isRecordingCancelled = false;
 let recordStartTime = 0;
+
+let audioContext = null;
+let analyserNode = null;
+let micSourceNode = null;
+let visualizerAnimFrame = null;
+let liveWaveformSamples = [];
+let sampleIntervalId = null;
+
+let currentAudioStream = null;
+let recPreviewAudio = null;
+let recBlobUrl = null;
 
 const recOverlay = document.getElementById('recording-overlay');
 const inputPill = document.getElementById('input-pill');
 const recTimer = document.getElementById('recording-timer');
 const cancelRecBtn = document.getElementById('cancel-rec-btn');
 const sendRecBtn = document.getElementById('send-rec-btn');
+const pauseRecBtn = document.getElementById('pause-rec-btn');
 
 function updateRecTimerDisplay() {
     const mins = Math.floor(recordingSeconds / 60);
     const secs = recordingSeconds % 60;
     if (recTimer) recTimer.textContent = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+}
+
+function normalizeWaveform(samples, barCount = 24) {
+    if (!samples || samples.length === 0) {
+        return [30, 55, 80, 45, 75, 95, 55, 85, 60, 35, 75, 90, 45, 65, 80, 40, 55, 30, 45, 25, 40, 55, 35, 20];
+    }
+    if (samples.length <= barCount) {
+        const res = [];
+        for (let i = 0; i < barCount; i++) {
+            const idx = Math.min(samples.length - 1, Math.floor((i / barCount) * samples.length));
+            res.push(samples[idx]);
+        }
+        return res;
+    }
+    const res = [];
+    const chunkSize = samples.length / barCount;
+    for (let i = 0; i < barCount; i++) {
+        const start = Math.floor(i * chunkSize);
+        const end = Math.floor((i + 1) * chunkSize);
+        let sum = 0, count = 0;
+        for (let j = start; j < end && j < samples.length; j++) {
+            sum += samples[j];
+            count++;
+        }
+        const avg = count > 0 ? Math.round(sum / count) : 20;
+        res.push(Math.max(16, Math.min(100, avg)));
+    }
+    return res;
+}
+
+function startLiveVisualizer(stream) {
+    try {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) return;
+        
+        if (!audioContext || audioContext.state === 'closed') {
+            audioContext = new AudioContextClass();
+        } else if (audioContext.state === 'suspended') {
+            audioContext.resume();
+        }
+
+        analyserNode = audioContext.createAnalyser();
+        analyserNode.fftSize = 64;
+        analyserNode.smoothingTimeConstant = 0.45;
+        
+        micSourceNode = audioContext.createMediaStreamSource(stream);
+        micSourceNode.connect(analyserNode);
+
+        const waveBars = document.querySelectorAll('#recording-waves .rec-wave-bar');
+        const dataArray = new Uint8Array(analyserNode.frequencyBinCount);
+
+        function drawVisualizer() {
+            if (!isRecording || isRecordingPaused) return;
+            analyserNode.getByteFrequencyData(dataArray);
+
+            let sum = 0;
+            for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
+            const avg = sum / (dataArray.length || 1);
+
+            waveBars.forEach((bar, idx) => {
+                const freq = dataArray[idx % dataArray.length] || 0;
+                const height = Math.min(100, Math.max(18, Math.round((freq / 255) * 80 + (avg / 255) * 20)));
+                bar.style.height = `${height}%`;
+            });
+
+            visualizerAnimFrame = requestAnimationFrame(drawVisualizer);
+        }
+        drawVisualizer();
+
+        liveWaveformSamples = [];
+        clearInterval(sampleIntervalId);
+        sampleIntervalId = setInterval(() => {
+            if (!isRecording || isRecordingPaused || !analyserNode) return;
+            analyserNode.getByteFrequencyData(dataArray);
+            let s = 0;
+            for (let i = 0; i < dataArray.length; i++) s += dataArray[i];
+            const val = Math.round(((s / (dataArray.length || 1)) / 255) * 100);
+            liveWaveformSamples.push(Math.max(16, Math.min(100, val)));
+        }, 80);
+    } catch(e) {
+        console.warn('Live audio visualizer error:', e);
+    }
+}
+
+function stopLiveVisualizer() {
+    if (visualizerAnimFrame) {
+        cancelAnimationFrame(visualizerAnimFrame);
+        visualizerAnimFrame = null;
+    }
+    if (sampleIntervalId) {
+        clearInterval(sampleIntervalId);
+        sampleIntervalId = null;
+    }
+    if (micSourceNode) {
+        try { micSourceNode.disconnect(); } catch(e){}
+        micSourceNode = null;
+    }
+    const waveBars = document.querySelectorAll('#recording-waves .rec-wave-bar');
+    waveBars.forEach(bar => { bar.style.height = '20%'; });
+}
+
+function cleanupPreviewAudio() {
+    if (recPreviewAudio) {
+        recPreviewAudio.pause();
+        recPreviewAudio = null;
+    }
+    if (recBlobUrl) {
+        URL.revokeObjectURL(recBlobUrl);
+        recBlobUrl = null;
+    }
+    if (pauseRecBtn) {
+        pauseRecBtn.classList.remove('is-preview-playing');
+        const playSvg = pauseRecBtn.querySelector('.rec-play-svg');
+        const pauseSvg = pauseRecBtn.querySelector('.rec-pause-svg');
+        if (playSvg) playSvg.classList.add('hidden');
+        if (pauseSvg) pauseSvg.classList.remove('hidden');
+    }
 }
 
 async function startRecording(e) {
@@ -3206,6 +3336,8 @@ async function startRecording(e) {
 
     hapticFeedback('medium'); 
     isRecordingCancelled = false;
+    isRecordingPaused = false;
+    cleanupPreviewAudio();
     recordStartTime = Date.now();
 
     try {
@@ -3216,8 +3348,8 @@ async function startRecording(e) {
                 autoGainControl: true
             } 
         });
+        currentAudioStream = stream;
 
-        // Determine best supported MIME type
         let options = {};
         if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
             options.mimeType = 'audio/webm;codecs=opus';
@@ -3238,12 +3370,22 @@ async function startRecording(e) {
 
         mediaRecorder.onstop = () => {
             clearInterval(recordingTimerInterval);
-            if (recOverlay) recOverlay.classList.add('hidden');
+            stopLiveVisualizer();
+            cleanupPreviewAudio();
+
+            if (recOverlay) {
+                recOverlay.classList.remove('is-paused');
+                recOverlay.classList.add('hidden');
+            }
             if (inputPill) inputPill.classList.remove('hidden');
+            if (sendMicBtn) sendMicBtn.classList.remove('hidden');
 
             if (!isRecordingCancelled && audioChunks.length > 0) {
                 const finalMime = mediaRecorder.mimeType || 'audio/webm';
                 const audioBlob = new Blob(audioChunks, { type: finalMime }); 
+                const normalizedWave = normalizeWaveform(liveWaveformSamples, 24);
+                const finalDuration = Math.max(1, recordingSeconds);
+
                 const reader = new FileReader();
                 reader.onload = (event) => { 
                     socket.emit('chat message', { 
@@ -3254,6 +3396,8 @@ async function startRecording(e) {
                         text: '', 
                         uploadedImage: event.target.result, 
                         isAudio: true, 
+                        duration: finalDuration,
+                        waveform: normalizedWave,
                         time: formatTo12HourTime(new Date()), 
                         isGhost: isGhostMode,
                         roomId: activeRoomId || 'lobby'
@@ -3262,23 +3406,36 @@ async function startRecording(e) {
                 reader.readAsDataURL(audioBlob); 
             }
             audioChunks = []; 
-            stream.getTracks().forEach(track => track.stop()); 
+            liveWaveformSamples = [];
+            if (currentAudioStream) {
+                currentAudioStream.getTracks().forEach(track => track.stop()); 
+                currentAudioStream = null;
+            }
             isRecording = false;
+            isRecordingPaused = false;
         };
 
-        mediaRecorder.start(100); // collect 100ms chunks continuously
+        mediaRecorder.start(100);
         isRecording = true;
+        isRecordingPaused = false;
+
+        startLiveVisualizer(stream);
 
         recordingSeconds = 0;
         updateRecTimerDisplay();
         clearInterval(recordingTimerInterval);
         recordingTimerInterval = setInterval(() => {
-            recordingSeconds++;
-            updateRecTimerDisplay();
+            if (!isRecordingPaused) {
+                recordingSeconds++;
+                updateRecTimerDisplay();
+            }
         }, 1000);
 
-        if (recOverlay) recOverlay.classList.remove('hidden');
+        if (recOverlay) {
+            recOverlay.classList.remove('hidden', 'is-paused');
+        }
         if (inputPill) inputPill.classList.add('hidden');
+        if (sendMicBtn) sendMicBtn.classList.add('hidden');
 
     } catch(err) { 
         isRecording = false; 
@@ -3289,6 +3446,7 @@ async function startRecording(e) {
 
 function stopRecording(cancel = false) {
     isRecordingCancelled = cancel;
+    cleanupPreviewAudio();
     if (isRecording && mediaRecorder && mediaRecorder.state !== 'inactive') {
         try {
             mediaRecorder.stop();
@@ -3297,6 +3455,82 @@ function stopRecording(cancel = false) {
         }
         isRecording = false;
         hapticFeedback(cancel ? 'light' : 'heavy'); 
+    } else {
+        if (recOverlay) {
+            recOverlay.classList.remove('is-paused');
+            recOverlay.classList.add('hidden');
+        }
+        if (inputPill) inputPill.classList.remove('hidden');
+        if (sendMicBtn) sendMicBtn.classList.remove('hidden');
+    }
+}
+
+function togglePauseRecording() {
+    if (!isRecording || !mediaRecorder) return;
+    hapticFeedback('medium');
+
+    const playSvg = pauseRecBtn?.querySelector('.rec-play-svg');
+    const pauseSvg = pauseRecBtn?.querySelector('.rec-pause-svg');
+
+    if (!isRecordingPaused) {
+        // Pause active recording and prepare preview
+        isRecordingPaused = true;
+        if (mediaRecorder.state === 'recording') {
+            mediaRecorder.pause();
+        }
+        stopLiveVisualizer();
+        if (recOverlay) recOverlay.classList.add('is-paused');
+
+        if (playSvg) playSvg.classList.remove('hidden');
+        if (pauseSvg) pauseSvg.classList.add('hidden');
+
+        // Request available chunks to build preview
+        if (typeof mediaRecorder.requestData === 'function') {
+            try { mediaRecorder.requestData(); } catch(e){}
+        }
+
+        setTimeout(() => {
+            const finalMime = mediaRecorder.mimeType || 'audio/webm';
+            const audioBlob = new Blob(audioChunks, { type: finalMime });
+            if (recBlobUrl) URL.revokeObjectURL(recBlobUrl);
+            recBlobUrl = URL.createObjectURL(audioBlob);
+
+            if (recPreviewAudio) {
+                recPreviewAudio.pause();
+                recPreviewAudio = null;
+            }
+            recPreviewAudio = new Audio(recBlobUrl);
+            recPreviewAudio.onended = () => {
+                if (playSvg) playSvg.classList.remove('hidden');
+                if (pauseSvg) pauseSvg.classList.add('hidden');
+                pauseRecBtn?.classList.remove('is-preview-playing');
+                updateRecTimerDisplay();
+            };
+            recPreviewAudio.ontimeupdate = () => {
+                if (recPreviewAudio && !recPreviewAudio.paused && recTimer) {
+                    const cur = Math.floor(recPreviewAudio.currentTime);
+                    const m = Math.floor(cur / 60);
+                    const s = cur % 60;
+                    recTimer.textContent = `${m}:${s < 10 ? '0' : ''}${s}`;
+                }
+            };
+        }, 60);
+
+    } else {
+        // Currently paused in preview mode: toggle preview playback
+        if (recPreviewAudio) {
+            if (recPreviewAudio.paused) {
+                recPreviewAudio.play().catch(e => console.log('Preview playback error:', e));
+                pauseRecBtn?.classList.add('is-preview-playing');
+                if (playSvg) playSvg.classList.add('hidden');
+                if (pauseSvg) pauseSvg.classList.remove('hidden');
+            } else {
+                recPreviewAudio.pause();
+                pauseRecBtn?.classList.remove('is-preview-playing');
+                if (playSvg) playSvg.classList.remove('hidden');
+                if (pauseSvg) pauseSvg.classList.add('hidden');
+            }
+        }
     }
 }
 
@@ -3305,6 +3539,13 @@ if (cancelRecBtn) {
         e.preventDefault();
         e.stopPropagation();
         stopRecording(true);
+    };
+}
+if (pauseRecBtn) {
+    pauseRecBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        togglePauseRecording();
     };
 }
 if (sendRecBtn) {
@@ -3331,7 +3572,7 @@ sendMicBtn.addEventListener('click', (e) => {
 });
 
 function handleHoldRelease(e) {
-    if (isRecording && (Date.now() - recordStartTime > 1200)) {
+    if (isRecording && !isRecordingPaused && (Date.now() - recordStartTime > 1200)) {
         stopRecording(false);
     }
 }
