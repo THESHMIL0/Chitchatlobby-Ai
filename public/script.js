@@ -2803,11 +2803,13 @@ function getMessageInnerHTML(data, isMe, isStacked) {
     const displayTimeStr = formatTo12HourTime(data.time);
     const tickHTML = isMe ? getTickHTML(data.status, data.id) : '';
     
+    const isMediaOnly = !!((data.uploadedImage || data.image) && !data.isAudio && !contentText && !replyHTML);
+
     if (isMe) {
         return `
             <div class="msg-content-wrapper my-wrapper">
                 ${topHeaderHTML ? `<div class="msg-top-header">${topHeaderHTML}</div>` : ''}
-                <div class="msg-bubble ${data.xox ? 'msg-bubble-xox' : ''}">
+                <div class="msg-bubble ${data.xox ? 'msg-bubble-xox' : ''} ${isMediaOnly ? 'msg-bubble-media-only' : ''}">
                     ${replyHTML}${content}
                     <div class="meta-row"><span>${data.isGhost ? '⏱️ ' : ''}${displayTimeStr}</span>${tickHTML}</div>
                     ${reactionsHTML}
@@ -2821,7 +2823,7 @@ function getMessageInnerHTML(data, isMe, isStacked) {
             ${avatarHTML}
             <div class="msg-content-wrapper other-wrapper">
                 ${topHeaderHTML ? `<div class="msg-top-header">${topHeaderHTML}</div>` : ''}
-                <div class="msg-bubble ${data.xox ? 'msg-bubble-xox' : ''}">
+                <div class="msg-bubble ${data.xox ? 'msg-bubble-xox' : ''} ${isMediaOnly ? 'msg-bubble-media-only' : ''}">
                     ${replyHTML}${content}
                     <div class="meta-row"><span>${data.isGhost ? '⏱️ ' : ''}${displayTimeStr}</span></div>
                     ${reactionsHTML}
@@ -3196,6 +3198,7 @@ function displayMessage(data, isHistory) {
     if(isStacked) li.classList.add('stacked');
     if(data.isGhost) li.classList.add('ghost-message');
     if(data.xox) li.classList.add('xox-message');
+    if((data.uploadedImage || data.image) && !data.isAudio && !data.text && !data.message) li.classList.add('media-only-message');
     if (data.color) li.style.setProperty('--bubble-color', data.color);
 
     li.innerHTML = getMessageInnerHTML(data, isMe, isStacked);
