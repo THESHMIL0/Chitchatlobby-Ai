@@ -106,8 +106,8 @@ let editingMsgId = null;
 let isGhostMode = false;
 let unreadCounts = {}; 
 const defaultRooms = [
-    { id: 'lobby', name: 'Lobby 😸', logo: '', isPrivate: 0 },
-    { id: 'ai_lounge', name: '🤖 AI Lounge', logo: 'https://api.dicebear.com/7.x/bottts/svg?seed=ChitChatBot&backgroundColor=00a884', isPrivate: 0 }
+    { id: 'lobby', name: 'Lobby', logo: '/icon.svg', isPrivate: 0 },
+    { id: 'ai_lounge', name: 'AI Lounge', logo: '/ai-icon.svg', isPrivate: 0 }
 ];
 let globalRoomList = [...defaultRooms];
 let currentlyTyping = new Map();

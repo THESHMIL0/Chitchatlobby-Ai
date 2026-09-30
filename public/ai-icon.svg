@@ -14,14 +14,14 @@
     </filter>
   </defs>
 
-  <!-- Squircle Frame -->
-  <rect x="32" y="32" width="448" height="448" rx="112" fill="url(#aiBgGrad)"/>
+  <!-- Full Edge-to-Edge Circular Base -->
+  <circle cx="256" cy="256" r="256" fill="url(#aiBgGrad)"/>
 
-  <!-- Subtle Inner Shimmer -->
-  <path d="M 80 140 C 180 60, 332 60, 432 140" fill="none" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" opacity="0.25"/>
+  <!-- Subtle Inner Ring Highlight -->
+  <circle cx="256" cy="256" r="250" fill="none" stroke="#FFFFFF" stroke-width="4" opacity="0.2"/>
 
-  <!-- AI Robot / Neural Head -->
-  <g filter="url(#aiGlow)">
+  <!-- AI Robot / Neural Head (Centered in Circle) -->
+  <g filter="url(#aiGlow)" transform="translate(0, 16)">
     <!-- Antenna -->
     <rect x="246" y="110" width="20" height="40" rx="10" fill="url(#sparkGrad)" />
     <circle cx="256" cy="100" r="16" fill="#38bdf8" />
