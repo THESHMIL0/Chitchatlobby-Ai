@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=2.2">
+    <link rel="stylesheet" href="style.css?v=2.3">
     <link rel="manifest" href="manifest.json">
     <script src="/socket.io/socket.io.js"></script>
 </head>
@@ -18,7 +18,7 @@
     <!-- Loading Screen -->
     <div id="loading-screen" class="screen hidden">
         <div class="loading-container">
-            <div class="app-logo-glow"><img src="/icon.svg" alt="Chit Chat Logo" class="brand-app-logo"></div>
+            <div class="app-logo-glow"><img src="/icon.svg" alt="Chit Chat Logo" title="Chit Chat Logo" class="brand-app-logo"></div>
             <div class="spinner"></div>
             <h2 class="loading-title">Chit Chat</h2>
             <p class="loading-sub">Connecting securely...</p>
@@ -31,7 +31,7 @@
             <div class="lock-icon-badge">🔒</div>
             <h2>App Locked</h2>
             <p class="app-lock-desc">Biometric or PIN verification required.</p>
-            <button id="unlock-app-btn" class="primary-btn">Unlock App</button>
+            <button id="unlock-app-btn" class="primary-btn" title="Unlock App" aria-label="Unlock App" type="button">Unlock App</button>
         </div>
     </div>
 
@@ -40,23 +40,23 @@
         <!-- Top Floating Theme Bar -->
         <div class="login-top-theme-bar">
             <div class="login-theme-pills">
-                <button type="button" class="theme-pill" data-theme-choice="emerald" title="Cute Green Mode">
+                <button type="button" class="theme-pill" data-theme-choice="emerald" title="Cute Green Mode" aria-label="Cute Green Mode">
                     <span class="theme-badge-icon">🌱</span>
                     <span>Cute Green</span>
                 </button>
-                <button type="button" class="theme-pill" data-theme-choice="light" title="Light Mode">
+                <button type="button" class="theme-pill" data-theme-choice="light" title="Light Mode" aria-label="Light Mode">
                     <span class="theme-badge-icon">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="sunPillG" x1="0" y1="0" x2="24" y2="24"><stop offset="0%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#d97706"/></linearGradient></defs><circle cx="12" cy="12" r="4.5" fill="url(#sunPillG)"/><path d="M12 1.5V3.5M12 20.5V22.5M1.5 12H3.5M20.5 12H22.5" stroke="url(#sunPillG)" stroke-width="2" stroke-linecap="round"/></svg>
                     </span>
                     <span>Light</span>
                 </button>
-                <button type="button" class="theme-pill" data-theme-choice="dark" title="Dark Mode">
+                <button type="button" class="theme-pill" data-theme-choice="dark" title="Dark Mode" aria-label="Dark Mode">
                     <span class="theme-badge-icon">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="moonPillG" x1="0" y1="0" x2="24" y2="24"><stop offset="0%" stop-color="#818cf8"/><stop offset="100%" stop-color="#4f46e5"/></linearGradient></defs><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" fill="url(#moonPillG)"/></svg>
                     </span>
                     <span>Dark</span>
                 </button>
-                <button type="button" class="theme-pill" data-theme-choice="pink" title="Rose Mode">
+                <button type="button" class="theme-pill" data-theme-choice="pink" title="Rose Mode" aria-label="Rose Mode">
                     <span class="theme-badge-icon">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="rosePillG" x1="0" y1="0" x2="24" y2="24"><stop offset="0%" stop-color="#f472b6"/><stop offset="100%" stop-color="#db2777"/></linearGradient></defs><path d="M12 3C12 3 16.5 7 16.5 11C16.5 13.4853 14.4853 15.5 12 15.5C9.51472 15.5 7.5 13.4853 7.5 11C7.5 7 12 3 12 3Z" fill="url(#rosePillG)"/></svg>
                     </span>
@@ -68,7 +68,7 @@
         <div class="login-card">
             <!-- Brand & Welcome Header -->
             <div class="login-header-wrap">
-                <div class="login-logo-glow"><img src="/icon.svg" alt="Chit Chat Logo" class="brand-app-logo"></div>
+                <div class="login-logo-glow"><img src="/icon.svg" alt="Chit Chat Logo" title="Chit Chat Logo" class="brand-app-logo"></div>
                 <h1 class="welcome-title">Chit Chat</h1>
                 <p class="login-subtitle">Simple, fast & real-time messaging</p>
             </div>
@@ -76,32 +76,34 @@
             <!-- Avatar Selection Section -->
             <div class="avatar-setup-section">
                 <div id="avatar-preview-container" class="avatar-preview-wrap">
-                    <img id="avatar-preview" src="https://api.dicebear.com/7.x/bottts/svg?seed=ChitChatGuest" alt="Avatar">
-                    <button type="button" id="btn-trigger-upload" class="edit-icon" title="Upload Custom Photo">📷</button>
+                    <img id="avatar-preview" src="https://api.dicebear.com/7.x/bottts/svg?seed=ChitChatGuest" alt="Avatar" title="Avatar">
+                    <button type="button" id="btn-trigger-upload" class="edit-icon" title="Upload Custom Photo" aria-label="Upload Custom Photo">📷</button>
                 </div>
 
                 <div class="avatar-actions-row">
-                    <button type="button" id="btn-random-avatar" class="chip-action-btn">
+                    <button type="button" id="btn-random-avatar" class="chip-action-btn" title="Shuffle Avatar" aria-label="Shuffle Avatar">
                         <span>🎲 Shuffle Avatar</span>
                     </button>
-                    <button type="button" id="btn-upload-avatar-text" class="chip-action-btn">
+                    <button type="button" id="btn-upload-avatar-text" class="chip-action-btn" title="Upload Photo" aria-label="Upload Photo">
                         <span>📷 Upload Photo</span>
                     </button>
                 </div>
             </div>
 
+            <label for="profile-pic-upload" class="sr-only">Upload profile picture</label>
             <input type="file" id="profile-pic-upload" accept="image/*" class="hidden" title="Upload profile picture" aria-label="Upload profile picture">
 
             <!-- Name Input Section -->
             <div class="login-fields-section">
                 <div class="input-field-wrapper">
                     <span class="field-icon">👤</span>
-                    <input type="text" id="username-input" placeholder="Enter your display name" autocomplete="off" maxlength="20">
+                    <label for="username-input" class="sr-only">Display Name</label>
+                    <input type="text" id="username-input" placeholder="Enter your display name" title="Enter your display name" aria-label="Display Name" autocomplete="off" maxlength="20">
                 </div>
             </div>
 
             <!-- Main Start Button -->
-            <button id="login-btn" class="primary-btn start-chat-btn">
+            <button id="login-btn" class="primary-btn start-chat-btn" title="Start Chatting" aria-label="Start Chatting" type="button">
                 <span>Start Chatting</span>
                 <span class="btn-arrow">→</span>
             </button>
@@ -113,7 +115,7 @@
         <div class="app-header lobby-header">
             <div class="lobby-title-wrap">
                 <div class="lobby-user-profile-trigger" id="lobby-profile-btn" title="View Profile">
-                    <img id="lobby-user-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=ChitChatGuest" alt="User Avatar" class="lobby-user-avatar-img">
+                    <img id="lobby-user-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=ChitChatGuest" alt="User Avatar" class="lobby-user-avatar-img" title="User Avatar">
                     <span class="lobby-user-online-pulse"></span>
                 </div>
                 <div class="lobby-brand-meta">
@@ -122,12 +124,12 @@
                 </div>
             </div>
             <div class="lobby-actions">
-                <button id="btn-theme-cycle" class="icon-btn" title="Toggle Theme">
+                <button id="btn-theme-cycle" class="icon-btn" title="Toggle Theme" aria-label="Toggle Theme" type="button">
                     <span id="theme-btn-icon">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
                     </span>
                 </button>
-                <button id="settings-btn" class="icon-btn" title="Settings">
+                <button id="settings-btn" class="icon-btn" title="Settings" aria-label="Open Settings" type="button">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                 </button>
             </div>
@@ -144,8 +146,8 @@
                     <p class="push-prompt-desc">Receive instant message alerts even when ChitChat is closed.</p>
                 </div>
                 <div class="push-prompt-actions">
-                    <button id="btn-enable-push-prompt" class="push-btn-primary" type="button">Enable</button>
-                    <button id="btn-dismiss-push-prompt" class="push-btn-dismiss" type="button" title="Dismiss">✕</button>
+                    <button id="btn-enable-push-prompt" class="push-btn-primary" type="button" title="Enable" aria-label="Enable">Enable</button>
+                    <button id="btn-dismiss-push-prompt" class="push-btn-dismiss" type="button" title="Dismiss" aria-label="Dismiss">✕</button>
                 </div>
             </div>
 
@@ -157,7 +159,7 @@
             </div>
         </div>
 
-        <button id="show-create-room-btn" class="fab-btn" title="Create New Room">
+        <button id="show-create-room-btn" class="fab-btn" title="Create New Room" aria-label="Create New Room" type="button">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
         </button>
     </div>
@@ -165,12 +167,12 @@
     <!-- Chat Screen -->
     <div id="chat-screen" class="screen hidden">
         <div id="chat-header" class="app-header chat-top-bar">
-            <button id="back-btn" class="icon-btn" title="Back">
+            <button id="back-btn" class="icon-btn" title="Back to Lobby" aria-label="Back to Lobby" type="button">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
             </button>
             <div id="header-click-area" class="header-info-clickable">
                 <div class="avatar-status-wrapper">
-                    <img id="current-room-logo" class="header-avatar" alt="Current Room Avatar" src="https://api.dicebear.com/7.x/shapes/svg?seed=room">
+                    <img id="current-room-logo" class="header-avatar" alt="Current Room Avatar" src="https://api.dicebear.com/7.x/shapes/svg?seed=room" title="Current Room Avatar">
                     <span class="live-online-dot"></span>
                 </div>
                 <div class="header-text-container">
@@ -178,7 +180,7 @@
                     <span id="online-users-text" class="header-subtitle">Tap to change info</span>
                 </div>
             </div>
-            <button id="btn-open-search" class="icon-btn" title="Search Chat">
+            <button id="btn-open-search" class="icon-btn" title="Search Chat" aria-label="Search Chat" type="button">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
             </button>
         </div>
@@ -187,8 +189,9 @@
             <span class="search-field-icon">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
             </span>
-            <input type="text" id="chat-search-input" placeholder="Search in this conversation...">
-            <button id="close-search-btn" title="Close search">
+            <label for="chat-search-input" class="sr-only">Search messages</label>
+            <input type="text" id="chat-search-input" placeholder="Search in this conversation..." title="Search in this conversation" aria-label="Search messages">
+            <button id="close-search-btn" title="Close search" aria-label="Close search" type="button">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
         </div>
@@ -200,7 +203,7 @@
                 </span>
                 <div class="pinned-details"><b id="pinned-user"></b>: <span id="pinned-text"></span></div>
             </div>
-            <button id="unpin-btn" title="Unpin">
+            <button id="unpin-btn" title="Unpin" aria-label="Unpin" type="button">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
         </div>
@@ -210,7 +213,7 @@
             <ul id="messages"></ul>
 
             <!-- Floating Scroll To Bottom Button -->
-            <button id="scroll-bottom-btn" class="scroll-bottom-btn" title="Scroll to bottom" type="button">
+            <button id="scroll-bottom-btn" class="scroll-bottom-btn" title="Scroll to bottom" type="button" aria-label="Scroll to bottom">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
                 <span id="unread-count-badge" class="unread-count-badge hidden">0</span>
             </button>
@@ -218,7 +221,7 @@
             <!-- Floating Animated Typing Indicator Bubble near Messages -->
             <div id="floating-typing-bubble" class="floating-typing-bubble hidden">
                 <div class="typing-bubble-avatar-wrap">
-                    <img id="floating-typing-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=ChitChat" alt="User Avatar">
+                    <img id="floating-typing-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=ChitChat" alt="User Avatar" title="User Avatar">
                 </div>
                 <div class="typing-bubble-content">
                     <div class="typing-bubble-meta">
@@ -237,7 +240,7 @@
         <div id="reply-preview-container" class="hidden">
             <div class="reply-bar-accent"></div>
             <div id="reply-preview-text"></div>
-            <button id="cancel-reply-btn" title="Cancel Reply">
+            <button id="cancel-reply-btn" title="Cancel Reply" aria-label="Cancel Reply" type="button">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
         </div>
@@ -246,7 +249,7 @@
         <div id="emoji-drawer" class="emoji-drawer hidden">
             <div class="emoji-drawer-header">
                 <span>Quick Emojis</span>
-                <button id="close-emoji-drawer" title="Close emoji panel">
+                <button id="close-emoji-drawer" title="Close emoji panel" aria-label="Close emoji panel" type="button">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
             </div>
@@ -272,33 +275,35 @@
                     <div class="rec-wave-bar"></div>
                     <div class="rec-wave-bar"></div>
                 </div>
-                <button id="cancel-rec-btn" class="rec-action-btn rec-cancel-btn" title="Cancel recording" type="button">
+                <button id="cancel-rec-btn" class="rec-action-btn rec-cancel-btn" title="Cancel recording" type="button" aria-label="Cancel recording">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
-                <button id="send-rec-btn" class="rec-action-btn rec-send-btn" title="Send Voice Note" type="button">
+                <button id="send-rec-btn" class="rec-action-btn rec-send-btn" title="Send Voice Note" type="button" aria-label="Send Voice Note">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                 </button>
             </div>
 
             <div id="input-pill" class="input-pill">
-                <button id="emoji-btn" class="footer-action-btn" title="Emojis" type="button">
+                <button id="emoji-btn" class="footer-action-btn" title="Emojis" aria-label="Emojis" type="button">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>
                 </button>
-                <button id="attach-btn" class="footer-action-btn" title="Send Photo or Video" type="button">
+                <button id="attach-btn" class="footer-action-btn" title="Send Photo or Video" aria-label="Send Photo or Video" type="button">
                     <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5" ry="5"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                 </button>
+                <label for="image-upload" class="sr-only">Attach photo or video</label>
                 <input type="file" id="image-upload" accept="image/*,video/*" class="hidden" title="Attach photo or video" aria-label="Attach photo or video">
-                <input type="text" id="the-chat-box" placeholder="Message..." autocomplete="off">
-                <button id="ghost-btn" class="footer-action-btn" title="Ghost Mode (10s Auto-delete)" type="button">
+                <label for="the-chat-box" class="sr-only">Type a message</label>
+                <input type="text" id="the-chat-box" placeholder="Message..." title="Type a message" aria-label="Type a message" autocomplete="off">
+                <button id="ghost-btn" class="footer-action-btn" title="Ghost Mode (10s Auto-delete)" aria-label="Ghost Mode (10s Auto-delete)" type="button">
                     <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 0 0-10 10c0 5.523 4.477 10 10 10s10-4.477 10-10A10 10 0 0 0 12 2z"></path><polyline points="12 6 12 12 16 14"></polyline></svg>
                     <span class="ghost-active-dot"></span>
                 </button>
-                <button id="poll-btn" class="footer-action-btn" title="Create Poll" type="button">
+                <button id="poll-btn" class="footer-action-btn" title="Create Poll" aria-label="Create Poll" type="button">
                     <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
                 </button>
 
             </div>
-            <button id="send-mic-btn" class="circle-btn" title="Send / Record Voice" type="button" data-state="mic">
+            <button id="send-mic-btn" class="circle-btn" title="Send / Record Voice" aria-label="Send / Record Voice" type="button" data-state="mic">
                 <span id="send-mic-icon">
                     <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
                 </span>
@@ -311,7 +316,7 @@
         <div class="profile-scroll-container">
             <!-- Glass Top Bar -->
             <div class="profile-top-navbar">
-                <button id="close-profile-btn" class="icon-btn back-btn-nav" title="Back to Settings">
+                <button id="close-profile-btn" class="icon-btn back-btn-nav" title="Back to Settings" aria-label="Back to Settings" type="button">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
                 </button>
                 <div class="profile-nav-title">
@@ -331,17 +336,17 @@
                 <div class="profile-avatar-hero">
                     <div id="settings-avatar-container" onclick="document.getElementById('profile-pic-upload').click()" title="Click to upload custom photo">
                         <div class="avatar-ring-glow"></div>
-                        <img id="settings-avatar-preview" src="https://api.dicebear.com/7.x/bottts/svg?seed=ChitChatGuest" alt="User Avatar">
+                        <img id="settings-avatar-preview" src="https://api.dicebear.com/7.x/bottts/svg?seed=ChitChatGuest" alt="User Avatar" title="User Avatar">
                         <div class="edit-icon-badge">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
                         </div>
                     </div>
                     <div class="avatar-quick-actions">
-                        <button type="button" id="profile-btn-random-avatar" class="avatar-action-chip">
+                        <button type="button" id="profile-btn-random-avatar" class="avatar-action-chip" title="Shuffle Avatar" aria-label="Shuffle Avatar">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
                             <span>Shuffle Avatar</span>
                         </button>
-                        <button type="button" id="profile-btn-upload-avatar" class="avatar-action-chip secondary">
+                        <button type="button" id="profile-btn-upload-avatar" class="avatar-action-chip secondary" title="Upload Photo" aria-label="Upload Photo">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                             <span>Upload Photo</span>
                         </button>
@@ -358,7 +363,7 @@
                         </div>
                         <div class="input-with-icon">
                             <span class="input-field-icon">👤</span>
-                            <input type="text" id="settings-username" placeholder="Display Name" maxlength="20" autocomplete="off">
+                            <input type="text" id="settings-username" placeholder="Display Name" title="Display Name" aria-label="Display Name" maxlength="20" autocomplete="off">
                         </div>
                     </div>
 
@@ -372,25 +377,25 @@
                         </div>
                         <div class="input-with-icon">
                             <span class="input-field-icon">💬</span>
-                            <input type="text" id="settings-about" placeholder="Hey there! I am using Chit Chat." maxlength="60" autocomplete="off">
+                            <input type="text" id="settings-about" placeholder="Hey there! I am using Chit Chat." title="About Status" aria-label="About Status" maxlength="60" autocomplete="off">
                         </div>
                         
                         <!-- Quick Status Presets -->
                         <div class="status-presets-wrap">
                             <span class="status-presets-hint">Quick Status:</span>
                             <div class="status-chips-row">
-                                <button type="button" class="status-chip-btn" data-status="Available ✨">Available ✨</button>
-                                <button type="button" class="status-chip-btn" data-status="At work 💼">At work 💼</button>
-                                <button type="button" class="status-chip-btn" data-status="In a meeting 📱">In a meeting 📱</button>
-                                <button type="button" class="status-chip-btn" data-status="Battery low 🔋">Battery low 🔋</button>
-                                <button type="button" class="status-chip-btn" data-status="Sleeping 😴">Sleeping 😴</button>
+                                <button type="button" class="status-chip-btn" data-status="Available ✨" title="Available ✨" aria-label="Available ✨">Available ✨</button>
+                                <button type="button" class="status-chip-btn" data-status="At work 💼" title="At work 💼" aria-label="At work 💼">At work 💼</button>
+                                <button type="button" class="status-chip-btn" data-status="In a meeting 📱" title="In a meeting 📱" aria-label="In a meeting 📱">In a meeting 📱</button>
+                                <button type="button" class="status-chip-btn" data-status="Battery low 🔋" title="Battery low 🔋" aria-label="Battery low 🔋">Battery low 🔋</button>
+                                <button type="button" class="status-chip-btn" data-status="Sleeping 😴" title="Sleeping 😴" aria-label="Sleeping 😴">Sleeping 😴</button>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Save Changes CTA Button -->
-                <button id="save-profile-btn" class="primary-btn save-profile-btn">
+                <button id="save-profile-btn" class="primary-btn save-profile-btn" title="Save Changes" aria-label="Save Changes" type="button">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><polyline points="20 6 9 17 4 12"></polyline></svg>
                     <span>Save Changes</span>
                 </button>
@@ -404,18 +409,21 @@
             <div class="modal-drag-pill"></div>
             <h3>Create Room</h3>
             <p class="modal-subtitle">Start a public or private chat group</p>
-            <input type="text" id="new-room-name" class="premium-input new-room-input" placeholder="Room Name">
+            <label for="new-room-name" class="sr-only">Room Name</label>
+            <input type="text" id="new-room-name" class="premium-input new-room-input" placeholder="Room Name" title="Room Name" aria-label="Room Name">
             <div class="premium-toggle">
-                <span>Private Room (Password Protected)</span>
-                <label class="switch">
+                <label for="new-room-private">Private Room (Password Protected)</label>
+                <label class="switch" for="new-room-private">
+                            <span class="sr-only">Private Room (Password Protected)</span>
                     <input type="checkbox" id="new-room-private" title="Private Room (Password Protected)" aria-label="Private Room (Password Protected)">
                     <span class="slider"></span>
                 </label>
             </div>
             <div id="password-input-container" class="hidden">
-                <input type="password" id="new-room-pass" class="premium-input" placeholder="Room Password">
+                <label for="new-room-pass" class="sr-only">Room Password</label>
+                <input type="password" id="new-room-pass" class="premium-input" placeholder="Room Password" title="Room Password" aria-label="Room Password">
             </div>
-            <button id="create-room-submit" class="primary-btn">Create</button>
+            <button id="create-room-submit" class="primary-btn" title="Create Room" aria-label="Create Room" type="button">Create</button>
         </div>
     </div>
 
@@ -425,8 +433,9 @@
             <div class="modal-drag-pill"></div>
             <h3>Private Room</h3>
             <p class="modal-subtitle">Enter room password to join</p>
-            <input type="password" id="join-room-pass" class="premium-input join-room-input" placeholder="Password">
-            <button id="join-room-submit" class="primary-btn">Join Room</button>
+            <label for="join-room-pass" class="sr-only">Room Password</label>
+            <input type="password" id="join-room-pass" class="premium-input join-room-input" placeholder="Password" title="Password" aria-label="Password">
+            <button id="join-room-submit" class="primary-btn" title="Join Room" aria-label="Join Room" type="button">Join Room</button>
         </div>
     </div>
 
@@ -435,19 +444,19 @@
         <div class="modal-content">
             <div class="modal-drag-pill"></div>
             <div class="reaction-bar">
-                <button class="react-btn">👍</button>
-                <button class="react-btn">❤️</button>
-                <button class="react-btn">😂</button>
-                <button class="react-btn">😮</button>
-                <button class="react-btn">😢</button>
-                <button class="react-btn">🔥</button>
+                <button class="react-btn" title="Thumbs Up" aria-label="React Thumbs Up" type="button">👍</button>
+                <button class="react-btn" title="Heart" aria-label="React Heart" type="button">❤️</button>
+                <button class="react-btn" title="Laugh" aria-label="React Laugh" type="button">😂</button>
+                <button class="react-btn" title="Surprised" aria-label="React Surprised" type="button">😮</button>
+                <button class="react-btn" title="Sad" aria-label="React Sad" type="button">😢</button>
+                <button class="react-btn" title="Fire" aria-label="React Fire" type="button">🔥</button>
             </div>
             <div class="menu-list">
-                <button id="opt-reply" class="menu-btn">↩️ Reply</button>
-                <button id="opt-star" class="menu-btn">⭐ Star Message</button>
-                <button id="opt-edit" class="menu-btn hidden">✏️ Edit Message</button>
-                <button id="opt-pin" class="menu-btn">📌 Pin Message</button>
-                <button id="opt-delete" class="menu-btn danger">🗑️ Delete Message</button>
+                <button id="opt-reply" class="menu-btn" title="Reply to message" aria-label="Reply to message" type="button">↩️ Reply</button>
+                <button id="opt-star" class="menu-btn" title="Star message" aria-label="Star message" type="button">⭐ Star Message</button>
+                <button id="opt-edit" class="menu-btn hidden" title="Edit message" aria-label="Edit message" type="button">✏️ Edit Message</button>
+                <button id="opt-pin" class="menu-btn" title="Pin message" aria-label="Pin message" type="button">📌 Pin Message</button>
+                <button id="opt-delete" class="menu-btn danger" title="Delete message" aria-label="Delete message" type="button">🗑️ Delete Message</button>
             </div>
         </div>
     </div>
@@ -467,18 +476,21 @@
             <div class="modal-drag-pill"></div>
             <h3>Room Settings</h3>
             <div class="room-pic-select-wrap">
-                <img id="info-room-logo" class="info-room-logo-img" alt="Room Logo">
+                <img id="info-room-logo" class="info-room-logo-img" alt="Room Logo" title="Room Logo">
+                <label for="group-pic-upload" class="sr-only">Upload room logo</label>
                 <input type="file" id="group-pic-upload" accept="image/*" class="hidden" title="Upload room logo" aria-label="Upload room logo">
-                <button onclick="document.getElementById('group-pic-upload').click()" class="icon-btn change-logo-btn" type="button">Change Logo</button>
+                <button onclick="document.getElementById('group-pic-upload').click()" class="icon-btn change-logo-btn" type="button" title="Change Logo" aria-label="Change Logo">Change Logo</button>
             </div>
-            <input type="text" id="info-room-name" class="premium-input" placeholder="Room Name">
-            <button id="save-group-info-btn" class="primary-btn save-group-btn">Save Changes</button>
+            <label for="info-room-name" class="sr-only">Room Name</label>
+            <input type="text" id="info-room-name" class="premium-input" placeholder="Room Name" title="Room Name" aria-label="Room Name">
+            <button id="save-group-info-btn" class="primary-btn save-group-btn" title="Save Changes" aria-label="Save Changes" type="button">Save Changes</button>
             
             <div class="menu-list">
-                <button id="btn-view-starred" class="menu-btn">⭐ View Starred Messages</button>
-                <button id="btn-change-wallpaper" class="menu-btn">🖼️ Change Chat Wallpaper</button>
+                <button id="btn-view-starred" class="menu-btn" title="View Starred Messages" aria-label="View Starred Messages" type="button">⭐ View Starred Messages</button>
+                <button id="btn-change-wallpaper" class="menu-btn" title="Change Chat Wallpaper" aria-label="Change Chat Wallpaper" type="button">🖼️ Change Chat Wallpaper</button>
+                <label for="wallpaper-upload" class="sr-only">Upload chat wallpaper</label>
                 <input type="file" id="wallpaper-upload" accept="image/*" class="hidden" title="Upload chat wallpaper" aria-label="Upload chat wallpaper">
-                <button id="btn-reset-wallpaper" class="menu-btn">🔄 Reset Wallpaper</button>
+                <button id="btn-reset-wallpaper" class="menu-btn" title="Reset Wallpaper" aria-label="Reset Wallpaper" type="button">🔄 Reset Wallpaper</button>
             </div>
         </div>
     </div>
@@ -515,15 +527,16 @@
             <div class="poll-presets-wrap">
                 <span class="poll-presets-label">Quick Presets:</span>
                 <div class="poll-presets-scroll">
-                    <button type="button" class="poll-preset-chip" data-q="What's your vote?" data-opts="Yes,No,Maybe">Yes / No / Maybe</button>
-                    <button type="button" class="poll-preset-chip" data-q="Rate this experience" data-opts="Excellent,Good,Average,Needs Work">1 - 5 Rating</button>
-                    <button type="button" class="poll-preset-chip" data-q="What should we eat for lunch?" data-opts="Pizza,Burgers,Sushi,Tacos">Lunch Poll</button>
-                    <button type="button" class="poll-preset-chip" data-q="When should we meet up?" data-opts="Today Evening,Tomorrow,This Weekend,Next Week">Meetup Time</button>
+                    <button type="button" class="poll-preset-chip" data-q="What's your vote?" data-opts="Yes,No,Maybe" title="Yes / No / Maybe" aria-label="Yes / No / Maybe">Yes / No / Maybe</button>
+                    <button type="button" class="poll-preset-chip" data-q="Rate this experience" data-opts="Excellent,Good,Average,Needs Work" title="1 - 5 Rating" aria-label="1 - 5 Rating">1 - 5 Rating</button>
+                    <button type="button" class="poll-preset-chip" data-q="What should we eat for lunch?" data-opts="Pizza,Burgers,Sushi,Tacos" title="Lunch Poll" aria-label="Lunch Poll">Lunch Poll</button>
+                    <button type="button" class="poll-preset-chip" data-q="When should we meet up?" data-opts="Today Evening,Tomorrow,This Weekend,Next Week" title="Meetup Time" aria-label="Meetup Time">Meetup Time</button>
                 </div>
             </div>
 
             <div class="poll-modal-body">
-                <input type="text" id="poll-question" class="premium-input poll-question-input" placeholder="Ask a question...">
+                <label for="poll-question" class="sr-only">Ask a question</label>
+                <input type="text" id="poll-question" class="premium-input poll-question-input" placeholder="Ask a question..." title="Ask a question" aria-label="Ask a question">
                 
                 <div class="poll-options-header">
                     <span>Poll Options</span>
@@ -533,36 +546,38 @@
                 <div id="poll-options-container" class="poll-options-container">
                     <div class="poll-opt-row">
                         <span class="poll-opt-num">1</span>
-                        <input type="text" class="premium-input poll-opt-input poll-opt-no-margin" placeholder="Option 1" title="Option 1" aria-label="Option 1">
-                        <button type="button" class="poll-opt-remove-btn" title="Remove option">✕</button>
+                        <label for="poll-opt-1" class="sr-only">Option 1</label>
+                        <input type="text" id="poll-opt-1" class="premium-input poll-opt-input poll-opt-no-margin" placeholder="Option 1" title="Option 1" aria-label="Option 1">
+                        <button type="button" class="poll-opt-remove-btn" title="Remove option" aria-label="Remove option">✕</button>
                     </div>
                     <div class="poll-opt-row">
                         <span class="poll-opt-num">2</span>
-                        <input type="text" class="premium-input poll-opt-input poll-opt-no-margin" placeholder="Option 2" title="Option 2" aria-label="Option 2">
-                        <button type="button" class="poll-opt-remove-btn" title="Remove option">✕</button>
+                        <label for="poll-opt-2" class="sr-only">Option 2</label>
+                        <input type="text" id="poll-opt-2" class="premium-input poll-opt-input poll-opt-no-margin" placeholder="Option 2" title="Option 2" aria-label="Option 2">
+                        <button type="button" class="poll-opt-remove-btn" title="Remove option" aria-label="Remove option">✕</button>
                     </div>
                 </div>
                 
-                <button type="button" id="add-poll-opt-btn" class="menu-btn add-poll-opt-btn">+ Add Option</button>
+                <button type="button" id="add-poll-opt-btn" class="menu-btn add-poll-opt-btn" title="Add Option" aria-label="Add Option">+ Add Option</button>
 
                 <!-- Poll Settings Toggles -->
                 <div class="poll-settings-box">
                     <div class="poll-setting-row">
                         <div class="poll-setting-col">
-                            <span class="poll-setting-title">Allow Multiple Answers</span>
+                            <label for="poll-toggle-multiple" class="poll-setting-title">Allow Multiple Answers</label>
                             <span class="poll-setting-desc">Voters can select more than one choice</span>
                         </div>
-                        <label class="switch">
+                        <label class="switch" for="poll-toggle-multiple">
                             <input type="checkbox" id="poll-toggle-multiple" title="Allow Multiple Answers" aria-label="Allow Multiple Answers">
                             <span class="slider"></span>
                         </label>
                     </div>
                     <div class="poll-setting-row border-top">
                         <div class="poll-setting-col">
-                            <span class="poll-setting-title">Anonymous Voting</span>
+                            <label for="poll-toggle-anonymous" class="poll-setting-title">Anonymous Voting</label>
                             <span class="poll-setting-desc">Hide voter identities from results</span>
                         </div>
-                        <label class="switch">
+                        <label class="switch" for="poll-toggle-anonymous">
                             <input type="checkbox" id="poll-toggle-anonymous" title="Anonymous Voting" aria-label="Anonymous Voting">
                             <span class="slider"></span>
                         </label>
@@ -570,7 +585,7 @@
                 </div>
             </div>
             
-            <button id="send-poll-btn" class="primary-btn send-poll-btn">Send Poll</button>
+            <button id="send-poll-btn" class="primary-btn send-poll-btn" title="Send Poll" aria-label="Send Poll" type="button">Send Poll</button>
         </div>
     </div>
 
@@ -597,7 +612,7 @@
     <div id="settings-screen" class="screen hidden">
         <!-- Clean Modern Header -->
         <div class="settings-clean-header">
-            <button id="close-settings-page-btn" class="clean-back-btn" title="Back to chats" type="button">
+            <button id="close-settings-page-btn" class="clean-back-btn" title="Back to chats" type="button" aria-label="Back to chats">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
             </button>
             <h2 class="settings-clean-title">Settings</h2>
@@ -608,7 +623,7 @@
             <!-- Profile Tile -->
             <div id="settings-profile-card" class="clean-profile-tile" role="button" tabindex="0">
                 <div class="clean-avatar-wrap">
-                    <img id="settings-card-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=ChitChatGuest" alt="User Avatar">
+                    <img id="settings-card-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=ChitChatGuest" alt="User Avatar" title="User Avatar">
                     <span class="clean-online-dot"></span>
                 </div>
                 <div class="clean-profile-meta">
@@ -632,16 +647,16 @@
                             <span class="clean-label">Theme</span>
                         </div>
                         <div class="clean-theme-segmented">
-                            <button class="theme-card-btn clean-theme-pill" data-theme-val="emerald" title="Cute Green" type="button">
+                            <button class="theme-card-btn clean-theme-pill" data-theme-val="emerald" title="Cute Green" type="button" aria-label="Cute Green">
                                 <span>🌱 Green</span>
                             </button>
-                            <button class="theme-card-btn clean-theme-pill" data-theme-val="light" title="Light" type="button">
+                            <button class="theme-card-btn clean-theme-pill" data-theme-val="light" title="Light" type="button" aria-label="Light">
                                 <span>☀️ Light</span>
                             </button>
-                            <button class="theme-card-btn clean-theme-pill" data-theme-val="dark" title="Dark" type="button">
+                            <button class="theme-card-btn clean-theme-pill" data-theme-val="dark" title="Dark" type="button" aria-label="Dark">
                                 <span>🌙 Dark</span>
                             </button>
-                            <button class="theme-card-btn clean-theme-pill" data-theme-val="pink" title="Pink" type="button">
+                            <button class="theme-card-btn clean-theme-pill" data-theme-val="pink" title="Pink" type="button" aria-label="Pink">
                                 <span>🌸 Pink</span>
                             </button>
                         </div>
@@ -668,9 +683,9 @@
                             <div class="clean-icon-box icon-sound">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
                             </div>
-                            <span class="clean-label">Sound Effects</span>
+                            <label for="toggle-sound-effects" class="clean-label">Sound Effects</label>
                         </div>
-                        <label class="switch">
+                        <label class="switch" for="toggle-sound-effects">
                             <input type="checkbox" id="toggle-sound-effects" title="Sound Effects" aria-label="Sound Effects" checked>
                             <span class="slider"></span>
                         </label>
@@ -681,9 +696,9 @@
                             <div class="clean-icon-box icon-haptic">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="3"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
                             </div>
-                            <span class="clean-label">Haptic Vibration</span>
+                            <label for="toggle-haptic-feedback" class="clean-label">Haptic Vibration</label>
                         </div>
-                        <label class="switch">
+                        <label class="switch" for="toggle-haptic-feedback">
                             <input type="checkbox" id="toggle-haptic-feedback" title="Haptic Vibration" aria-label="Haptic Vibration" checked>
                             <span class="slider"></span>
                         </label>
@@ -695,13 +710,13 @@
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
                             </div>
                             <div>
-                                <span class="clean-label">Push Alerts</span>
+                                <label for="toggle-push-notifications" class="clean-label">Push Alerts</label>
                                 <span id="notif-permission-status-text" class="clean-sublabel">Alerts for new messages</span>
                             </div>
                         </div>
                         <div class="clean-row-actions">
-                            <button id="btn-request-push-permission" class="clean-subtle-btn" type="button">Test</button>
-                            <label class="switch">
+                            <button id="btn-request-push-permission" class="clean-subtle-btn" title="Test Push Alerts" aria-label="Test Push Alerts" type="button">Test</button>
+                            <label class="switch" for="toggle-push-notifications">
                                 <input type="checkbox" id="toggle-push-notifications" title="Push Alerts" aria-label="Push Alerts" checked>
                                 <span class="slider"></span>
                             </label>
@@ -719,9 +734,9 @@
                             <div class="clean-icon-box icon-lock">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                             </div>
-                            <span class="clean-label">App Passcode Lock</span>
+                            <label for="toggle-app-lock" class="clean-label">App Passcode Lock</label>
                         </div>
-                        <label class="switch">
+                        <label class="switch" for="toggle-app-lock">
                             <input type="checkbox" id="toggle-app-lock" title="App Passcode Lock" aria-label="App Passcode Lock">
                             <span class="slider"></span>
                         </label>
@@ -753,7 +768,7 @@
                                 <span id="storage-usage-text" class="clean-sublabel">0 KB</span>
                             </div>
                         </div>
-                        <button id="btn-clear-cache" class="clean-subtle-btn danger" type="button">Clear</button>
+                        <button id="btn-clear-cache" class="clean-subtle-btn danger" title="Clear Offline Cache" aria-label="Clear Offline Cache" type="button">Clear</button>
                     </div>
 
                     <div class="clean-row">
@@ -770,7 +785,7 @@
 
             <!-- Log Out / Reset -->
             <div class="clean-logout-wrap">
-                <button id="btn-logout" class="clean-logout-btn" type="button">
+                <button id="btn-logout" class="clean-logout-btn" title="Log Out & Reset" aria-label="Log Out & Reset" type="button">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
                     <span>Log Out & Reset</span>
                 </button>
@@ -788,58 +803,58 @@
                     <span class="sparkle-icon">🎨</span>
                     <span class="modal-title-text">Customization Studio</span>
                 </div>
-                <button id="close-customization-modal" class="modal-close-btn" type="button">✕</button>
+                <button id="close-customization-modal" class="modal-close-btn" title="Close Customization Studio" aria-label="Close Customization Studio" type="button">✕</button>
             </div>
             <div class="modal-card-body">
                 <!-- Wallpaper Presets -->
                 <div class="cust-section">
                     <label class="cust-label">Chat Wallpaper Design</label>
                     <div class="wallpaper-preset-grid">
-                        <button type="button" class="wp-card active" data-wp="default">
+                        <button type="button" class="wp-card active" data-wp="default" title="Default Clean" aria-label="Default Clean">
                             <span class="wp-preview wp-pattern-default"></span>
                             <span>Default Clean</span>
                         </button>
-                        <button type="button" class="wp-card" data-wp="doodle">
+                        <button type="button" class="wp-card" data-wp="doodle" title="Chat Doodles" aria-label="Chat Doodles">
                             <span class="wp-preview wp-pattern-doodle"></span>
                             <span>Chat Doodles</span>
                         </button>
-                        <button type="button" class="wp-card" data-wp="constellation">
+                        <button type="button" class="wp-card" data-wp="constellation" title="Starry Sky" aria-label="Starry Sky">
                             <span class="wp-preview wp-pattern-constellation"></span>
                             <span>Starry Sky</span>
                         </button>
-                        <button type="button" class="wp-card" data-wp="botanical">
+                        <button type="button" class="wp-card" data-wp="botanical" title="Botanical" aria-label="Botanical">
                             <span class="wp-preview wp-pattern-botanical"></span>
                             <span>Botanical</span>
                         </button>
-                        <button type="button" class="wp-card" data-wp="cute-paws">
+                        <button type="button" class="wp-card" data-wp="cute-paws" title="Paws & Pets" aria-label="Paws & Pets">
                             <span class="wp-preview wp-pattern-cute-paws"></span>
                             <span>Paws & Pets</span>
                         </button>
-                        <button type="button" class="wp-card" data-wp="cyber-grid">
+                        <button type="button" class="wp-card" data-wp="cyber-grid" title="Cyber Mesh" aria-label="Cyber Mesh">
                             <span class="wp-preview wp-pattern-cyber-grid"></span>
                             <span>Cyber Mesh</span>
                         </button>
-                        <button type="button" class="wp-card" data-wp="waves">
+                        <button type="button" class="wp-card" data-wp="waves" title="Zen Waves" aria-label="Zen Waves">
                             <span class="wp-preview wp-pattern-waves"></span>
                             <span>Zen Waves</span>
                         </button>
-                        <button type="button" class="wp-card" data-wp="tokyo-rain">
+                        <button type="button" class="wp-card" data-wp="tokyo-rain" title="Tokyo Rain" aria-label="Tokyo Rain">
                             <span class="wp-preview wp-pattern-tokyo-rain"></span>
                             <span>Tokyo Rain</span>
                         </button>
-                        <button type="button" class="wp-card" data-wp="cozy-cafe">
+                        <button type="button" class="wp-card" data-wp="cozy-cafe" title="Cozy Cafe" aria-label="Cozy Cafe">
                             <span class="wp-preview wp-pattern-cozy-cafe"></span>
                             <span>Cozy Cafe</span>
                         </button>
-                        <button type="button" class="wp-card" data-wp="sweetheart">
+                        <button type="button" class="wp-card" data-wp="sweetheart" title="Sweetheart" aria-label="Sweetheart">
                             <span class="wp-preview wp-pattern-sweetheart"></span>
                             <span>Sweetheart</span>
                         </button>
-                        <button type="button" class="wp-card" data-wp="flirt">
+                        <button type="button" class="wp-card" data-wp="flirt" title="Flirt" aria-label="Flirt">
                             <span class="wp-preview wp-pattern-flirt"></span>
                             <span>Flirt</span>
                         </button>
-                        <button type="button" class="wp-card" data-wp="thinking-of-you">
+                        <button type="button" class="wp-card" data-wp="thinking-of-you" title="Thinking of you" aria-label="Thinking of you">
                             <span class="wp-preview wp-pattern-thinking-of-you"></span>
                             <span>Thinking of you</span>
                         </button>
@@ -848,7 +863,7 @@
                     <div class="cust-custom-wp-row">
                         <label class="cust-sublabel" for="cust-color-picker">Custom Color Tint:</label>
                         <input type="color" id="cust-color-picker" value="#f4fbf7" title="Custom Color Tint" aria-label="Custom Color Tint">
-                        <button id="btn-apply-color-wp" class="cust-btn-sm" type="button">Apply Color</button>
+                        <button id="btn-apply-color-wp" class="cust-btn-sm" title="Apply Color" aria-label="Apply Color" type="button">Apply Color</button>
                     </div>
                 </div>
 
@@ -856,15 +871,15 @@
                 <div class="cust-section">
                     <label class="cust-label">Message Bubble Style</label>
                     <div class="bubble-style-grid">
-                        <button type="button" class="bubble-style-card active" data-bubble-style="rounded">
+                        <button type="button" class="bubble-style-card active" data-bubble-style="rounded" title="Hello! 🌱 Cute Rounded" aria-label="Hello! 🌱 Cute Rounded">
                             <div class="sample-bubble rounded">Hello! 🌱</div>
                             <span>Cute Rounded</span>
                         </button>
-                        <button type="button" class="bubble-style-card" data-bubble-style="pill">
+                        <button type="button" class="bubble-style-card" data-bubble-style="pill" title="Hello! ✨ Pill Shape" aria-label="Hello! ✨ Pill Shape">
                             <div class="sample-bubble pill">Hello! ✨</div>
                             <span>Pill Shape</span>
                         </button>
-                        <button type="button" class="bubble-style-card" data-bubble-style="classic">
+                        <button type="button" class="bubble-style-card" data-bubble-style="classic" title="Hello! 👋 Classic WhatsApp" aria-label="Hello! 👋 Classic WhatsApp">
                             <div class="sample-bubble classic">Hello! 👋</div>
                             <span>Classic WhatsApp</span>
                         </button>
@@ -884,10 +899,10 @@
                 <div class="cust-section">
                     <div class="cust-toggle-row">
                         <div>
-                            <span class="cust-toggle-title">Interactive Reaction Sparks ✨</span>
+                            <label for="toggle-reaction-fx" class="cust-toggle-title">Interactive Reaction Sparks ✨</label>
                             <p class="cust-toggle-desc">Show floating particle bursts when double-tapping messages</p>
                         </div>
-                        <label class="switch">
+                        <label class="switch" for="toggle-reaction-fx">
                             <input type="checkbox" id="toggle-reaction-fx" title="Interactive Reaction Sparks" aria-label="Interactive Reaction Sparks" checked>
                             <span class="slider"></span>
                         </label>
@@ -900,7 +915,7 @@
     <!-- In-App Interactive Notification Banner -->
     <div id="in-app-notification-banner" class="in-app-notif-banner hidden">
         <div class="notif-banner-avatar-wrap">
-            <img id="notif-banner-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=ChitChat" alt="Avatar">
+            <img id="notif-banner-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=ChitChat" alt="Notification Avatar" title="Notification Avatar">
         </div>
         <div class="notif-banner-content">
             <div class="notif-banner-title">
@@ -910,15 +925,15 @@
             </div>
             <div id="notif-banner-text" class="notif-banner-text">Message text</div>
         </div>
-        <button id="notif-banner-close" class="notif-banner-close" title="Dismiss" type="button">✕</button>
+        <button id="notif-banner-close" class="notif-banner-close" title="Dismiss" aria-label="Dismiss" type="button">✕</button>
     </div>
 
     <!-- Lightbox for Image Viewer -->
     <div id="lightbox" class="modal hidden lightbox-modal">
-        <img id="lightbox-img" class="lightbox-media-img" alt="Expanded Media Preview">
+        <img id="lightbox-img" class="lightbox-media-img" alt="Expanded Media Preview" title="Expanded Media Preview">
     </div>
 
-    <script src="script.js?v=2.2"></script>
+    <script src="script.js?v=2.3"></script>
     <script>
         (function() {
             var ls = document.getElementById('loading-screen');
