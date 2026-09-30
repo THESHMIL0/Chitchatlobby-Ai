@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chit Chat</title>
     <link rel="icon" type="image/svg+xml" href="/icon.svg">
     <link rel="apple-touch-icon" href="/icon.svg">
@@ -26,11 +26,11 @@
     </div>
 
     <!-- App Lock Screen -->
-    <div id="app-lock-screen" class="screen hidden" style="z-index: 300;">
+    <div id="app-lock-screen" class="screen hidden app-lock-screen">
         <div class="login-card">
             <div class="lock-icon-badge">🔒</div>
             <h2>App Locked</h2>
-            <p style="color: var(--text-secondary); margin-bottom: 24px; font-size: 14px;">Biometric or PIN verification required.</p>
+            <p class="app-lock-desc">Biometric or PIN verification required.</p>
             <button id="unlock-app-btn" class="primary-btn">Unlock App</button>
         </div>
     </div>
@@ -90,7 +90,7 @@
                 </div>
             </div>
 
-            <input type="file" id="profile-pic-upload" accept="image/*" class="hidden">
+            <input type="file" id="profile-pic-upload" accept="image/*" class="hidden" title="Upload profile picture" aria-label="Upload profile picture">
 
             <!-- Name Input Section -->
             <div class="login-fields-section">
@@ -170,7 +170,7 @@
             </button>
             <div id="header-click-area" class="header-info-clickable">
                 <div class="avatar-status-wrapper">
-                    <img id="current-room-logo" class="header-avatar" src="https://api.dicebear.com/7.x/shapes/svg?seed=room">
+                    <img id="current-room-logo" class="header-avatar" alt="Current Room Avatar" src="https://api.dicebear.com/7.x/shapes/svg?seed=room">
                     <span class="live-online-dot"></span>
                 </div>
                 <div class="header-text-container">
@@ -287,7 +287,7 @@
                 <button id="attach-btn" class="footer-action-btn" title="Send Photo or Video" type="button">
                     <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5" ry="5"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                 </button>
-                <input type="file" id="image-upload" accept="image/*,video/*" class="hidden">
+                <input type="file" id="image-upload" accept="image/*,video/*" class="hidden" title="Attach photo or video" aria-label="Attach photo or video">
                 <input type="text" id="the-chat-box" placeholder="Message..." autocomplete="off">
                 <button id="ghost-btn" class="footer-action-btn" title="Ghost Mode (10s Auto-delete)" type="button">
                     <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 0 0-10 10c0 5.523 4.477 10 10 10s10-4.477 10-10A10 10 0 0 0 12 2z"></path><polyline points="12 6 12 12 16 14"></polyline></svg>
@@ -318,7 +318,7 @@
                     <h2>Edit Profile</h2>
                     <span class="profile-online-badge">● Active Profile</span>
                 </div>
-                <div style="width: 36px;"></div>
+                <div class="header-nav-spacer"></div>
             </div>
 
             <div class="profile-header-mesh">
@@ -404,14 +404,14 @@
             <div class="modal-drag-pill"></div>
             <h3>Create Room</h3>
             <p class="modal-subtitle">Start a public or private chat group</p>
-            <input type="text" id="new-room-name" class="premium-input" placeholder="Room Name" style="margin-top: 15px;">
-            <label class="premium-toggle">
+            <input type="text" id="new-room-name" class="premium-input new-room-input" placeholder="Room Name">
+            <div class="premium-toggle">
                 <span>Private Room (Password Protected)</span>
                 <label class="switch">
-                    <input type="checkbox" id="new-room-private">
+                    <input type="checkbox" id="new-room-private" title="Private Room (Password Protected)" aria-label="Private Room (Password Protected)">
                     <span class="slider"></span>
                 </label>
-            </label>
+            </div>
             <div id="password-input-container" class="hidden">
                 <input type="password" id="new-room-pass" class="premium-input" placeholder="Room Password">
             </div>
@@ -425,7 +425,7 @@
             <div class="modal-drag-pill"></div>
             <h3>Private Room</h3>
             <p class="modal-subtitle">Enter room password to join</p>
-            <input type="password" id="join-room-pass" class="premium-input" placeholder="Password" style="margin-top: 15px;">
+            <input type="password" id="join-room-pass" class="premium-input join-room-input" placeholder="Password">
             <button id="join-room-submit" class="primary-btn">Join Room</button>
         </div>
     </div>
@@ -466,18 +466,18 @@
         <div class="modal-content form-modal">
             <div class="modal-drag-pill"></div>
             <h3>Room Settings</h3>
-            <div style="display: flex; flex-direction: column; align-items: center; margin: 15px 0;">
-                <img id="info-room-logo" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-bottom: 10px;">
-                <input type="file" id="group-pic-upload" accept="image/*" class="hidden">
-                <button onclick="document.getElementById('group-pic-upload').click()" class="icon-btn" style="font-size: 14px; color: var(--accent);">Change Logo</button>
+            <div class="room-pic-select-wrap">
+                <img id="info-room-logo" class="info-room-logo-img" alt="Room Logo">
+                <input type="file" id="group-pic-upload" accept="image/*" class="hidden" title="Upload room logo" aria-label="Upload room logo">
+                <button onclick="document.getElementById('group-pic-upload').click()" class="icon-btn change-logo-btn" type="button">Change Logo</button>
             </div>
             <input type="text" id="info-room-name" class="premium-input" placeholder="Room Name">
-            <button id="save-group-info-btn" class="primary-btn" style="margin-bottom: 10px;">Save Changes</button>
+            <button id="save-group-info-btn" class="primary-btn save-group-btn">Save Changes</button>
             
             <div class="menu-list">
                 <button id="btn-view-starred" class="menu-btn">⭐ View Starred Messages</button>
                 <button id="btn-change-wallpaper" class="menu-btn">🖼️ Change Chat Wallpaper</button>
-                <input type="file" id="wallpaper-upload" accept="image/*" class="hidden">
+                <input type="file" id="wallpaper-upload" accept="image/*" class="hidden" title="Upload chat wallpaper" aria-label="Upload chat wallpaper">
                 <button id="btn-reset-wallpaper" class="menu-btn">🔄 Reset Wallpaper</button>
             </div>
         </div>
@@ -485,36 +485,36 @@
 
     <!-- Starred Messages Modal -->
     <div id="starred-messages-modal" class="modal hidden">
-        <div class="modal-content form-modal" style="max-height: 80dvh; display: flex; flex-direction: column;">
+        <div class="modal-content form-modal starred-modal-content">
             <div class="modal-drag-pill"></div>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div class="modal-header-between">
                 <h3>Starred Messages ⭐</h3>
-                <button id="close-starred-modal-btn" class="icon-btn">
+                <button id="close-starred-modal-btn" class="icon-btn" title="Close" aria-label="Close" type="button">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
             </div>
-            <div id="starred-messages-list" style="overflow-y: auto; display: flex; flex-direction: column; gap: 10px; max-height: 50dvh; padding-right: 4px;">
-                <p style="text-align: center; color: var(--text-secondary); font-size: 13.5px; padding: 20px 0;">No starred messages yet. Long-press any message to star it! ⭐</p>
+            <div id="starred-messages-list" class="starred-messages-scroll">
+                <p class="starred-empty-msg">No starred messages yet. Long-press any message to star it! ⭐</p>
             </div>
         </div>
     </div>
 
     <!-- Create Poll Modal -->
     <div id="create-poll-modal" class="modal hidden">
-        <div class="modal-content form-modal" style="max-height: 85dvh; overflow-y: auto;">
+        <div class="modal-content form-modal poll-modal-content">
             <div class="modal-drag-pill"></div>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+            <div class="poll-header-between">
                 <h3>Create Poll 📊</h3>
-                <button id="close-poll-modal-btn" class="icon-btn" type="button">
+                <button id="close-poll-modal-btn" class="icon-btn" title="Close" aria-label="Close" type="button">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
             </div>
             <p class="modal-subtitle">Ask a question and get live interactive votes</p>
 
             <!-- Quick Poll Templates / Presets -->
-            <div class="poll-presets-wrap" style="margin-top: 10px;">
-                <span style="font-size: 11.5px; font-weight: 700; color: var(--text-secondary); display: block; margin-bottom: 6px;">Quick Presets:</span>
-                <div class="poll-presets-scroll" style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px;">
+            <div class="poll-presets-wrap">
+                <span class="poll-presets-label">Quick Presets:</span>
+                <div class="poll-presets-scroll">
                     <button type="button" class="poll-preset-chip" data-q="What's your vote?" data-opts="Yes,No,Maybe">Yes / No / Maybe</button>
                     <button type="button" class="poll-preset-chip" data-q="Rate this experience" data-opts="Excellent,Good,Average,Needs Work">1 - 5 Rating</button>
                     <button type="button" class="poll-preset-chip" data-q="What should we eat for lunch?" data-opts="Pizza,Burgers,Sushi,Tacos">Lunch Poll</button>
@@ -522,72 +522,72 @@
                 </div>
             </div>
 
-            <div class="poll-modal-body" style="margin-top: 10px; display: flex; flex-direction: column; gap: 10px;">
-                <input type="text" id="poll-question" class="premium-input" placeholder="Ask a question..." style="margin-bottom: 2px;">
+            <div class="poll-modal-body">
+                <input type="text" id="poll-question" class="premium-input poll-question-input" placeholder="Ask a question...">
                 
-                <div class="poll-options-header" style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 700; color: var(--text-secondary); margin-top: 4px;">
+                <div class="poll-options-header">
                     <span>Poll Options</span>
                     <span id="poll-count-badge">2 / 10</span>
                 </div>
                 
-                <div id="poll-options-container" style="display: flex; flex-direction: column; gap: 8px;">
+                <div id="poll-options-container" class="poll-options-container">
                     <div class="poll-opt-row">
                         <span class="poll-opt-num">1</span>
-                        <input type="text" class="premium-input poll-opt-input" placeholder="Option 1" style="margin-bottom:0;">
+                        <input type="text" class="premium-input poll-opt-input poll-opt-no-margin" placeholder="Option 1" title="Option 1" aria-label="Option 1">
                         <button type="button" class="poll-opt-remove-btn" title="Remove option">✕</button>
                     </div>
                     <div class="poll-opt-row">
                         <span class="poll-opt-num">2</span>
-                        <input type="text" class="premium-input poll-opt-input" placeholder="Option 2" style="margin-bottom:0;">
+                        <input type="text" class="premium-input poll-opt-input poll-opt-no-margin" placeholder="Option 2" title="Option 2" aria-label="Option 2">
                         <button type="button" class="poll-opt-remove-btn" title="Remove option">✕</button>
                     </div>
                 </div>
                 
-                <button type="button" id="add-poll-opt-btn" class="menu-btn" style="justify-content: center; margin-top: 2px; border-radius: 14px; background: var(--input-bg); font-weight: 700; color: var(--accent);">+ Add Option</button>
+                <button type="button" id="add-poll-opt-btn" class="menu-btn add-poll-opt-btn">+ Add Option</button>
 
                 <!-- Poll Settings Toggles -->
-                <div class="poll-settings-box" style="background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 14px; padding: 10px 12px; display: flex; flex-direction: column; gap: 10px; margin-top: 4px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div style="display: flex; flex-direction: column;">
-                            <span style="font-size: 13px; font-weight: 700; color: var(--text-primary);">Allow Multiple Answers</span>
-                            <span style="font-size: 11px; color: var(--text-secondary);">Voters can select more than one choice</span>
+                <div class="poll-settings-box">
+                    <div class="poll-setting-row">
+                        <div class="poll-setting-col">
+                            <span class="poll-setting-title">Allow Multiple Answers</span>
+                            <span class="poll-setting-desc">Voters can select more than one choice</span>
                         </div>
                         <label class="switch">
-                            <input type="checkbox" id="poll-toggle-multiple">
+                            <input type="checkbox" id="poll-toggle-multiple" title="Allow Multiple Answers" aria-label="Allow Multiple Answers">
                             <span class="slider"></span>
                         </label>
                     </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 8px;">
-                        <div style="display: flex; flex-direction: column;">
-                            <span style="font-size: 13px; font-weight: 700; color: var(--text-primary);">Anonymous Voting</span>
-                            <span style="font-size: 11px; color: var(--text-secondary);">Hide voter identities from results</span>
+                    <div class="poll-setting-row border-top">
+                        <div class="poll-setting-col">
+                            <span class="poll-setting-title">Anonymous Voting</span>
+                            <span class="poll-setting-desc">Hide voter identities from results</span>
                         </div>
                         <label class="switch">
-                            <input type="checkbox" id="poll-toggle-anonymous">
+                            <input type="checkbox" id="poll-toggle-anonymous" title="Anonymous Voting" aria-label="Anonymous Voting">
                             <span class="slider"></span>
                         </label>
                     </div>
                 </div>
             </div>
             
-            <button id="send-poll-btn" class="primary-btn" style="margin-top: 12px;">Send Poll</button>
+            <button id="send-poll-btn" class="primary-btn send-poll-btn">Send Poll</button>
         </div>
     </div>
 
     <!-- Poll Voters Details Modal -->
     <div id="poll-voters-modal" class="modal hidden">
-        <div class="modal-content form-modal" style="max-height: 80dvh; display: flex; flex-direction: column;">
+        <div class="modal-content form-modal pv-modal-content">
             <div class="modal-drag-pill"></div>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div class="pv-header-between">
                 <div>
                     <h3 id="pv-modal-title">Poll Results</h3>
-                    <p id="pv-modal-sub" style="font-size: 12px; color: var(--text-secondary);">Voter breakdown</p>
+                    <p id="pv-modal-sub" class="pv-modal-subtext">Voter breakdown</p>
                 </div>
-                <button id="close-pv-modal-btn" class="icon-btn" type="button">
+                <button id="close-pv-modal-btn" class="icon-btn" title="Close" aria-label="Close" type="button">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
             </div>
-            <div id="poll-voters-list" style="overflow-y: auto; display: flex; flex-direction: column; gap: 12px; max-height: 55dvh; padding-right: 4px;">
+            <div id="poll-voters-list" class="pv-list-scroll">
                 <!-- Dynamically populated options & voters -->
             </div>
         </div>
@@ -601,7 +601,7 @@
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
             </button>
             <h2 class="settings-clean-title">Settings</h2>
-            <div style="width: 36px;"></div>
+            <div class="header-nav-spacer"></div>
         </div>
 
         <div class="settings-clean-scroll">
@@ -615,9 +615,9 @@
                     <h3 id="settings-card-name">Guest User</h3>
                     <p id="settings-card-about">Hey there! I am using Chit Chat.</p>
                 </div>
-                <button id="btn-open-profile" class="clean-chevron-btn" title="Edit Profile" type="button">
+                <span id="btn-open-profile" class="clean-chevron-btn" aria-hidden="true">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
-                </button>
+                </span>
             </div>
 
             <!-- Appearance -->
@@ -671,7 +671,7 @@
                             <span class="clean-label">Sound Effects</span>
                         </div>
                         <label class="switch">
-                            <input type="checkbox" id="toggle-sound-effects" checked>
+                            <input type="checkbox" id="toggle-sound-effects" title="Sound Effects" aria-label="Sound Effects" checked>
                             <span class="slider"></span>
                         </label>
                     </div>
@@ -684,7 +684,7 @@
                             <span class="clean-label">Haptic Vibration</span>
                         </div>
                         <label class="switch">
-                            <input type="checkbox" id="toggle-haptic-feedback" checked>
+                            <input type="checkbox" id="toggle-haptic-feedback" title="Haptic Vibration" aria-label="Haptic Vibration" checked>
                             <span class="slider"></span>
                         </label>
                     </div>
@@ -699,10 +699,10 @@
                                 <span id="notif-permission-status-text" class="clean-sublabel">Alerts for new messages</span>
                             </div>
                         </div>
-                        <div style="display: flex; align-items: center; gap: 8px;">
+                        <div class="clean-row-actions">
                             <button id="btn-request-push-permission" class="clean-subtle-btn" type="button">Test</button>
                             <label class="switch">
-                                <input type="checkbox" id="toggle-push-notifications" checked>
+                                <input type="checkbox" id="toggle-push-notifications" title="Push Alerts" aria-label="Push Alerts" checked>
                                 <span class="slider"></span>
                             </label>
                         </div>
@@ -722,7 +722,7 @@
                             <span class="clean-label">App Passcode Lock</span>
                         </div>
                         <label class="switch">
-                            <input type="checkbox" id="toggle-app-lock">
+                            <input type="checkbox" id="toggle-app-lock" title="App Passcode Lock" aria-label="App Passcode Lock">
                             <span class="slider"></span>
                         </label>
                     </div>
@@ -846,8 +846,8 @@
                     </div>
                     
                     <div class="cust-custom-wp-row">
-                        <label class="cust-sublabel">Custom Color Tint:</label>
-                        <input type="color" id="cust-color-picker" value="#f4fbf7">
+                        <label class="cust-sublabel" for="cust-color-picker">Custom Color Tint:</label>
+                        <input type="color" id="cust-color-picker" value="#f4fbf7" title="Custom Color Tint" aria-label="Custom Color Tint">
                         <button id="btn-apply-color-wp" class="cust-btn-sm" type="button">Apply Color</button>
                     </div>
                 </div>
@@ -874,10 +874,10 @@
                 <!-- Font Size Slider -->
                 <div class="cust-section">
                     <div class="cust-slider-header">
-                        <label class="cust-label">Chat Text Size</label>
+                        <label class="cust-label" for="font-size-slider">Chat Text Size</label>
                         <span id="font-size-value">15px</span>
                     </div>
-                    <input type="range" id="font-size-slider" min="13" max="19" step="1" value="15">
+                    <input type="range" id="font-size-slider" min="13" max="19" step="1" value="15" title="Chat Text Size" aria-label="Chat Text Size">
                 </div>
 
                 <!-- Floating Reaction Sparkles -->
@@ -888,7 +888,7 @@
                             <p class="cust-toggle-desc">Show floating particle bursts when double-tapping messages</p>
                         </div>
                         <label class="switch">
-                            <input type="checkbox" id="toggle-reaction-fx" checked>
+                            <input type="checkbox" id="toggle-reaction-fx" title="Interactive Reaction Sparks" aria-label="Interactive Reaction Sparks" checked>
                             <span class="slider"></span>
                         </label>
                     </div>
@@ -914,8 +914,8 @@
     </div>
 
     <!-- Lightbox for Image Viewer -->
-    <div id="lightbox" class="modal hidden" style="background: rgba(0,0,0,0.9); justify-content: center; align-items: center;">
-        <img id="lightbox-img" style="max-width: 95%; max-height: 90dvh; object-fit: contain; border-radius: 12px;">
+    <div id="lightbox" class="modal hidden lightbox-modal">
+        <img id="lightbox-img" class="lightbox-media-img" alt="Expanded Media Preview">
     </div>
 
     <script src="script.js?v=2.2"></script>
