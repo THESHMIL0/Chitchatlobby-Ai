@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="aiBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06b6d4" />
+      <stop offset="50%" stop-color="#0891b2" />
+      <stop offset="100%" stop-color="#0e7490" />
+    </linearGradient>
+    <linearGradient id="sparkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#cffafe" />
+    </linearGradient>
+    <filter id="aiGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="14" flood-color="#0891b2" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+
+  <!-- Squircle Frame -->
+  <rect x="32" y="32" width="448" height="448" rx="112" fill="url(#aiBgGrad)"/>
+
+  <!-- Subtle Inner Shimmer -->
+  <path d="M 80 140 C 180 60, 332 60, 432 140" fill="none" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" opacity="0.25"/>
+
+  <!-- AI Robot / Neural Head -->
+  <g filter="url(#aiGlow)">
+    <!-- Antenna -->
+    <rect x="246" y="110" width="20" height="40" rx="10" fill="url(#sparkGrad)" />
+    <circle cx="256" cy="100" r="16" fill="#38bdf8" />
+
+    <!-- Head Body -->
+    <rect x="136" y="145" width="240" height="190" rx="55" fill="url(#sparkGrad)" />
+
+    <!-- Visor Display -->
+    <rect x="166" y="180" width="180" height="110" rx="30" fill="#0f172a" />
+
+    <!-- Glowing Cyber Eyes -->
+    <circle cx="210" cy="235" r="18" fill="#38bdf8" />
+    <circle cx="302" cy="235" r="18" fill="#38bdf8" />
+    <circle cx="215" cy="230" r="6" fill="#ffffff" />
+    <circle cx="307" cy="230" r="6" fill="#ffffff" />
+
+    <!-- Friendly Smile -->
+    <path d="M 230 262 Q 256 278 282 262" fill="none" stroke="#38bdf8" stroke-width="6" stroke-linecap="round" />
+
+    <!-- Ear Nodes -->
+    <rect x="118" y="210" width="20" height="55" rx="8" fill="url(#sparkGrad)" opacity="0.8" />
+    <rect x="374" y="210" width="20" height="55" rx="8" fill="url(#sparkGrad)" opacity="0.8" />
+
+    <!-- Sparkle Stars -->
+    <path d="M 390 120 Q 390 145 415 145 Q 390 145 390 170 Q 390 145 365 145 Q 390 145 390 120 Z" fill="#facc15" />
+    <path d="M 120 330 Q 120 345 135 345 Q 120 345 120 360 Q 120 345 105 345 Q 120 345 120 330 Z" fill="#38bdf8" />
+  </g>
+</svg>

@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=2.4">
+    <link rel="stylesheet" href="style.css?v=2.6">
     <link rel="manifest" href="manifest.json">
     <script src="/socket.io/socket.io.js"></script>
 </head>
@@ -28,7 +28,9 @@
     <!-- App Lock Screen -->
     <div id="app-lock-screen" class="screen hidden app-lock-screen">
         <div class="login-card">
-            <div class="lock-icon-badge">🔒</div>
+            <div class="lock-icon-badge">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
             <h2>App Locked</h2>
             <p class="app-lock-desc">Biometric or PIN verification required.</p>
             <button id="unlock-app-btn" class="primary-btn" title="Unlock App" aria-label="Unlock App" type="button">Unlock App</button>
@@ -41,7 +43,7 @@
         <div class="login-top-theme-bar">
             <div class="login-theme-pills">
                 <button type="button" class="theme-pill" data-theme-choice="emerald" title="Cute Green Mode" aria-label="Cute Green Mode">
-                    <span class="theme-badge-icon">🌱</span>
+                    <span class="theme-badge-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg></span>
                     <span>Cute Green</span>
                 </button>
                 <button type="button" class="theme-pill" data-theme-choice="light" title="Light Mode" aria-label="Light Mode">
@@ -77,15 +79,17 @@
             <div class="avatar-setup-section">
                 <div id="avatar-preview-container" class="avatar-preview-wrap">
                     <img id="avatar-preview" src="https://api.dicebear.com/7.x/bottts/svg?seed=ChitChatGuest" alt="Avatar" title="Avatar">
-                    <button type="button" id="btn-trigger-upload" class="edit-icon" title="Upload Custom Photo" aria-label="Upload Custom Photo">📷</button>
+                    <button type="button" id="btn-trigger-upload" class="edit-avatar-btn" title="Upload Photo" aria-label="Upload Photo">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                    </button>
                 </div>
 
                 <div class="avatar-actions-row">
                     <button type="button" id="btn-random-avatar" class="chip-action-btn" title="Shuffle Avatar" aria-label="Shuffle Avatar">
-                        <span>🎲 Shuffle Avatar</span>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="4"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="16" cy="16" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg><span>Shuffle Avatar</span>
                     </button>
                     <button type="button" id="btn-upload-avatar-text" class="chip-action-btn" title="Upload Photo" aria-label="Upload Photo">
-                        <span>📷 Upload Photo</span>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span>Upload Photo</span>
                     </button>
                 </div>
             </div>
@@ -96,7 +100,7 @@
             <!-- Name Input Section -->
             <div class="login-fields-section">
                 <div class="input-field-wrapper">
-                    <span class="field-icon">👤</span>
+                    <span class="field-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
                     <label for="username-input" class="sr-only">Display Name</label>
                     <input type="text" id="username-input" placeholder="Enter your display name" title="Enter your display name" aria-label="Display Name" autocomplete="off" maxlength="20">
                 </div>
@@ -140,7 +144,7 @@
         <div class="rooms-container">
             <!-- Visual Web Push Notification Permission Prompt Card -->
             <div id="push-permission-prompt-card" class="push-prompt-card hidden">
-                <div class="push-prompt-icon">🔔</div>
+                <div class="push-prompt-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
                 <div class="push-prompt-body">
                     <span class="push-prompt-title">Enable Web Push Notifications</span>
                     <p class="push-prompt-desc">Receive instant message alerts even when ChitChat is closed.</p>
@@ -153,7 +157,7 @@
 
             <ul id="rooms-ul"></ul>
             <div id="empty-rooms-state" class="empty-rooms-card hidden">
-                <div class="empty-rooms-icon">💬</div>
+                <div class="empty-rooms-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
                 <h4 class="empty-rooms-title">No rooms available</h4>
                 <p class="empty-rooms-sub">Create a brand new room to start chatting with friends or AI!</p>
             </div>
@@ -176,7 +180,7 @@
                     <span class="live-online-dot"></span>
                 </div>
                 <div class="header-text-container">
-                    <span id="current-room-name">Lobby 😸</span>
+                    <span id="current-room-name">Lobby</span>
                     <span id="online-users-text" class="header-subtitle">Tap to change info</span>
                 </div>
             </div>
@@ -362,7 +366,7 @@
                             <span id="name-char-count" class="char-counter">0/20</span>
                         </div>
                         <div class="input-with-icon">
-                            <span class="input-field-icon">👤</span>
+                            <span class="input-field-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
                             <input type="text" id="settings-username" placeholder="Display Name" title="Display Name" aria-label="Display Name" maxlength="20" autocomplete="off">
                         </div>
                     </div>
@@ -376,7 +380,7 @@
                             <span id="about-char-count" class="char-counter">0/60</span>
                         </div>
                         <div class="input-with-icon">
-                            <span class="input-field-icon">💬</span>
+                            <span class="input-field-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
                             <input type="text" id="settings-about" placeholder="Hey there! I am using Chit Chat." title="About Status" aria-label="About Status" maxlength="60" autocomplete="off">
                         </div>
                         
@@ -384,11 +388,11 @@
                         <div class="status-presets-wrap">
                             <span class="status-presets-hint">Quick Status:</span>
                             <div class="status-chips-row">
-                                <button type="button" class="status-chip-btn" data-status="Available ✨" title="Available ✨" aria-label="Available ✨">Available ✨</button>
-                                <button type="button" class="status-chip-btn" data-status="At work 💼" title="At work 💼" aria-label="At work 💼">At work 💼</button>
-                                <button type="button" class="status-chip-btn" data-status="In a meeting 📱" title="In a meeting 📱" aria-label="In a meeting 📱">In a meeting 📱</button>
-                                <button type="button" class="status-chip-btn" data-status="Battery low 🔋" title="Battery low 🔋" aria-label="Battery low 🔋">Battery low 🔋</button>
-                                <button type="button" class="status-chip-btn" data-status="Sleeping 😴" title="Sleeping 😴" aria-label="Sleeping 😴">Sleeping 😴</button>
+                                <button type="button" class="status-chip-btn" data-status="Available" title="Available" aria-label="Available"><span class="chip-status-dot"></span><span>Available</span></button>
+                                <button type="button" class="status-chip-btn" data-status="At work" title="At work" aria-label="At work"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg><span>At work</span></button>
+                                <button type="button" class="status-chip-btn" data-status="In a meeting" title="In a meeting" aria-label="In a meeting"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg><span>In a meeting</span></button>
+                                <button type="button" class="status-chip-btn" data-status="Battery low" title="Battery low" aria-label="Battery low"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="6" width="18" height="12" rx="2"/><line x1="23" y1="11" x2="23" y2="13"/><line x1="6" y1="10" x2="6" y2="14"/></svg><span>Battery low</span></button>
+                                <button type="button" class="status-chip-btn" data-status="Sleeping" title="Sleeping" aria-label="Sleeping"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg><span>Sleeping</span></button>
                             </div>
                         </div>
                     </div>
@@ -452,11 +456,11 @@
                 <button class="react-btn" title="Fire" aria-label="React Fire" type="button">🔥</button>
             </div>
             <div class="menu-list">
-                <button id="opt-reply" class="menu-btn" title="Reply to message" aria-label="Reply to message" type="button">↩️ Reply</button>
-                <button id="opt-star" class="menu-btn" title="Star message" aria-label="Star message" type="button">⭐ Star Message</button>
-                <button id="opt-edit" class="menu-btn hidden" title="Edit message" aria-label="Edit message" type="button">✏️ Edit Message</button>
-                <button id="opt-pin" class="menu-btn" title="Pin message" aria-label="Pin message" type="button">📌 Pin Message</button>
-                <button id="opt-delete" class="menu-btn danger" title="Delete message" aria-label="Delete message" type="button">🗑️ Delete Message</button>
+                <button id="opt-reply" class="menu-btn" title="Reply to message" aria-label="Reply to message" type="button"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg><span>Reply</span></button>
+                <button id="opt-star" class="menu-btn" title="Star message" aria-label="Star message" type="button"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span>Star Message</span></button>
+                <button id="opt-edit" class="menu-btn hidden" title="Edit message" aria-label="Edit message" type="button"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg><span>Edit Message</span></button>
+                <button id="opt-pin" class="menu-btn" title="Pin message" aria-label="Pin message" type="button"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a1 1 0 0 0 0-2H8a1 1 0 0 0 0 2h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg><span>Pin Message</span></button>
+                <button id="opt-delete" class="menu-btn danger" title="Delete message" aria-label="Delete message" type="button"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg><span>Delete Message</span></button>
             </div>
         </div>
     </div>
@@ -476,7 +480,7 @@
             <div class="modal-drag-pill"></div>
             <h3>Room Settings</h3>
             <div class="room-pic-select-wrap">
-                <img id="info-room-logo" class="info-room-logo-img" alt="Room Logo" title="Room Logo">
+                <img id="info-room-logo" class="info-room-logo-img" src="/icon.svg" alt="Room Logo" title="Room Logo">
                 <label for="group-pic-upload" class="sr-only">Upload room logo</label>
                 <input type="file" id="group-pic-upload" accept="image/*" class="hidden" title="Upload room logo" aria-label="Upload room logo">
                 <button onclick="document.getElementById('group-pic-upload').click()" class="icon-btn change-logo-btn" type="button" title="Change Logo" aria-label="Change Logo">Change Logo</button>
@@ -486,11 +490,11 @@
             <button id="save-group-info-btn" class="primary-btn save-group-btn" title="Save Changes" aria-label="Save Changes" type="button">Save Changes</button>
             
             <div class="menu-list">
-                <button id="btn-view-starred" class="menu-btn" title="View Starred Messages" aria-label="View Starred Messages" type="button">⭐ View Starred Messages</button>
-                <button id="btn-change-wallpaper" class="menu-btn" title="Change Chat Wallpaper" aria-label="Change Chat Wallpaper" type="button">🖼️ Change Chat Wallpaper</button>
+                <button id="btn-view-starred" class="menu-btn" title="View Starred Messages" aria-label="View Starred Messages" type="button"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span>Starred Messages</span></button>
+                <button id="btn-change-wallpaper" class="menu-btn" title="Change Chat Wallpaper" aria-label="Change Chat Wallpaper" type="button"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Chat Wallpaper</span></button>
                 <label for="wallpaper-upload" class="sr-only">Upload chat wallpaper</label>
                 <input type="file" id="wallpaper-upload" accept="image/*" class="hidden" title="Upload chat wallpaper" aria-label="Upload chat wallpaper">
-                <button id="btn-reset-wallpaper" class="menu-btn" title="Reset Wallpaper" aria-label="Reset Wallpaper" type="button">🔄 Reset Wallpaper</button>
+                <button id="btn-reset-wallpaper" class="menu-btn" title="Reset Wallpaper" aria-label="Reset Wallpaper" type="button"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg><span>Reset Wallpaper</span></button>
             </div>
         </div>
     </div>
@@ -506,7 +510,7 @@
                 </button>
             </div>
             <div id="starred-messages-list" class="starred-messages-scroll">
-                <p class="starred-empty-msg">No starred messages yet. Long-press any message to star it! ⭐</p>
+                <p class="starred-empty-msg">No starred messages yet. Long-press any message to star it!</p>
             </div>
         </div>
     </div>
@@ -516,7 +520,7 @@
         <div class="modal-content form-modal poll-modal-content">
             <div class="modal-drag-pill"></div>
             <div class="poll-header-between">
-                <h3>Create Poll 📊</h3>
+                <h3>Create Poll</h3>
                 <button id="close-poll-modal-btn" class="icon-btn" title="Close" aria-label="Close" type="button">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
@@ -648,16 +652,16 @@
                         </div>
                         <div class="clean-theme-segmented">
                             <button class="theme-card-btn clean-theme-pill" data-theme-val="emerald" title="Cute Green" type="button" aria-label="Cute Green">
-                                <span>🌱 Green</span>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22C12 17 16 13 21 12C21 6.5 17.5 2 12 2Z" fill="#10b981"/><path d="M2 12C7 12 11 16 12 21" stroke="#047857" stroke-width="2" stroke-linecap="round"/></svg><span>Green</span>
                             </button>
                             <button class="theme-card-btn clean-theme-pill" data-theme-val="light" title="Light" type="button" aria-label="Light">
-                                <span>☀️ Light</span>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg><span>Light</span>
                             </button>
                             <button class="theme-card-btn clean-theme-pill" data-theme-val="dark" title="Dark" type="button" aria-label="Dark">
-                                <span>🌙 Dark</span>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg><span>Dark</span>
                             </button>
                             <button class="theme-card-btn clean-theme-pill" data-theme-val="pink" title="Pink" type="button" aria-label="Pink">
-                                <span>🌸 Pink</span>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 3C12 3 16.5 7 16.5 11C16.5 13.4853 14.4853 15.5 12 15.5C9.51472 15.5 7.5 13.4853 7.5 11C7.5 7 12 3 12 3Z" fill="#ec4899"/><path d="M5 13.5C2.5 12 2 9.5 3.5 7.5C5 5.5 7.5 6 9 8.5C9 8.5 7.5 11.5 5 13.5Z" fill="#ec4899" opacity="0.75"/><path d="M19 13.5C21.5 12 22 9.5 20.5 7.5C19 5.5 16.5 6 15 8.5C15 8.5 16.5 11.5 19 13.5Z" fill="#ec4899" opacity="0.75"/></svg><span>Pink</span>
                             </button>
                         </div>
                     </div>
@@ -817,7 +821,7 @@
         <div class="modal-card customization-modal-card">
             <div class="modal-card-header">
                 <div class="modal-title-with-badge">
-                    <span class="sparkle-icon">🎨</span>
+                    <span class="sparkle-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.563-2.512 5.563-5.563C22 6.5 17.5 2 12 2Z"/></svg></span>
                     <span class="modal-title-text">Customization Studio</span>
                 </div>
                 <button id="close-customization-modal" class="modal-close-btn" title="Close Customization Studio" aria-label="Close Customization Studio" type="button">✕</button>
@@ -888,16 +892,16 @@
                 <div class="cust-section">
                     <label class="cust-label">Message Bubble Style</label>
                     <div class="bubble-style-grid">
-                        <button type="button" class="bubble-style-card active" data-bubble-style="rounded" title="Hello! 🌱 Cute Rounded" aria-label="Hello! 🌱 Cute Rounded">
-                            <div class="sample-bubble rounded">Hello! 🌱</div>
+                        <button type="button" class="bubble-style-card active" data-bubble-style="rounded" title="Hello there! Cute Rounded" aria-label="Hello there! Cute Rounded">
+                            <div class="sample-bubble rounded">Hello there!</div>
                             <span>Cute Rounded</span>
                         </button>
-                        <button type="button" class="bubble-style-card" data-bubble-style="pill" title="Hello! ✨ Pill Shape" aria-label="Hello! ✨ Pill Shape">
+                        <button type="button" class="bubble-style-card" data-bubble-style="pill" title="Hello there! Pill Shape" aria-label="Hello! ✨ Pill Shape">
                             <div class="sample-bubble pill">Hello! ✨</div>
                             <span>Pill Shape</span>
                         </button>
-                        <button type="button" class="bubble-style-card" data-bubble-style="classic" title="Hello! 👋 Classic WhatsApp" aria-label="Hello! 👋 Classic WhatsApp">
-                            <div class="sample-bubble classic">Hello! 👋</div>
+                        <button type="button" class="bubble-style-card" data-bubble-style="classic" title="Hello there! Classic WhatsApp" aria-label="Hello there! Classic WhatsApp">
+                            <div class="sample-bubble classic">Hello there!</div>
                             <span>Classic WhatsApp</span>
                         </button>
                     </div>
@@ -916,7 +920,7 @@
                 <div class="cust-section">
                     <div class="cust-toggle-row">
                         <div>
-                            <label for="toggle-reaction-fx" class="cust-toggle-title">Interactive Reaction Sparks ✨</label>
+                            <label for="toggle-reaction-fx" class="cust-toggle-title">Interactive Reaction Sparks</label>
                             <p class="cust-toggle-desc">Show floating particle bursts when double-tapping messages</p>
                         </div>
                         <label class="switch" for="toggle-reaction-fx">
@@ -950,7 +954,7 @@
         <img id="lightbox-img" class="lightbox-media-img" alt="Expanded Media Preview" title="Expanded Media Preview">
     </div>
 
-    <script src="script.js?v=2.4"></script>
+    <script src="script.js?v=2.6"></script>
     <script>
         (function() {
             var ls = document.getElementById('loading-screen');

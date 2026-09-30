@@ -728,7 +728,7 @@ if (profileRandomBtn) {
         document.querySelectorAll('.avatar-preset-item').forEach(el => el.classList.remove('active'));
         saveUserLocally();
         if (socket) socket.emit('update profile', currentUser);
-        showToast('🎲 Random avatar generated!');
+        showToast('Random avatar generated!');
     };
 }
 
@@ -869,7 +869,7 @@ if (lobbyProfileBtn) {
 
 const btnLogout = document.getElementById('btn-logout');
 if (btnLogout) {
-    btnLogout.onclick = () => { if(confirm("Are you sure you want to completely reset the app and log out? 😿")) { localStorage.clear(); window.location.reload(); } };
+    btnLogout.onclick = () => { if(confirm("Are you sure you want to completely reset the app and log out?")) { localStorage.clear(); window.location.reload(); } };
 }
 
 const closeProfileBtn = document.getElementById('close-profile-btn');
@@ -923,7 +923,7 @@ window.addEventListener('popstate', (e) => {
         if (settingsScreen) settingsScreen.classList.add('hidden');
         if (roomListScreen) roomListScreen.classList.remove('hidden');
     } else if (state === 'exit') {
-        if (roomListScreen && !roomListScreen.classList.contains('hidden')) { if (confirm("Are you sure you want to exit Chit Chat? 😿")) history.back(); else try { history.pushState({screen: 'lobby'}, '', '#lobby'); } catch(e){} 
+        if (roomListScreen && !roomListScreen.classList.contains('hidden')) { if (confirm("Are you sure you want to exit Chit Chat?")) history.back(); else try { history.pushState({screen: 'lobby'}, '', '#lobby'); } catch(e){} 
         } else { history.back(); }
     }
 });
@@ -1094,7 +1094,7 @@ socket.on('connect', () => {
 });
 
 socket.on('join error', (msg) => showToast('⚠️ ' + msg, 3500));
-socket.on('action error', (msg) => showToast('🔒 ' + msg, 3500));
+socket.on('action error', (msg) => showToast(msg, 3500));
 socket.on('rate limit', (msg) => showToast('⏳ ' + msg, 3500));
 socket.on('chat history', (data) => {
     if (activeRoomId !== data.room.id) {
@@ -1156,7 +1156,7 @@ function updateNotifStatusText() {
     } else {
         statusText.textContent = 'Alerts when app is closed';
         if (btnRequestPushPermission) {
-            btnRequestPushPermission.textContent = 'Enable 🔔';
+            btnRequestPushPermission.textContent = 'Enable';
             btnRequestPushPermission.style.display = 'inline-block';
         }
     }
@@ -1240,7 +1240,7 @@ async function registerWebPushSubscription() {
         });
 
         console.log('Web Push subscription registered successfully!');
-        showToast('🔔 Web Push Notifications Enabled!');
+        showToast('Web Push Notifications Enabled!');
         updateNotifStatusText();
     } catch (err) {
         console.error('Failed to register Web Push subscription:', err);
@@ -1281,7 +1281,7 @@ if (btnRequestPushPermission) {
                     });
                     const resData = await res.json();
                     if (resData.success) {
-                        showToast('🔔 Test push scheduled! Minimize/lock screen within 4 seconds!');
+                        showToast('Test push scheduled! Minimize/lock screen within 4 seconds!');
                     } else {
                         showToast('⚠️ Test push: ' + (resData.error || 'Re-subscribing...'));
                         registerWebPushSubscription();
@@ -1290,7 +1290,7 @@ if (btnRequestPushPermission) {
                     showToast('⚠️ Error testing push notification');
                 }
             } else {
-                triggerSystemNotification('ChitChat Test', 'Lobby', 'Test Web Push Notification working! 🎉', currentUser ? currentUser.avatar : null, 'lobby');
+                triggerSystemNotification('ChitChat Test', 'Lobby', 'Test Web Push Notification working!', currentUser ? currentUser.avatar : null, 'lobby');
             }
         } else {
             registerWebPushSubscription();
@@ -1475,7 +1475,7 @@ function checkEmptyMessages() {
             emptyEl = document.createElement('div');
             emptyEl.className = 'empty-chat-state';
             emptyEl.innerHTML = `
-                <div class="empty-icon">😸</div>
+                <div class="empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
                 <h4>No messages yet</h4>
                 <p>Start the chat with a message or a fun poll!</p>
             `;
@@ -1701,7 +1701,7 @@ if (wallpaperUpload) {
                 const dataUrl = e.target.result;
                 setAndSaveWallpaper(dataUrl);
                 if (groupInfoModal) groupInfoModal.classList.add('hidden');
-                showToast('🖼️ Custom wallpaper uploaded!');
+                showToast('Custom wallpaper uploaded!');
             };
             reader.readAsDataURL(this.files[0]);
             this.value = '';
@@ -3031,7 +3031,7 @@ document.getElementById('messages').addEventListener('click', (e) => {
     const pollOpt = e.target.closest('.poll-option-btn');
     if (pollOpt) {
         if (pollOpt.classList.contains('disabled-option') || pollOpt.disabled) {
-            showToast('This poll is closed 🔒');
+            showToast('This poll is closed');
             return;
         }
         hapticFeedback('light'); 
@@ -3043,7 +3043,7 @@ document.getElementById('messages').addEventListener('click', (e) => {
     if (closePollBtn) {
         hapticFeedback('medium');
         socket.emit('close poll', { msgId: closePollBtn.dataset.msgid });
-        showToast('Poll voting closed 🔒');
+        showToast('Poll voting closed');
         return;
     }
 
@@ -3100,7 +3100,7 @@ currentThemeIndex = availableThemes.indexOf(savedTheme);
 if(currentThemeIndex === -1) currentThemeIndex = 0;
 
 const THEME_ICONS_SVG = {
-    emerald: `<span style="font-size:16px; line-height:1;">🌱</span>`,
+    emerald: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="leafHGrad" x1="0" y1="0" x2="24" y2="24"><stop offset="0%" stop-color="#34d399"/><stop offset="100%" stop-color="#059669"/></linearGradient></defs><path d="M12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22C12 17 16 13 21 12C21 6.5 17.5 2 12 2Z" fill="url(#leafHGrad)"/><path d="M2 12C7 12 11 16 12 21" stroke="#047857" stroke-width="2" stroke-linecap="round"/></svg>`,
     
     light: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="sunHGrad" x1="0" y1="0" x2="24" y2="24"><stop offset="0%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#d97706"/></linearGradient></defs><circle cx="12" cy="12" r="4.5" fill="url(#sunHGrad)"/><path d="M12 1.5V3.5M12 20.5V22.5M1.5 12H3.5M20.5 12H22.5M4.57 4.57L5.99 5.99M18.01 18.01L19.43 19.43M4.57 19.43L5.99 18.01M18.01 5.99L19.43 4.57" stroke="url(#sunHGrad)" stroke-width="2.2" stroke-linecap="round"/></svg>`,
     
@@ -3283,7 +3283,7 @@ async function startRecording(e) {
     } catch(err) { 
         isRecording = false; 
         console.error('Microphone access error:', err);
-        showToast("Please allow Microphone access to send Voice Notes! 🎤"); 
+        showToast("Please allow Microphone access to send Voice Notes!"); 
     }
 }
 
@@ -3399,7 +3399,7 @@ if (btnApplyColorWp && custColorPicker) {
     btnApplyColorWp.onclick = () => {
         const color = custColorPicker.value;
         setAndSaveWallpaper(color);
-        showToast('🎨 Custom color tint applied!');
+        showToast('Custom color tint applied!');
     };
 }
 

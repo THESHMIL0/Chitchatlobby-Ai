@@ -264,8 +264,8 @@ function verifyPassword(password, storedPassword) {
 const DATA_FILE = path.join(__dirname, 'chat-data.json');
 
 const rooms = new Map([
-    ['lobby', { id: 'lobby', name: 'Lobby 😸', logo: '', isPrivate: 0, password: '', pinnedMessage: null, createdBy: 'system' }],
-    ['ai_lounge', { id: 'ai_lounge', name: '🤖 AI Lounge', logo: 'https://api.dicebear.com/7.x/bottts/svg?seed=ChitChatBot&backgroundColor=00a884', isPrivate: 0, password: '', pinnedMessage: null, createdBy: 'system' }]
+    ['lobby', { id: 'lobby', name: 'Lobby', logo: '/icon.svg', isPrivate: 0, password: '', pinnedMessage: null, createdBy: 'system' }],
+    ['ai_lounge', { id: 'ai_lounge', name: 'AI Lounge', logo: '/ai-icon.svg', isPrivate: 0, password: '', pinnedMessage: null, createdBy: 'system' }]
 ]);
 
 const historyStore = []; // Array of { id, roomId, timestamp, data }
@@ -277,6 +277,13 @@ function loadChatData() {
             const raw = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
             if (Array.isArray(raw.rooms)) {
                 raw.rooms.forEach(([id, room]) => {
+                    if (id === 'lobby') {
+                        room.name = 'Lobby';
+                        room.logo = '/icon.svg';
+                    } else if (id === 'ai_lounge') {
+                        room.name = 'AI Lounge';
+                        room.logo = '/ai-icon.svg';
+                    }
                     rooms.set(id, room);
                 });
             }

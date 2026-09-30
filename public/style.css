@@ -4604,3 +4604,26 @@ li.system-message {
     white-space: nowrap !important;
     border: 0 !important;
 }
+
+/* Status Chip & Theme Pill Logo Layouts */
+.chip-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10b981;
+    display: inline-block;
+    flex-shrink: 0;
+    box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
+}
+
+.status-chip-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.clean-theme-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
