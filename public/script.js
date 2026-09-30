@@ -27,16 +27,64 @@ function sanitizeUrl(url) {
     return '';
 }
 
-function showToast(msg, duration = 3000) {
+function showToast(msg, options = {}) {
+    let duration = 3200;
+    let icon = '';
+    let type = 'info';
+    let sound = true;
+
+    if (typeof options === 'number') {
+        duration = options;
+    } else if (typeof options === 'string') {
+        type = options;
+    } else if (typeof options === 'object' && options !== null) {
+        if (options.duration) duration = options.duration;
+        if (options.icon) icon = options.icon;
+        if (options.type) type = options.type;
+        if (options.sound !== undefined) sound = options.sound;
+    }
+
+    let text = String(msg || '').trim();
+
+    // Auto-detect emoji if present at beginning of message
+    if (!icon) {
+        const emojiRegex = /^(\p{Extended_Pictographic}|\p{Emoji_Presentation})/u;
+        const match = text.match(emojiRegex);
+        if (match) {
+            icon = match[0];
+            text = text.substring(match[0].length).trim();
+        } else {
+            if (type === 'error') icon = '🌸';
+            else if (type === 'game') icon = '🎮';
+            else if (type === 'success') icon = '✨';
+            else icon = '💖';
+        }
+    }
+
     let toast = document.getElementById('custom-app-toast');
     if (!toast) {
         toast = document.createElement('div');
         toast.id = 'custom-app-toast';
-        toast.className = 'custom-toast-pill';
         document.body.appendChild(toast);
     }
-    toast.textContent = msg;
+
+    toast.className = `custom-toast-pill toast-${type}`;
+    toast.innerHTML = `
+        <span class="toast-emoji-icon" aria-hidden="true">${escapeHTML(icon)}</span>
+        <span class="toast-message-text">${escapeHTML(text)}</span>
+    `;
+
+    // Sensory feedback: Playful pop audio and gentle haptic vibration
+    if (sound) {
+        try { playUiSound('pop'); } catch (e) {}
+    }
+    try { hapticFeedback('light'); } catch (e) {}
+
+    // Retrigger bouncy entrance animation
+    toast.classList.remove('show');
+    void toast.offsetWidth;
     toast.classList.add('show');
+
     clearTimeout(toast._timer);
     toast._timer = setTimeout(() => {
         toast.classList.remove('show');
@@ -183,7 +231,7 @@ function saveUserLocally() {
             const copy = { ...currentUser };
             if (copy.avatar && copy.avatar.startsWith('data:')) {
                 // If storing custom image exceeded quota, fallback to standard dicebear URL for local persistence
-                copy.avatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(copy.name || 'Guest')}`;
+                copy.avatar = `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(copy.name || 'Alex')}`;
             }
             localStorage.setItem('chitchat_user', JSON.stringify(copy));
         } catch (e2) {
@@ -194,7 +242,7 @@ function saveUserLocally() {
 
 function syncUserAvatarUI() {
     if (!currentUser) return;
-    const url = currentUser.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(currentUser.name || 'Guest')}`;
+    const url = currentUser.avatar || `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(currentUser.name || 'Alex')}`;
     
     const elements = [
         document.getElementById('avatar-preview'),
@@ -208,7 +256,7 @@ function syncUserAvatarUI() {
             img.src = url;
             img.onerror = function() {
                 this.onerror = null;
-                this.src = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(currentUser.name || 'Guest')}`;
+                this.src = `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(currentUser.name || 'Alex')}`;
             };
         }
     });
@@ -428,6 +476,9 @@ if (savedUser) {
     try {
         const parsedUser = JSON.parse(savedUser);
         currentUser = { ...currentUser, ...parsedUser, id: savedUserId };
+        if (currentUser.avatar && currentUser.avatar.includes('bottts')) {
+            currentUser.avatar = `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(currentUser.name || 'Alex')}`;
+        }
         if (usernameInput) usernameInput.value = currentUser.name || '';
         syncUserAvatarUI();
         const setUsername = document.getElementById('settings-username');
@@ -447,7 +498,7 @@ if (btnRandomAvatar) {
     btnRandomAvatar.onclick = () => {
         hapticFeedback('medium');
         const randomSeed = Math.random().toString(36).substring(2, 8);
-        const styles = ['bottts', 'adventurer', 'lorelei', 'fun-emoji', 'personas', 'avataaars'];
+        const styles = ['lorelei', 'adventurer', 'personas', 'avataaars'];
         const randomStyle = styles[Math.floor(Math.random() * styles.length)];
         const newUrl = `https://api.dicebear.com/7.x/${randomStyle}/svg?seed=${randomSeed}`;
         currentUser.avatar = newUrl;
@@ -554,7 +605,7 @@ if (loginBtn) {
             return;
         }
         if (!currentUser.avatar) { 
-            currentUser.avatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(currentUser.name)}`; 
+            currentUser.avatar = `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(currentUser.name || 'Alex')}`; 
             const setAvatarPrev = document.getElementById('settings-avatar-preview');
             if (setAvatarPrev) setAvatarPrev.src = currentUser.avatar; 
         }
@@ -587,7 +638,7 @@ function updateSettingsModalUI() {
     const cardName = document.getElementById('settings-card-name');
     const cardAbout = document.getElementById('settings-card-about');
     
-    if (cardAvatar) cardAvatar.src = currentUser.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${currentUser.name || 'Guest'}`;
+    if (cardAvatar) cardAvatar.src = currentUser.avatar || `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(currentUser.name || 'Alex')}`;
     if (cardName) cardName.textContent = currentUser.name || 'Guest User';
     if (cardAbout) cardAbout.textContent = currentUser.about || 'Hey there! I am using Chit Chat.';
 
@@ -719,7 +770,7 @@ if (profileRandomBtn) {
         e.stopPropagation();
         hapticFeedback('medium');
         const randomSeed = Math.random().toString(36).substring(2, 8);
-        const styles = ['bottts', 'adventurer', 'lorelei', 'fun-emoji', 'personas', 'spark'];
+        const styles = ['lorelei', 'adventurer', 'personas', 'avataaars'];
         const randomStyle = styles[Math.floor(Math.random() * styles.length)];
         const newUrl = `https://api.dicebear.com/7.x/${randomStyle}/svg?seed=${randomSeed}`;
         currentUser.avatar = newUrl;
@@ -1382,7 +1433,7 @@ function showInAppNotificationBanner(alertData) {
     const roomEl = document.getElementById('notif-banner-room');
     const textEl = document.getElementById('notif-banner-text');
 
-    if (avatarImg) avatarImg.src = alertData.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=Guest';
+    if (avatarImg) avatarImg.src = alertData.avatar || 'https://api.dicebear.com/7.x/lorelei/svg?seed=Guest';
     if (senderEl) senderEl.textContent = alertData.sender || 'Friend';
     if (roomEl) roomEl.textContent = alertData.roomName || alertData.roomId || 'Room';
     if (textEl) textEl.textContent = alertData.text || 'Sent a message';
@@ -1461,6 +1512,16 @@ function playUiSound(type = 'send') {
             gain.gain.exponentialRampToValueAtTime(0.01, now + 0.06);
             osc.start(now);
             osc.stop(now + 0.06);
+        } else if (type === 'celebrate') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(523.25, now);
+            osc.frequency.setValueAtTime(659.25, now + 0.08);
+            osc.frequency.setValueAtTime(783.99, now + 0.16);
+            osc.frequency.setValueAtTime(1046.50, now + 0.24);
+            gain.gain.setValueAtTime(0.12, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.36);
+            osc.start(now);
+            osc.stop(now + 0.36);
         }
     } catch (e) {
         // audio fail safe
@@ -1517,7 +1578,7 @@ function updateHeaderSubtitle() {
         // Update Floating Animated Typing Bubble
         if (floatingTypingBubble && floatingTypingAvatar && floatingTypingName) {
             const firstUser = users[users.length - 1]; // most recent typing user
-            floatingTypingAvatar.src = firstUser.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(firstUser.name)}`;
+            floatingTypingAvatar.src = firstUser.avatar || `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(firstUser.name)}`;
             
             const statusLabel = floatingTypingBubble.querySelector('.typing-status-label');
 
@@ -1559,7 +1620,7 @@ socket.on('user typing', (data) => {
     if (data.isTyping) {
         currentlyTyping.set(data.name, {
             name: data.name,
-            avatar: data.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(data.name)}`
+            avatar: data.avatar || `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(data.name)}`
         });
     } else {
         currentlyTyping.delete(data.name);
@@ -1959,7 +2020,7 @@ function sendMessage() {
         if (socket) socket.emit('chat message', { 
             userId: currentUser.id,
             user: currentUser.name || 'Guest', 
-            avatar: currentUser.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(currentUser.name || 'Guest')}`, 
+            avatar: currentUser.avatar || `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(currentUser.name || 'Alex')}`, 
             color: currentUser.color || '#dcf8c6', 
             text, 
             time: formatTo12HourTime(new Date()), 
@@ -2457,7 +2518,111 @@ function getMessageInnerHTML(data, isMe, isStacked) {
     if(data.isEdited) contentText += `<span class="edited-tag">(edited)</span>`;
     
     let content = '';
-    if (data.poll) {
+    if (data.xox) {
+        const xox = data.xox;
+        const players = xox.players || { X: null, O: null };
+        const avatars = xox.playerAvatars || { X: null, O: null };
+        const board = Array.isArray(xox.board) && xox.board.length === 9 ? xox.board : Array(9).fill('');
+        const status = xox.status || 'in_progress';
+        const currentTurn = xox.turn || 'X';
+        const winner = xox.winner;
+        const winningLine = xox.winningLine || [];
+
+        const playerXName = players.X || 'Player X';
+        const playerXAvatar = avatars.X || `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(playerXName)}`;
+
+        const playerOName = players.O;
+        const playerOAvatar = playerOName 
+            ? (avatars.O || `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(playerOName)}`) 
+            : null;
+
+        const isMePlayerX = currentUser && currentUser.name && currentUser.name === players.X;
+        const isMePlayerO = currentUser && currentUser.name && currentUser.name === players.O;
+
+        let statusText = '';
+        if (status === 'won') {
+            const winnerName = winner === 'X' ? playerXName : (playerOName || 'Player O');
+            statusText = `🎉 <strong class="winner-highlight">${escapeHTML(winnerName)}</strong> won! 🏆`;
+        } else if (status === 'draw') {
+            statusText = `🤝 It's a draw! Well played!`;
+        } else {
+            const activePlayerName = currentTurn === 'X' ? playerXName : (playerOName || 'Player O');
+            if (currentTurn === 'O' && !playerOName) {
+                statusText = `⏳ Waiting for Player O to join...`;
+            } else {
+                statusText = `🌸 It's <strong>${escapeHTML(activePlayerName)}</strong>'s (${currentTurn}) turn`;
+            }
+        }
+
+        const isXTurn = status === 'in_progress' && currentTurn === 'X';
+        const isOTurn = status === 'in_progress' && currentTurn === 'O';
+
+        const cellsHTML = board.map((val, idx) => {
+            const isWinningCell = winningLine.includes(idx);
+            const valClass = val === 'X' ? 'val-x' : (val === 'O' ? 'val-o' : '');
+            return `
+                <button class="xox-cell ${val ? 'filled' : 'empty'} ${isWinningCell ? 'winning-cell' : ''}" 
+                        data-msgid="${data.id}" data-idx="${idx}" type="button" aria-label="Square ${idx + 1}: ${val || 'Empty'}">
+                    ${val ? `<span class="xox-symbol ${valClass}">${val}</span>` : ''}
+                </button>
+            `;
+        }).join('');
+
+        content = `
+            <div class="xox-game-card ${status !== 'in_progress' ? 'game-finished' : ''}" data-msgid="${data.id}">
+                <div class="xox-card-top">
+                    <span class="xox-card-badge">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line></svg>
+                        TIC-TAC-TOE
+                    </span>
+                    <span class="xox-room-subtag">Turn: ${currentTurn}</span>
+                </div>
+
+                <div class="xox-players-bar">
+                    <div class="xox-player-box player-x-box ${isXTurn ? 'active-turn' : ''}">
+                        <div class="xox-avatar-ring">
+                            <img src="${escapeHTML(playerXAvatar)}" class="xox-player-avatar" alt="${escapeHTML(playerXName)}" title="${escapeHTML(playerXName)}">
+                            <span class="xox-badge badge-x">X</span>
+                            <div class="xox-ring-glow"></div>
+                        </div>
+                        <div class="xox-player-meta">
+                            <span class="xox-pname" title="${escapeHTML(playerXName)}">${escapeHTML(playerXName)}${isMePlayerX ? ' (You)' : ''}</span>
+                        </div>
+                    </div>
+
+                    <div class="xox-vs-pill">
+                        <span>VS</span>
+                    </div>
+
+                    <div class="xox-player-box player-o-box ${isOTurn ? 'active-turn' : ''} ${!playerOName ? 'waiting-slot' : ''}">
+                        <div class="xox-avatar-ring">
+                            ${playerOAvatar 
+                                ? `<img src="${escapeHTML(playerOAvatar)}" class="xox-player-avatar" alt="${escapeHTML(playerOName)}" title="${escapeHTML(playerOName)}">`
+                                : `<div class="xox-player-avatar xox-empty-avatar" title="Waiting for Player O"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></div>`}
+                            <span class="xox-badge badge-o">O</span>
+                            <div class="xox-ring-glow"></div>
+                        </div>
+                        <div class="xox-player-meta">
+                            <span class="xox-pname" title="${playerOName ? escapeHTML(playerOName) : 'Tap to Join as O'}">${playerOName ? (escapeHTML(playerOName) + (isMePlayerO ? ' (You)' : '')) : 'Join as O'}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="xox-status-row">${statusText}</div>
+
+                <div class="xox-board-grid">${cellsHTML}</div>
+
+                ${status !== 'in_progress' ? `
+                    <div class="xox-footer-row">
+                        <button class="xox-btn-rematch" data-msgid="${data.id}" type="button">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                            <span>Play Again</span>
+                        </button>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    } else if (data.poll) {
         const isMultiple = !!data.poll.isMultiple;
         const isAnonymous = !!data.poll.isAnonymous;
         const isClosed = !!data.poll.isClosed;
@@ -2642,7 +2807,7 @@ function getMessageInnerHTML(data, isMe, isStacked) {
         return `
             <div class="msg-content-wrapper my-wrapper">
                 ${topHeaderHTML ? `<div class="msg-top-header">${topHeaderHTML}</div>` : ''}
-                <div class="msg-bubble">
+                <div class="msg-bubble ${data.xox ? 'msg-bubble-xox' : ''}">
                     ${replyHTML}${content}
                     <div class="meta-row"><span>${data.isGhost ? '⏱️ ' : ''}${displayTimeStr}</span>${tickHTML}</div>
                     ${reactionsHTML}
@@ -2656,7 +2821,7 @@ function getMessageInnerHTML(data, isMe, isStacked) {
             ${avatarHTML}
             <div class="msg-content-wrapper other-wrapper">
                 ${topHeaderHTML ? `<div class="msg-top-header">${topHeaderHTML}</div>` : ''}
-                <div class="msg-bubble">
+                <div class="msg-bubble ${data.xox ? 'msg-bubble-xox' : ''}">
                     ${replyHTML}${content}
                     <div class="meta-row"><span>${data.isGhost ? '⏱️ ' : ''}${displayTimeStr}</span></div>
                     ${reactionsHTML}
@@ -2736,7 +2901,7 @@ function renderPollVotersList(poll) {
                     <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px;">
                         ${votes.map(vName => `
                             <div style="display: flex; align-items: center; gap: 6px; background: var(--bg-screen); border: 1px solid var(--border-color); padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; color: var(--text-primary);">
-                                <img src="https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(vName)}" style="width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--border-color);">
+                                <img src="https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(vName)}" style="width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--border-color);">
                                 <span>${escapeHTML(vName)}</span>
                             </div>
                         `).join('')}
@@ -2762,6 +2927,125 @@ if (socket) {
                 renderPollVotersList(data.poll);
             }
         }
+    });
+
+    // ==========================
+    // 🎮 TIC-TAC-TOE (XOX) REAL-TIME GAME HANDLERS
+    // ==========================
+    socket.on('xox updated', (data) => {
+        if (data && data.xox) {
+            xoxGamesMap.set(data.id, data);
+            const li = document.getElementById(`msg-${data.id}`);
+            if (li) {
+                const isMe = checkIsMe(data);
+                const isStacked = li.classList.contains('stacked');
+                li.innerHTML = getMessageInnerHTML(data, isMe, isStacked);
+            }
+
+            if (data.xox.status === 'won') {
+                const winnerName = data.xox.winner === 'X' ? data.xox.players?.X : data.xox.players?.O;
+                triggerReactionParticles(window.innerWidth / 2, window.innerHeight / 2, '🎉');
+                try { playUiSound('celebrate'); } catch (e) {}
+                showToast(`🎉 ${winnerName || 'Winner'} won Tic-Tac-Toe! 🏆`, { icon: '🏆', type: 'success', duration: 4000 });
+            } else if (data.xox.status === 'draw') {
+                try { playUiSound('pop'); } catch (e) {}
+                showToast("🤝 It's a draw! Well played both!", { icon: '🤝', type: 'game' });
+            } else {
+                try { playUiSound('pop'); } catch (e) {}
+            }
+        }
+    });
+
+    socket.on('xox error', (payload) => {
+        const message = typeof payload === 'string' ? payload : (payload.message || 'Action error');
+        showToast(message, { icon: '🌸', type: 'game' });
+    });
+}
+
+const xoxGamesMap = new Map();
+
+function sendXoxGame() {
+    if (!currentUser || !currentUser.name) {
+        showToast('Please set your username first!', { icon: '🌸', type: 'error' });
+        return;
+    }
+    if (!activeRoomId) return;
+
+    hapticFeedback('medium');
+    playUiSound('pop');
+
+    const gameId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+    const gameMsg = {
+        id: gameId,
+        roomId: activeRoomId,
+        user: currentUser.name,
+        avatar: currentUser.avatar || `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(currentUser.name || 'Alex')}`,
+        userId: currentUser.id || currentUser.userId || currentUser.name,
+        time: formatTo12HourTime(new Date()),
+        status: 'sent',
+        text: '🎮 Tic-Tac-Toe match started! Tap squares to play.',
+        xox: {
+            board: Array(9).fill(''),
+            turn: 'X',
+            players: { X: currentUser.name, O: null },
+            playerAvatars: { X: currentUser.avatar || `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(currentUser.name || 'Alex')}`, O: null },
+            status: 'in_progress',
+            winner: null,
+            winningLine: null
+        }
+    };
+
+    if (socket) {
+        socket.emit('chat message', gameMsg);
+        showToast('🎮 Tic-Tac-Toe challenge sent!', { icon: '🎮', type: 'game' });
+    }
+}
+
+function handleXoxCellClick(msgId, index) {
+    if (!socket || !msgId || isNaN(index)) return;
+
+    const item = xoxGamesMap.get(msgId);
+    if (item && item.xox) {
+        const xox = item.xox;
+        if (xox.status !== 'in_progress') {
+            showToast("🎮 Game over! Tap 'Play Again' to start a rematch.", { icon: '🎮', type: 'game' });
+            return;
+        }
+
+        if (xox.board && xox.board[index] !== '') {
+            showToast("✨ That square is already taken!", { icon: '✨', type: 'game' });
+            return;
+        }
+
+        const currentTurn = xox.turn || 'X';
+        const players = xox.players || { X: null, O: null };
+        const myName = currentUser && currentUser.name ? currentUser.name : 'Guest';
+
+        if (currentTurn === 'X') {
+            if (players.X && players.X !== myName) {
+                showToast(`🌸 It's ${players.X}'s (X) turn! Please wait for them to move.`, { icon: '🌸', type: 'game' });
+                return;
+            }
+        } else if (currentTurn === 'O') {
+            if (!players.O) {
+                if (players.X === myName) {
+                    showToast("💖 You are Player X! Waiting for your opponent to take O.", { icon: '💖', type: 'game' });
+                    return;
+                }
+            } else if (players.O !== myName) {
+                showToast(`🌸 It's ${players.O}'s (O) turn! Please wait for them to move.`, { icon: '🌸', type: 'game' });
+                return;
+            }
+        }
+    }
+
+    hapticFeedback('medium');
+    playUiSound('pop');
+    socket.emit('play xox move', {
+        msgId,
+        index,
+        userName: currentUser.name,
+        userAvatar: currentUser.avatar
     });
 }
 
@@ -2890,6 +3174,9 @@ function displayMessage(data, isHistory) {
     if (data && data.poll) {
         pollMessagesMap.set(data.id, data);
     }
+    if (data && data.xox) {
+        xoxGamesMap.set(data.id, data);
+    }
 
     // 💋 Trigger Instagram-style kiss animation when "Theshmil" or "Galliya" is sent/received
     if (!isHistory && data && data.text && typeof data.text === 'string') {
@@ -2908,6 +3195,7 @@ function displayMessage(data, isHistory) {
     li.className = isMe ? 'my-message' : 'other-message';
     if(isStacked) li.classList.add('stacked');
     if(data.isGhost) li.classList.add('ghost-message');
+    if(data.xox) li.classList.add('xox-message');
     if (data.color) li.style.setProperty('--bubble-color', data.color);
 
     li.innerHTML = getMessageInnerHTML(data, isMe, isStacked);
@@ -3028,6 +3316,25 @@ document.getElementById('messages').addEventListener('click', (e) => {
 });
 
 document.getElementById('messages').addEventListener('click', (e) => { 
+    const xoxCell = e.target.closest('.xox-cell');
+    if (xoxCell) {
+        const msgId = xoxCell.dataset.msgid;
+        const index = parseInt(xoxCell.dataset.idx, 10);
+        handleXoxCellClick(msgId, index);
+        return;
+    }
+
+    const rematchBtn = e.target.closest('.xox-btn-rematch');
+    if (rematchBtn) {
+        const msgId = rematchBtn.dataset.msgid;
+        if (socket && msgId) {
+            hapticFeedback('medium');
+            playUiSound('pop');
+            socket.emit('reset xox game', { msgId });
+        }
+        return;
+    }
+
     const pollOpt = e.target.closest('.poll-option-btn');
     if (pollOpt) {
         if (pollOpt.classList.contains('disabled-option') || pollOpt.disabled) {
@@ -3075,6 +3382,14 @@ if (emojiBtn && emojiDrawer) {
     emojiBtn.addEventListener('click', () => {
         hapticFeedback('light');
         emojiDrawer.classList.toggle('hidden');
+    });
+}
+
+// XOX Game Launcher Button
+const xoxBtn = document.getElementById('xox-btn');
+if (xoxBtn) {
+    xoxBtn.addEventListener('click', () => {
+        sendXoxGame();
     });
 }
 

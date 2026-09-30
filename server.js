@@ -18,8 +18,12 @@ app.disable('x-powered-by');
 // Trust reverse proxies (such as Render.com proxy)
 app.set('trust proxy', 1);
 
-// HTTP Security Headers via Helmet
+// HTTP Security Headers via Helmet - configured to support AI Studio iframe preview
 app.use(helmet({
+    frameguard: false,
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: false,
+    crossOriginOpenerPolicy: false,
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
@@ -30,11 +34,17 @@ app.use(helmet({
             mediaSrc: ["'self'", "data:", "blob:"],
             connectSrc: ["'self'", "ws:", "wss:", "https://api.dicebear.com"],
             objectSrc: ["'none'"],
-            upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null
+            frameAncestors: ["*"],
+            upgradeInsecureRequests: null
         }
-    },
-    crossOriginEmbedderPolicy: false
+    }
 }));
+
+// Explicitly ensure iframe embedding is allowed in preview
+app.use((req, res, next) => {
+    res.removeHeader('X-Frame-Options');
+    next();
+});
 
 // Setup Web Push VAPID keys with persistence
 const VAPID_KEY_FILE = path.join(__dirname, 'vapid-keys.json');
@@ -859,6 +869,24 @@ io.on('connection', (socket) => {
             }
         }
 
+        if (data.xox) {
+            data.xox = {
+                board: Array.isArray(data.xox.board) && data.xox.board.length === 9 ? data.xox.board : Array(9).fill(''),
+                turn: data.xox.turn === 'O' ? 'O' : 'X',
+                players: {
+                    X: data.xox.players?.X ? String(data.xox.players.X).substring(0, 30) : data.user,
+                    O: data.xox.players?.O ? String(data.xox.players.O).substring(0, 30) : null
+                },
+                playerAvatars: {
+                    X: data.xox.playerAvatars?.X || data.avatar,
+                    O: data.xox.playerAvatars?.O || null
+                },
+                status: 'in_progress',
+                winner: null,
+                winningLine: null
+            };
+        }
+
         socket.join(roomId);
         if (activeUsersById[socket.id]) {
             activeUsersById[socket.id].roomId = roomId;
@@ -880,6 +908,7 @@ io.on('connection', (socket) => {
                 else if (data.isVideo) summaryText = '🎥 Video';
                 else if (data.uploadedImage) summaryText = '📷 Photo';
                 else if (data.poll) summaryText = '📊 Poll: ' + (data.poll.question || '');
+                else if (data.xox) summaryText = '🎮 Tic-Tac-Toe (XOX) Game';
                 else summaryText = 'Sent an attachment';
             }
             const alertData = {
@@ -946,7 +975,7 @@ io.on('connection', (socket) => {
                         status: 'delivered', 
                         time: new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }), 
                         color: '#00a884', 
-                        avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=ChitChatBot&backgroundColor=00a884',
+                        avatar: 'https://api.dicebear.com/7.x/lorelei/svg?seed=ChitChatBot&backgroundColor=b6e3f4',
                         replyTo: data.replyTo ? { user: data.user, text: textContent.substring(0, 120) || 'Message', msgId: data.id } : null
                     };
                     io.to(roomId).emit('user typing', { name: '🤖 Bot', isTyping: false });
@@ -1013,6 +1042,108 @@ io.on('connection', (socket) => {
                 item.data = JSON.stringify(data);
                 scheduleDataSave();
                 io.to(data.roomId).emit('poll updated', data);
+            }
+        }
+    });
+
+    // ==========================
+    // 🎮 XOX (TIC TAC TOE) GAME ENGINE
+    // ==========================
+    const XOX_WINNING_COMBOS = [
+        [0, 1, 2], [3, 4, 5], [6, 7, 8],
+        [0, 3, 6], [1, 4, 7], [2, 5, 8],
+        [0, 4, 8], [2, 4, 6]
+    ];
+
+    function evaluateXoxBoard(board) {
+        for (const combo of XOX_WINNING_COMBOS) {
+            const [a, b, c] = combo;
+            if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+                return { winner: board[a], winningLine: combo, status: 'won' };
+            }
+        }
+        if (board.every(cell => cell !== '')) {
+            return { winner: null, winningLine: null, status: 'draw' };
+        }
+        return { winner: null, winningLine: null, status: 'in_progress' };
+    }
+
+    socket.on('play xox move', ({ msgId, index, userName, userAvatar }) => {
+        const item = historyStore.find(h => h.id === msgId);
+        if (item) {
+            const data = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
+            if (data.xox) {
+                if (data.xox.status !== 'in_progress') {
+                    return socket.emit('xox error', { msgId, message: "🎮 This game has ended! Tap 'Play Again' to start a rematch." });
+                }
+
+                const board = data.xox.board;
+                if (index < 0 || index > 8) return;
+
+                if (board[index] !== '') {
+                    return socket.emit('xox error', { msgId, message: "✨ That square is already taken!" });
+                }
+
+                const currentTurn = data.xox.turn || 'X';
+                const players = data.xox.players || { X: null, O: null };
+                data.xox.playerAvatars = data.xox.playerAvatars || { X: null, O: null };
+                const player = userName || activeUsersById[socket.id]?.name || 'Guest';
+                const avatar = userAvatar || activeUsersById[socket.id]?.avatar || `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(player)}`;
+
+                // Player Turn Authorization & Slot Claiming
+                if (currentTurn === 'X') {
+                    if (!players.X) {
+                        players.X = player;
+                        data.xox.playerAvatars.X = avatar;
+                    } else if (players.X !== player) {
+                        return socket.emit('xox error', { msgId, message: `🌸 It's ${players.X}'s (X) turn! Please wait for them to move.` });
+                    }
+                } else if (currentTurn === 'O') {
+                    if (!players.O) {
+                        if (players.X === player) {
+                            return socket.emit('xox error', { msgId, message: "💖 You are Player X! Waiting for your opponent to take O." });
+                        }
+                        players.O = player;
+                        data.xox.playerAvatars.O = avatar;
+                    } else if (players.O !== player) {
+                        return socket.emit('xox error', { msgId, message: `🌸 It's ${players.O}'s (O) turn! Please wait for them to move.` });
+                    }
+                }
+
+                // Apply move
+                board[index] = currentTurn;
+                data.xox.players = players;
+
+                // Evaluate board state
+                const evalRes = evaluateXoxBoard(board);
+                data.xox.status = evalRes.status;
+                data.xox.winner = evalRes.winner;
+                data.xox.winningLine = evalRes.winningLine;
+
+                if (evalRes.status === 'in_progress') {
+                    data.xox.turn = currentTurn === 'X' ? 'O' : 'X';
+                }
+
+                item.data = JSON.stringify(data);
+                scheduleDataSave();
+                io.to(data.roomId).emit('xox updated', data);
+            }
+        }
+    });
+
+    socket.on('reset xox game', ({ msgId }) => {
+        const item = historyStore.find(h => h.id === msgId);
+        if (item) {
+            const data = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
+            if (data.xox) {
+                data.xox.board = Array(9).fill('');
+                data.xox.status = 'in_progress';
+                data.xox.winner = null;
+                data.xox.winningLine = null;
+                data.xox.turn = 'X';
+                item.data = JSON.stringify(data);
+                scheduleDataSave();
+                io.to(data.roomId).emit('xox updated', data);
             }
         }
     });

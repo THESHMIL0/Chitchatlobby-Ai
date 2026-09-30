@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=2.8">
+    <link rel="stylesheet" href="style.css?v=2.9">
     <link rel="manifest" href="manifest.json">
     <script src="/socket.io/socket.io.js"></script>
 </head>
@@ -39,34 +39,6 @@
 
     <!-- Login Screen -->
     <div id="login-screen" class="screen hidden">
-        <!-- Top Floating Theme Bar -->
-        <div class="login-top-theme-bar">
-            <div class="login-theme-pills">
-                <button type="button" class="theme-pill" data-theme-choice="emerald" title="Cute Green Mode" aria-label="Cute Green Mode">
-                    <span class="theme-badge-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg></span>
-                    <span>Cute Green</span>
-                </button>
-                <button type="button" class="theme-pill" data-theme-choice="light" title="Light Mode" aria-label="Light Mode">
-                    <span class="theme-badge-icon">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="sunPillG" x1="0" y1="0" x2="24" y2="24"><stop offset="0%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#d97706"/></linearGradient></defs><circle cx="12" cy="12" r="4.5" fill="url(#sunPillG)"/><path d="M12 1.5V3.5M12 20.5V22.5M1.5 12H3.5M20.5 12H22.5" stroke="url(#sunPillG)" stroke-width="2" stroke-linecap="round"/></svg>
-                    </span>
-                    <span>Light</span>
-                </button>
-                <button type="button" class="theme-pill" data-theme-choice="dark" title="Dark Mode" aria-label="Dark Mode">
-                    <span class="theme-badge-icon">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="moonPillG" x1="0" y1="0" x2="24" y2="24"><stop offset="0%" stop-color="#818cf8"/><stop offset="100%" stop-color="#4f46e5"/></linearGradient></defs><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" fill="url(#moonPillG)"/></svg>
-                    </span>
-                    <span>Dark</span>
-                </button>
-                <button type="button" class="theme-pill" data-theme-choice="pink" title="Rose Mode" aria-label="Rose Mode">
-                    <span class="theme-badge-icon">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="rosePillG" x1="0" y1="0" x2="24" y2="24"><stop offset="0%" stop-color="#f472b6"/><stop offset="100%" stop-color="#db2777"/></linearGradient></defs><path d="M12 3C12 3 16.5 7 16.5 11C16.5 13.4853 14.4853 15.5 12 15.5C9.51472 15.5 7.5 13.4853 7.5 11C7.5 7 12 3 12 3Z" fill="url(#rosePillG)"/></svg>
-                    </span>
-                    <span>Pink</span>
-                </button>
-            </div>
-        </div>
-
         <div class="login-card">
             <!-- Brand & Welcome Header -->
             <div class="login-header-wrap">
@@ -78,7 +50,7 @@
             <!-- Avatar Selection Section -->
             <div class="avatar-setup-section">
                 <div id="avatar-preview-container" class="avatar-preview-wrap">
-                    <img id="avatar-preview" src="https://api.dicebear.com/7.x/bottts/svg?seed=ChitChatGuest" alt="Avatar" title="Avatar">
+                    <img id="avatar-preview" src="https://api.dicebear.com/7.x/lorelei/svg?seed=Felix" alt="Avatar" title="Avatar">
                     <button type="button" id="btn-trigger-upload" class="edit-avatar-btn" title="Upload Photo" aria-label="Upload Photo">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                     </button>
@@ -119,7 +91,7 @@
         <div class="app-header lobby-header">
             <div class="lobby-title-wrap">
                 <div class="lobby-user-profile-trigger" id="lobby-profile-btn" title="View Profile">
-                    <img id="lobby-user-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=ChitChatGuest" alt="User Avatar" class="lobby-user-avatar-img" title="User Avatar">
+                    <img id="lobby-user-avatar" src="https://api.dicebear.com/7.x/lorelei/svg?seed=Felix" alt="User Avatar" class="lobby-user-avatar-img" title="User Avatar">
                     <span class="lobby-user-online-pulse"></span>
                 </div>
                 <div class="lobby-brand-meta">
@@ -225,7 +197,7 @@
             <!-- Floating Animated Typing Indicator Bubble near Messages -->
             <div id="floating-typing-bubble" class="floating-typing-bubble hidden">
                 <div class="typing-bubble-avatar-wrap">
-                    <img id="floating-typing-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=ChitChat" alt="User Avatar" title="User Avatar">
+                    <img id="floating-typing-avatar" src="https://api.dicebear.com/7.x/lorelei/svg?seed=ChitChat" alt="User Avatar" title="User Avatar">
                 </div>
                 <div class="typing-bubble-content">
                     <div class="typing-bubble-meta">
@@ -315,6 +287,9 @@
                 <button id="poll-btn" class="footer-action-btn" title="Create Poll" aria-label="Create Poll" type="button">
                     <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
                 </button>
+                <button id="xox-btn" class="footer-action-btn" title="Start Tic-Tac-Toe Game" aria-label="Start Tic-Tac-Toe Game" type="button">
+                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line></svg>
+                </button>
 
             </div>
             <button id="send-mic-btn" class="circle-btn" title="Send / Record Voice" aria-label="Send / Record Voice" type="button" data-state="mic">
@@ -350,7 +325,7 @@
                 <div class="profile-avatar-hero">
                     <div id="settings-avatar-container" onclick="document.getElementById('profile-pic-upload').click()" title="Click to upload custom photo">
                         <div class="avatar-ring-glow"></div>
-                        <img id="settings-avatar-preview" src="https://api.dicebear.com/7.x/bottts/svg?seed=ChitChatGuest" alt="User Avatar" title="User Avatar">
+                        <img id="settings-avatar-preview" src="https://api.dicebear.com/7.x/lorelei/svg?seed=Felix" alt="User Avatar" title="User Avatar">
                         <div class="edit-icon-badge">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
                         </div>
@@ -392,18 +367,6 @@
                         <div class="input-with-icon">
                             <span class="input-field-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
                             <input type="text" id="settings-about" placeholder="Hey there! I am using Chit Chat." title="About Status" aria-label="About Status" maxlength="60" autocomplete="off">
-                        </div>
-                        
-                        <!-- Quick Status Presets -->
-                        <div class="status-presets-wrap">
-                            <span class="status-presets-hint">Quick Status:</span>
-                            <div class="status-chips-row">
-                                <button type="button" class="status-chip-btn" data-status="Available" title="Available" aria-label="Available"><span class="chip-status-dot"></span><span>Available</span></button>
-                                <button type="button" class="status-chip-btn" data-status="At work" title="At work" aria-label="At work"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg><span>At work</span></button>
-                                <button type="button" class="status-chip-btn" data-status="In a meeting" title="In a meeting" aria-label="In a meeting"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg><span>In a meeting</span></button>
-                                <button type="button" class="status-chip-btn" data-status="Battery low" title="Battery low" aria-label="Battery low"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="6" width="18" height="12" rx="2"/><line x1="23" y1="11" x2="23" y2="13"/><line x1="6" y1="10" x2="6" y2="14"/></svg><span>Battery low</span></button>
-                                <button type="button" class="status-chip-btn" data-status="Sleeping" title="Sleeping" aria-label="Sleeping"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg><span>Sleeping</span></button>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -637,7 +600,7 @@
             <!-- Profile Tile -->
             <div id="settings-profile-card" class="clean-profile-tile" role="button" tabindex="0">
                 <div class="clean-avatar-wrap">
-                    <img id="settings-card-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=ChitChatGuest" alt="User Avatar" title="User Avatar">
+                    <img id="settings-card-avatar" src="https://api.dicebear.com/7.x/lorelei/svg?seed=Felix" alt="User Avatar" title="User Avatar">
                     <span class="clean-online-dot"></span>
                 </div>
                 <div class="clean-profile-meta">
@@ -946,7 +909,7 @@
     <!-- In-App Interactive Notification Banner -->
     <div id="in-app-notification-banner" class="in-app-notif-banner hidden">
         <div class="notif-banner-avatar-wrap">
-            <img id="notif-banner-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=ChitChat" alt="Notification Avatar" title="Notification Avatar">
+            <img id="notif-banner-avatar" src="https://api.dicebear.com/7.x/lorelei/svg?seed=ChitChat" alt="Notification Avatar" title="Notification Avatar">
         </div>
         <div class="notif-banner-content">
             <div class="notif-banner-title">
@@ -964,7 +927,7 @@
         <img id="lightbox-img" class="lightbox-media-img" alt="Expanded Media Preview" title="Expanded Media Preview">
     </div>
 
-    <script src="script.js?v=2.8"></script>
+    <script src="script.js?v=2.9"></script>
     <script>
         (function() {
             var ls = document.getElementById('loading-screen');
