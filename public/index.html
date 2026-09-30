@@ -593,194 +593,186 @@
         </div>
     </div>
 
-    <!-- App Settings Screen (Full Page) -->
+    <!-- App Settings Screen (Full Page - Ultra Clean) -->
     <div id="settings-screen" class="screen hidden">
-        <div class="app-header settings-page-header">
-            <button id="close-settings-page-btn" class="icon-btn back-btn" title="Back to chats">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        <!-- Clean Modern Header -->
+        <div class="settings-clean-header">
+            <button id="close-settings-page-btn" class="clean-back-btn" title="Back to chats" type="button">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
             </button>
-            <div class="settings-header-title-wrap">
-                <h2 class="settings-page-title">Settings</h2>
-            </div>
-            <div class="settings-wa-header-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-            </div>
+            <h2 class="settings-clean-title">Settings</h2>
+            <div style="width: 36px;"></div>
         </div>
 
-        <div class="settings-page-scroll">
-            <!-- User Profile Hero Card -->
-            <div id="settings-profile-card" class="settings-hero-profile-card">
-                <div class="settings-avatar-wrapper">
+        <div class="settings-clean-scroll">
+            <!-- Profile Tile -->
+            <div id="settings-profile-card" class="clean-profile-tile" role="button" tabindex="0">
+                <div class="clean-avatar-wrap">
                     <img id="settings-card-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=ChitChatGuest" alt="User Avatar">
-                    <span class="settings-avatar-badge" title="Online"></span>
+                    <span class="clean-online-dot"></span>
                 </div>
-                <div class="settings-profile-info">
-                    <h4 id="settings-card-name">Guest User</h4>
+                <div class="clean-profile-meta">
+                    <h3 id="settings-card-name">Guest User</h3>
                     <p id="settings-card-about">Hey there! I am using Chit Chat.</p>
                 </div>
-                <button id="btn-open-profile" class="settings-edit-profile-btn">
-                    <span>Edit Profile</span>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                <button id="btn-open-profile" class="clean-chevron-btn" title="Edit Profile" type="button">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
                 </button>
             </div>
 
-            <!-- Appearance & Theme Section -->
-            <div class="settings-group-card">
-                <div class="settings-group-header">
-                    <span class="settings-group-title">APPEARANCE & THEME</span>
-                </div>
-                <div class="theme-selector-grid">
-                    <button class="theme-card-btn" data-theme-val="emerald">
-                        <span class="theme-icon theme-icon-emerald" style="font-size: 20px;">
-                            🌱
-                        </span>
-                        <span class="theme-label">Cute Green</span>
-                    </button>
-                    <button class="theme-card-btn" data-theme-val="light">
-                        <span class="theme-icon theme-icon-light">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4" fill="#f59e0b"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="#f59e0b" stroke-linecap="round"/></svg>
-                        </span>
-                        <span class="theme-label">Light</span>
-                    </button>
-                    <button class="theme-card-btn" data-theme-val="dark">
-                        <span class="theme-icon theme-icon-dark">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" fill="#6366f1" stroke="#6366f1"/></svg>
-                        </span>
-                        <span class="theme-label">Dark</span>
-                    </button>
-                    <button class="theme-card-btn" data-theme-val="pink">
-                        <span class="theme-icon theme-icon-pink">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="#ec4899" stroke="#ec4899"/></svg>
-                        </span>
-                        <span class="theme-label">Pink</span>
-                    </button>
-                </div>
+            <!-- Appearance -->
+            <div class="clean-group">
+                <div class="clean-group-label">APPEARANCE</div>
+                <div class="clean-card">
+                    <div class="clean-row clean-theme-row">
+                        <div class="clean-row-lead">
+                            <div class="clean-icon-box icon-theme">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+                            </div>
+                            <span class="clean-label">Theme</span>
+                        </div>
+                        <div class="clean-theme-segmented">
+                            <button class="theme-card-btn clean-theme-pill" data-theme-val="emerald" title="Cute Green" type="button">
+                                <span>🌱 Green</span>
+                            </button>
+                            <button class="theme-card-btn clean-theme-pill" data-theme-val="light" title="Light" type="button">
+                                <span>☀️ Light</span>
+                            </button>
+                            <button class="theme-card-btn clean-theme-pill" data-theme-val="dark" title="Dark" type="button">
+                                <span>🌙 Dark</span>
+                            </button>
+                            <button class="theme-card-btn clean-theme-pill" data-theme-val="pink" title="Pink" type="button">
+                                <span>🌸 Pink</span>
+                            </button>
+                        </div>
+                    </div>
 
-                <div class="settings-item-row clickable" id="open-customization-btn" style="margin-top:12px; border-top:1px solid var(--border-color); padding-top:12px;">
-                    <div class="settings-item-icon-badge badge-purple">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    <div class="clean-row clean-row-clickable" id="open-customization-btn" role="button" tabindex="0">
+                        <div class="clean-row-lead">
+                            <div class="clean-icon-box icon-palette">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                            </div>
+                            <span class="clean-label">Chat Wallpapers & Styles</span>
+                        </div>
+                        <svg class="clean-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 18l6-6-6-6"/></svg>
                     </div>
-                    <div class="settings-item-text">
-                        <span>Customization & Wallpapers</span>
-                        <p>Wallpapers, fonts & custom bubble styles</p>
-                    </div>
-                    <span class="settings-arrow">›</span>
-                </div>
-
-
-            </div>
-
-            <!-- Notifications & Audio Section -->
-            <div class="settings-group-card">
-                <div class="settings-group-header">
-                    <span class="settings-group-title">NOTIFICATIONS & AUDIO</span>
-                </div>
-                <div class="settings-item-row">
-                    <div class="settings-item-icon-badge badge-amber">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-                    </div>
-                    <div class="settings-item-text">
-                        <span>Sound Effects</span>
-                        <p>Play chime sounds for chat actions & messages</p>
-                    </div>
-                    <label class="switch">
-                        <input type="checkbox" id="toggle-sound-effects" checked>
-                        <span class="slider"></span>
-                    </label>
-                </div>
-                <div class="settings-item-row" style="flex-wrap: wrap;">
-                    <div class="settings-item-icon-badge badge-purple">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-                    </div>
-                    <div class="settings-item-text" style="flex: 1; min-width: 180px;">
-                        <span>Push & Room Notifications</span>
-                        <p id="notif-permission-status-text">Alerts when friends text in other rooms</p>
-                        <button id="btn-request-push-permission" class="notif-action-btn" type="button" style="margin-top: 6px;">
-                            Request Notification Access 🔔
-                        </button>
-                    </div>
-                    <label class="switch">
-                        <input type="checkbox" id="toggle-push-notifications" checked>
-                        <span class="slider"></span>
-                    </label>
-                </div>
-                <div class="settings-item-row">
-                    <div class="settings-item-icon-badge badge-rose">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="3" ry="3"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
-                    </div>
-                    <div class="settings-item-text">
-                        <span>Haptic Vibrations</span>
-                        <p>Tactile feedback on button presses</p>
-                    </div>
-                    <label class="switch">
-                        <input type="checkbox" id="toggle-haptic-feedback" checked>
-                        <span class="slider"></span>
-                    </label>
                 </div>
             </div>
 
-            <!-- Privacy & Security Section -->
-            <div class="settings-group-card">
-                <div class="settings-group-header">
-                    <span class="settings-group-title">PRIVACY & SECURITY</span>
-                </div>
-                <div class="settings-item-row">
-                    <div class="settings-item-icon-badge badge-emerald">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            <!-- Notifications & Audio -->
+            <div class="clean-group">
+                <div class="clean-group-label">NOTIFICATIONS & AUDIO</div>
+                <div class="clean-card">
+                    <div class="clean-row">
+                        <div class="clean-row-lead">
+                            <div class="clean-icon-box icon-sound">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                            </div>
+                            <span class="clean-label">Sound Effects</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="toggle-sound-effects" checked>
+                            <span class="slider"></span>
+                        </label>
                     </div>
-                    <div class="settings-item-text">
-                        <span>App Passcode Lock</span>
-                        <p>Require security lock when launching app</p>
+
+                    <div class="clean-row">
+                        <div class="clean-row-lead">
+                            <div class="clean-icon-box icon-haptic">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="3"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                            </div>
+                            <span class="clean-label">Haptic Vibration</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="toggle-haptic-feedback" checked>
+                            <span class="slider"></span>
+                        </label>
                     </div>
-                    <label class="switch">
-                        <input type="checkbox" id="toggle-app-lock">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-                <div class="settings-item-row">
-                    <div class="settings-item-icon-badge badge-purple">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+
+                    <div class="clean-row">
+                        <div class="clean-row-lead">
+                            <div class="clean-icon-box icon-bell">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                            </div>
+                            <div>
+                                <span class="clean-label">Push Alerts</span>
+                                <span id="notif-permission-status-text" class="clean-sublabel">Alerts for new messages</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <button id="btn-request-push-permission" class="clean-subtle-btn" type="button">Test</button>
+                            <label class="switch">
+                                <input type="checkbox" id="toggle-push-notifications" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
                     </div>
-                    <div class="settings-item-text">
-                        <span>Ghost Disappearing Messages</span>
-                        <p>Send 10-second auto-delete messages in chat</p>
-                    </div>
-                    <span class="settings-badge-pill">Ghost 👻</span>
                 </div>
             </div>
 
-            <!-- Data & Storage Section -->
-            <div class="settings-group-card">
-                <div class="settings-group-header">
-                    <span class="settings-group-title">DATA & STORAGE</span>
-                </div>
-                <div class="settings-item-row">
-                    <div class="settings-item-icon-badge badge-blue">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+            <!-- Privacy & Security -->
+            <div class="clean-group">
+                <div class="clean-group-label">PRIVACY & SECURITY</div>
+                <div class="clean-card">
+                    <div class="clean-row">
+                        <div class="clean-row-lead">
+                            <div class="clean-icon-box icon-lock">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                            </div>
+                            <span class="clean-label">App Passcode Lock</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="toggle-app-lock">
+                            <span class="slider"></span>
+                        </label>
                     </div>
-                    <div class="settings-item-text">
-                        <span>Local Cache Storage</span>
-                        <p id="storage-usage-text">Calculated usage: 1.2 MB</p>
+
+                    <div class="clean-row">
+                        <div class="clean-row-lead">
+                            <div class="clean-icon-box icon-ghost">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                            </div>
+                            <span class="clean-label">Ghost Mode</span>
+                        </div>
+                        <span class="clean-pill-tag">10s Auto-delete</span>
                     </div>
-                    <button id="btn-clear-cache" class="settings-action-btn">Clear Cache</button>
-                </div>
-                <div class="settings-item-row">
-                    <div class="settings-item-icon-badge badge-teal">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                    </div>
-                    <div class="settings-item-text">
-                        <span>AI Assistant Engine</span>
-                        <p>Gemini 3.6-Flash powered smart bot</p>
-                    </div>
-                    <span class="settings-badge-pill success">Active 🤖</span>
                 </div>
             </div>
 
-            <!-- Logout / Reset -->
-            <div class="settings-group-card logout-card">
-                <button id="btn-logout" class="danger-btn-full">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-                    <span>Reset App & Log Out</span>
+            <!-- Storage & System -->
+            <div class="clean-group">
+                <div class="clean-group-label">STORAGE & SYSTEM</div>
+                <div class="clean-card">
+                    <div class="clean-row">
+                        <div class="clean-row-lead">
+                            <div class="clean-icon-box icon-storage">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                            </div>
+                            <div>
+                                <span class="clean-label">Local Cache</span>
+                                <span id="storage-usage-text" class="clean-sublabel">0 KB</span>
+                            </div>
+                        </div>
+                        <button id="btn-clear-cache" class="clean-subtle-btn danger" type="button">Clear</button>
+                    </div>
+
+                    <div class="clean-row">
+                        <div class="clean-row-lead">
+                            <div class="clean-icon-box icon-ai">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                            </div>
+                            <span class="clean-label">AI Assistant</span>
+                        </div>
+                        <span class="clean-pill-tag active">Gemini Active</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Log Out / Reset -->
+            <div class="clean-logout-wrap">
+                <button id="btn-logout" class="clean-logout-btn" type="button">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    <span>Log Out & Reset</span>
                 </button>
             </div>
         </div>

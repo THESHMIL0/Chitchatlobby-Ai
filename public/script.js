@@ -794,16 +794,17 @@ if (avatarPresetsRow) {
 }
 
 const btnOpenProfile = document.getElementById('btn-open-profile');
-if (btnOpenProfile) {
-    btnOpenProfile.onclick = () => {
-        hapticFeedback('light');
-        updateProfileScreenUI();
-        if (settingsScreen) settingsScreen.classList.add('hidden');
-        if (roomListScreen) roomListScreen.classList.add('hidden'); 
-        if (profileScreen) profileScreen.classList.remove('hidden'); 
-        try { history.pushState({screen: 'profile'}, '', '#profile'); } catch(e){}
-    };
+const settingsProfileCard = document.getElementById('settings-profile-card');
+function handleOpenProfile() {
+    hapticFeedback('light');
+    updateProfileScreenUI();
+    if (settingsScreen) settingsScreen.classList.add('hidden');
+    if (roomListScreen) roomListScreen.classList.add('hidden'); 
+    if (profileScreen) profileScreen.classList.remove('hidden'); 
+    try { history.pushState({screen: 'profile'}, '', '#profile'); } catch(e){}
 }
+if (btnOpenProfile) btnOpenProfile.onclick = handleOpenProfile;
+if (settingsProfileCard) settingsProfileCard.onclick = handleOpenProfile;
 
 const lobbyProfileBtn = document.getElementById('lobby-profile-btn');
 if (lobbyProfileBtn) {
@@ -1090,24 +1091,24 @@ function updateNotifStatusText() {
     if (!statusText) return;
 
     if (!('Notification' in window)) {
-        statusText.textContent = 'In-app notifications enabled (Browser Push unsupported)';
+        statusText.textContent = 'Unsupported in browser';
         if (btnRequestPushPermission) btnRequestPushPermission.style.display = 'none';
     } else if (Notification.permission === 'granted') {
-        statusText.textContent = 'Browser & Web Push Notifications Active 🔔';
+        statusText.textContent = 'Active in background';
         if (btnRequestPushPermission) {
-            btnRequestPushPermission.textContent = 'Test Server Push 🔔';
+            btnRequestPushPermission.textContent = 'Test Push';
             btnRequestPushPermission.style.display = 'inline-block';
         }
     } else if (Notification.permission === 'denied') {
-        statusText.textContent = 'Notifications blocked in browser settings';
+        statusText.textContent = 'Blocked in browser';
         if (btnRequestPushPermission) {
-            btnRequestPushPermission.textContent = 'Blocked in Browser Settings ⚠️';
+            btnRequestPushPermission.textContent = 'Blocked';
             btnRequestPushPermission.style.display = 'inline-block';
         }
     } else {
-        statusText.textContent = 'Tap below to request Web Push permissions';
+        statusText.textContent = 'Alerts when app is closed';
         if (btnRequestPushPermission) {
-            btnRequestPushPermission.textContent = 'Request Notification Access 🔔';
+            btnRequestPushPermission.textContent = 'Enable 🔔';
             btnRequestPushPermission.style.display = 'inline-block';
         }
     }
