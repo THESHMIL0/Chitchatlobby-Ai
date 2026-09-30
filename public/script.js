@@ -1122,10 +1122,10 @@ socket.on('chat history', (data) => {
         data.history.forEach(msg => displayMessage(msg, true));
     }
     checkEmptyMessages();
-    socket.emit('mark read');
+    emitMarkRead();
 });
 
-document.addEventListener('visibilitychange', () => { if (!document.hidden && activeRoomId) { socket.emit('mark read'); } });
+document.addEventListener('visibilitychange', () => { if (!document.hidden && activeRoomId) { emitMarkRead(); } });
 
 // ==========================
 // 🔔 NOTIFICATIONS SYSTEM
@@ -2284,7 +2284,7 @@ socket.on('chat message', (data) => {
             triggerSystemNotification(data.user, rName, summaryText, data.avatar, activeRoomId);
         }
         
-        if (!document.hidden && activeRoomId) socket.emit('mark read');
+        if (!document.hidden && activeRoomId) emitMarkRead();
     }
 });
 
@@ -2294,7 +2294,45 @@ socket.on('poll updated', (updatedMsg) => {
     if (li) { const isMe = updatedMsg.user === currentUser.name; const isStacked = li.classList.contains('stacked'); li.innerHTML = getMessageInnerHTML(updatedMsg, isMe, isStacked); }
 });
 
-socket.on('messages read', () => { document.querySelectorAll('.ticks.delivered').forEach(el => { el.classList.remove('delivered'); el.classList.add('read'); }); });
+socket.on('messages read', (payload) => {
+    if (payload && payload.roomId && payload.roomId !== activeRoomId) return;
+    const readSVG = `<svg class="tick-svg tick-double tick-read-svg" width="18" height="13" viewBox="0 0 24 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 8.5L5.5 12.5L14 3.5"/><path d="M7.5 8.5L11.5 12.5L20 3.5"/></svg>`;
+    
+    if (payload && Array.isArray(payload.msgIds) && payload.msgIds.length > 0) {
+        payload.msgIds.forEach(id => {
+            const li = document.getElementById(`msg-${id}`) || document.getElementById(id);
+            const tickEl = (li && li.querySelector('.ticks')) || document.querySelector(`.ticks[data-msg-id="${id}"]`);
+            if (tickEl && !tickEl.classList.contains('read')) {
+                tickEl.className = 'ticks read just-read';
+                tickEl.title = payload.reader ? `Read by ${payload.reader}` : 'Read';
+                tickEl.innerHTML = readSVG;
+            }
+        });
+    } else {
+        document.querySelectorAll('.my-wrapper .ticks:not(.read)').forEach(tickEl => {
+            tickEl.className = 'ticks read just-read';
+            tickEl.title = 'Read';
+            tickEl.innerHTML = readSVG;
+        });
+    }
+});
+
+socket.on('messages delivered', (payload) => {
+    if (payload && payload.roomId && payload.roomId !== activeRoomId) return;
+    const deliveredSVG = `<svg class="tick-svg tick-double" width="18" height="13" viewBox="0 0 24 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 8.5L5.5 12.5L14 3.5"/><path d="M7.5 8.5L11.5 12.5L20 3.5"/></svg>`;
+    
+    if (payload && Array.isArray(payload.msgIds)) {
+        payload.msgIds.forEach(id => {
+            const li = document.getElementById(`msg-${id}`) || document.getElementById(id);
+            const tickEl = (li && li.querySelector('.ticks.sent')) || document.querySelector(`.ticks[data-msg-id="${id}"].sent`);
+            if (tickEl) {
+                tickEl.className = 'ticks delivered';
+                tickEl.title = 'Delivered';
+                tickEl.innerHTML = deliveredSVG;
+            }
+        });
+    }
+});
 
 socket.on('update reactions', (data) => { 
     const li = document.getElementById(`msg-${data.id}`);
@@ -2375,6 +2413,43 @@ function resetAudioPlayerUI(container) {
     if (pauseIcon) pauseIcon.classList.add('hidden');
     if (timeLabel) timeLabel.textContent = '0:00';
     waveBars.forEach(bar => bar.classList.remove('played'));
+}
+
+// ==========================================
+// 📬 WhatsApp-Style Ticks & Read Receipts
+// ==========================================
+let readReceiptsEnabled = localStorage.getItem('chitChat_readReceipts') !== 'false';
+
+function getTickHTML(status = 'sent', msgId = '') {
+    const s = String(status || 'sent').toLowerCase();
+    const safeId = escapeHTML(String(msgId || ''));
+
+    if (s === 'pending' || s === 'sending') {
+        return `<span class="ticks pending" data-msg-id="${safeId}" title="Sending...">` +
+            `<svg class="tick-svg tick-clock" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>` +
+        `</span>`;
+    }
+    if (s === 'sent') {
+        return `<span class="ticks sent" data-msg-id="${safeId}" title="Sent to server">` +
+            `<svg class="tick-svg tick-single" width="14" height="12" viewBox="0 0 20 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 8.5 8.5 13 16 4"/></svg>` +
+        `</span>`;
+    }
+    if (s === 'delivered') {
+        return `<span class="ticks delivered" data-msg-id="${safeId}" title="Delivered">` +
+            `<svg class="tick-svg tick-double" width="18" height="13" viewBox="0 0 24 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 8.5L5.5 12.5L14 3.5"/><path d="M7.5 8.5L11.5 12.5L20 3.5"/></svg>` +
+        `</span>`;
+    }
+    // 'read' (WhatsApp blue double-tick)
+    return `<span class="ticks read" data-msg-id="${safeId}" title="Read">` +
+        `<svg class="tick-svg tick-double tick-read-svg" width="18" height="13" viewBox="0 0 24 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 8.5L5.5 12.5L14 3.5"/><path d="M7.5 8.5L11.5 12.5L20 3.5"/></svg>` +
+    `</span>`;
+}
+
+function emitMarkRead(msgId = null) {
+    if (!readReceiptsEnabled) return;
+    if (!document.hidden && activeRoomId && socket) {
+        socket.emit('mark read', { roomId: activeRoomId, msgId });
+    }
 }
 
 function getMessageInnerHTML(data, isMe, isStacked) {
@@ -2560,8 +2635,8 @@ function getMessageInnerHTML(data, isMe, isStacked) {
             </div>`;
     }
     let reactionsHTML = ''; if (data.reactions && Object.keys(data.reactions).length > 0) reactionsHTML = `<div class="reaction-badge" id="reaction-count-${data.id}">${Object.entries(data.reactions).map(([e, c]) => `${e} ${c}`).join(' ')}</div>`;
-    let tickClass = data.status === 'read' ? 'read' : 'delivered';
     const displayTimeStr = formatTo12HourTime(data.time);
+    const tickHTML = isMe ? getTickHTML(data.status, data.id) : '';
     
     if (isMe) {
         return `
@@ -2569,7 +2644,7 @@ function getMessageInnerHTML(data, isMe, isStacked) {
                 ${topHeaderHTML ? `<div class="msg-top-header">${topHeaderHTML}</div>` : ''}
                 <div class="msg-bubble">
                     ${replyHTML}${content}
-                    <div class="meta-row"><span>${data.isGhost ? '⏱️ ' : ''}${displayTimeStr}</span><span class="ticks ${tickClass}">✔✔</span></div>
+                    <div class="meta-row"><span>${data.isGhost ? '⏱️ ' : ''}${displayTimeStr}</span>${tickHTML}</div>
                     ${reactionsHTML}
                 </div>
             </div>`;
@@ -3414,5 +3489,19 @@ if ('serviceWorker' in navigator) {
         if (event.data && event.data.type === 'OPEN_ROOM' && event.data.roomId) {
             openRoomById(event.data.roomId);
         }
+    });
+}
+
+
+// Read Receipts Settings Toggle
+const toggleReadReceipts = document.getElementById('toggle-read-receipts');
+if (toggleReadReceipts) {
+    toggleReadReceipts.checked = readReceiptsEnabled;
+    toggleReadReceipts.addEventListener('change', (e) => {
+        readReceiptsEnabled = e.target.checked;
+        localStorage.setItem('chitChat_readReceipts', readReceiptsEnabled ? 'true' : 'false');
+        hapticFeedback('light');
+        showToast(readReceiptsEnabled ? 'Read Receipts Enabled' : 'Read Receipts Disabled');
+        if (readReceiptsEnabled) emitMarkRead();
     });
 }

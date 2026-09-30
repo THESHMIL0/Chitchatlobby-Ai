@@ -1269,8 +1269,64 @@ input { user-select: auto; -webkit-user-select: auto; }
     margin-top: 4px; 
 }
 
-.ticks { font-size: 13px; letter-spacing: -3px; } 
-.ticks.read { color: #10b981; }
+.ticks { 
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary); 
+    opacity: 0.72;
+    transition: color 0.22s ease, opacity 0.22s ease, transform 0.2s ease;
+    vertical-align: middle;
+    margin-left: 3px;
+    user-select: none;
+} 
+
+.ticks svg.tick-svg {
+    display: inline-block;
+    vertical-align: middle;
+    stroke: currentColor;
+    fill: none;
+    transition: stroke 0.2s ease, transform 0.2s ease;
+}
+
+.ticks.pending svg.tick-clock {
+    opacity: 0.6;
+    animation: tickClockSpin 1.6s linear infinite;
+}
+
+@keyframes tickClockSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.ticks.sent {
+    color: var(--text-secondary);
+    opacity: 0.7;
+}
+
+.ticks.delivered {
+    color: var(--text-secondary);
+    opacity: 0.85;
+}
+
+.ticks.read { 
+    color: #38bdf8;
+    opacity: 1;
+}
+
+[data-theme="emerald"] .ticks.read {
+    color: #10b981;
+}
+
+@keyframes tickPopIn {
+    0% { transform: scale(0.75); }
+    55% { transform: scale(1.22); }
+    100% { transform: scale(1); }
+}
+
+.ticks.read.just-read svg {
+    animation: tickPopIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
 
 .ghost-message .msg-bubble { border: 1.5px dashed var(--danger) !important; }
 
@@ -3220,6 +3276,7 @@ li.system-message {
 .clean-icon-box.icon-bell    { background: rgba(59, 130, 246, 0.12);  color: #3b82f6; }
 .clean-icon-box.icon-lock    { background: rgba(16, 185, 129, 0.12); color: #10b981; }
 .clean-icon-box.icon-ghost   { background: rgba(99, 102, 241, 0.12); color: #6366f1; }
+.clean-icon-box.icon-read-receipts { background: rgba(56, 189, 248, 0.14); color: #38bdf8; }
 .clean-icon-box.icon-storage { background: rgba(14, 165, 233, 0.12); color: #0ea5e9; }
 .clean-icon-box.icon-ai      { background: rgba(20, 184, 166, 0.12); color: #14b8a6; }
 

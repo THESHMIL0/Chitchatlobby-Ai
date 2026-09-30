@@ -700,6 +700,25 @@ io.on('connection', (socket) => {
             db.run("INSERT OR REPLACE INTO users (name, avatar, about, isOnline, lastSeen, bubbleColor) VALUES (?, ?, ?, ?, ?, ?)", 
                 [cleanName, safeAvatar, safeAbout, 1, Date.now(), safeColor]);
 
+            // Deliver any pending sent messages to this joining recipient
+            const newlyDeliveredIds = [];
+            historyStore.forEach(h => {
+                if (h.roomId === room.id) {
+                    try {
+                        const m = typeof h.data === 'string' ? JSON.parse(h.data) : h.data;
+                        if (m.userId !== userId && m.user !== cleanName && m.status === 'sent') {
+                            m.status = 'delivered';
+                            h.data = JSON.stringify(m);
+                            newlyDeliveredIds.push(m.id);
+                        }
+                    } catch (e) {}
+                }
+            });
+            if (newlyDeliveredIds.length > 0) {
+                scheduleDataSave();
+                io.to(room.id).emit('messages delivered', { roomId: room.id, msgIds: newlyDeliveredIds });
+            }
+
             db.all("SELECT data FROM history WHERE roomId = ?", [room.id], (err, rows) => {
                 const history = rows?.map(r => typeof r.data === 'string' ? JSON.parse(r.data) : r.data) || [];
                 socket.emit('chat history', { 
@@ -774,10 +793,15 @@ io.on('connection', (socket) => {
             ? data.roomId 
             : (sessionUser?.roomId || 'lobby');
 
-        data.id = data.id || (Date.now() + "_" + Math.floor(Math.random() * 1000));
+                data.id = data.id || (Date.now() + "_" + Math.floor(Math.random() * 1000));
         data.roomId = roomId; 
         data.type = data.type || 'chat'; 
-        data.status = 'delivered';
+        
+        // WhatsApp-style status: 'delivered' if recipients online in room, else 'sent'
+        const roomRecipients = Object.entries(activeUsersById).filter(([sId, u]) => 
+            sId !== socket.id && u.roomId === roomId && u.name !== data.user
+        );
+        data.status = roomRecipients.length > 0 ? 'delivered' : 'sent';
         data.senderSocketId = socket.id;
 
         // Enforce max text length (4000 characters)
@@ -859,6 +883,27 @@ io.on('connection', (socket) => {
                 // Rate limited bot invocation in this room
                 return;
             }
+
+            // Bot reads the user's message immediately (triggers blue ticks)
+            setTimeout(() => {
+                const item = historyStore.find(h => h.id === data.id);
+                if (item) {
+                    try {
+                        const m = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
+                        m.status = 'read';
+                        m.readBy = m.readBy || [];
+                        if (!m.readBy.includes('🤖 Bot')) m.readBy.push('🤖 Bot');
+                        item.data = JSON.stringify(m);
+                        scheduleDataSave();
+                    } catch (e) {}
+                }
+                io.to(roomId).emit('messages read', {
+                    roomId,
+                    msgIds: [data.id],
+                    reader: '🤖 Bot',
+                    readAt: Date.now()
+                });
+            }, 180);
 
             io.to(roomId).emit('user typing', { name: '🤖 Bot', isTyping: true });
             
@@ -1075,10 +1120,47 @@ io.on('connection', (socket) => {
         broadcastRooms();
     });
 
-    socket.on('mark read', () => {
-        const roomId = activeUsersById[socket.id]?.roomId;
-        if (roomId) {
-            io.to(roomId).emit('messages read');
+    socket.on('mark read', (payload) => {
+        const sessionUser = activeUsersById[socket.id];
+        if (!sessionUser) return;
+        const targetRoomId = (payload && typeof payload.roomId === 'string') ? payload.roomId : sessionUser.roomId;
+        if (!targetRoomId) return;
+
+        const targetMsgId = (payload && typeof payload.msgId === 'string') ? payload.msgId : null;
+        const readMsgIds = [];
+
+        for (let i = historyStore.length - 1; i >= 0; i--) {
+            const h = historyStore[i];
+            if (h.roomId === targetRoomId) {
+                try {
+                    const m = typeof h.data === 'string' ? JSON.parse(h.data) : h.data;
+                    const isOtherUserMsg = (m.userId && m.userId !== sessionUser.userId) || (m.user && m.user !== sessionUser.name);
+                    
+                    if (isOtherUserMsg) {
+                        if (!targetMsgId || m.id === targetMsgId) {
+                            if (m.status !== 'read') {
+                                m.status = 'read';
+                                m.readAt = Date.now();
+                                m.readBy = m.readBy || [];
+                                if (!m.readBy.includes(sessionUser.name)) m.readBy.push(sessionUser.name);
+                                h.data = JSON.stringify(m);
+                                readMsgIds.push(m.id);
+                            }
+                            if (targetMsgId && m.id === targetMsgId) break;
+                        }
+                    }
+                } catch (e) {}
+            }
+        }
+
+        if (readMsgIds.length > 0) {
+            scheduleDataSave();
+            io.to(targetRoomId).emit('messages read', { 
+                roomId: targetRoomId, 
+                msgIds: readMsgIds, 
+                reader: sessionUser.name, 
+                readAt: Date.now() 
+            });
         }
     });
 
