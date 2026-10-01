@@ -3381,9 +3381,17 @@ function formatAudioTime(seconds) {
     return `${m}:${s < 10 ? '0' : ''}${s}`;
 }
 
-function generateWaveformBarsHTML() {
-    const heights = [35, 60, 85, 40, 75, 100, 50, 90, 65, 30, 80, 95, 45, 70, 85, 40, 60, 30, 50, 25];
-    return heights.map(h => `<div class="wave-bar" style="height: ${h}%;"></div>`).join('');
+function generateWaveformBarsHTML(waveform) {
+    let heights;
+    if (Array.isArray(waveform) && waveform.length >= 10) {
+        heights = waveform;
+    } else {
+        heights = [35, 60, 85, 45, 75, 95, 55, 85, 60, 35, 75, 90, 45, 65, 80, 40, 60, 30, 50, 30, 45, 60, 40, 25];
+    }
+    return heights.map(h => {
+        const cleanH = Math.max(18, Math.min(100, Math.round(Number(h) || 25)));
+        return `<div class="wave-bar" style="height: ${cleanH}%;"></div>`;
+    }).join('');
 }
 
 function updateWaveformProgress(container, currentTime, duration) {
@@ -3391,12 +3399,25 @@ function updateWaveformProgress(container, currentTime, duration) {
     const waveBars = container.querySelectorAll('.wave-bar');
     const timeLabel = container.querySelector('.audio-time-label');
     
-    if (timeLabel) {
-        timeLabel.textContent = formatAudioTime(currentTime) + (duration ? ` / ${formatAudioTime(duration)}` : '');
+    // Resolve safe duration (WebM recordings in browsers report duration = Infinity)
+    let safeDuration = (duration && isFinite(duration) && duration > 0) ? duration : 0;
+    if (!safeDuration) {
+        safeDuration = parseFloat(container.dataset.duration || 0);
+    }
+    if (!safeDuration && currentTime > 0) {
+        safeDuration = Math.max(currentTime, 1);
     }
 
-    if (!duration || waveBars.length === 0) return;
-    const progress = Math.min(1, Math.max(0, currentTime / duration));
+    if (timeLabel) {
+        if (safeDuration > 0) {
+            timeLabel.textContent = `${formatAudioTime(currentTime)} / ${formatAudioTime(safeDuration)}`;
+        } else {
+            timeLabel.textContent = formatAudioTime(currentTime);
+        }
+    }
+
+    if (!safeDuration || waveBars.length === 0) return;
+    const progress = Math.min(1, Math.max(0, currentTime / safeDuration));
     const activeCount = Math.floor(progress * waveBars.length);
 
     waveBars.forEach((bar, idx) => {
@@ -3417,7 +3438,11 @@ function resetAudioPlayerUI(container) {
 
     if (playIcon) playIcon.classList.remove('hidden');
     if (pauseIcon) pauseIcon.classList.add('hidden');
-    if (timeLabel) timeLabel.textContent = '0:00';
+    
+    const safeDuration = parseFloat(container.dataset.duration || 0);
+    if (timeLabel) {
+        timeLabel.textContent = safeDuration > 0 ? formatAudioTime(safeDuration) : '0:00';
+    }
     waveBars.forEach(bar => bar.classList.remove('played'));
 }
 
@@ -3708,23 +3733,27 @@ function getMessageInnerHTML(data, isMe, isStacked) {
     else if (data.uploadedImage || data.image) {
         const imgSrc = data.uploadedImage || data.image;
         if (data.isAudio) {
+            const totalDuration = (data.duration && isFinite(data.duration) && data.duration > 0) ? Math.round(data.duration) : 0;
+            const durationDisplay = totalDuration > 0 ? formatAudioTime(totalDuration) : '0:00';
             content = `
-                <div class="custom-audio-player" data-audio-src="${escapeHTML(imgSrc)}">
-                    <button class="cozy-play-btn play-pause-btn" title="Play Voice Note" type="button">
+                <div class="custom-audio-player" data-audio-src="${escapeHTML(imgSrc)}" data-duration="${totalDuration}">
+                    <button class="cozy-play-btn play-pause-btn" title="Play Voice Note" type="button" aria-label="Play Voice Note">
                         <svg class="play-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
                         <svg class="pause-icon hidden" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"></rect><rect x="14" y="4" width="4" height="16" rx="1"></rect></svg>
                     </button>
                     <div class="cozy-audio-body">
                         <div class="cozy-waveform-track" title="Tap to seek">
-                            ${generateWaveformBarsHTML()}
+                            ${generateWaveformBarsHTML(data.waveform)}
                         </div>
                         <div class="cozy-audio-meta">
-                            <span class="audio-time-label">0:00</span>
-                            <button class="audio-speed-btn" title="Change playback speed" type="button" data-speed="1">1x</button>
-                            <span class="audio-type-badge">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path></svg>
-                                Voice Note
-                            </span>
+                            <span class="audio-time-label">${durationDisplay}</span>
+                            <div class="audio-meta-right">
+                                <button class="audio-speed-btn" title="Change playback speed" type="button" data-speed="1">1x</button>
+                                <span class="audio-type-badge">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path></svg>
+                                    Voice Note
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>`;
@@ -4403,16 +4432,69 @@ document.getElementById('messages').addEventListener('click', (e) => {
     const pauseIcon = playerContainer.querySelector('.pause-icon');
     const playerSpeedBtn = playerContainer.querySelector('.audio-speed-btn');
 
-    // Handle Waveform seeking if audio is currently active
+    const getSafeDuration = (audio, container) => {
+        if (audio && isFinite(audio.duration) && audio.duration > 0) {
+            return audio.duration;
+        }
+        const dataDur = parseFloat(container?.dataset?.duration || 0);
+        if (dataDur > 0) return dataDur;
+        if (audio && audio.currentTime > 0) return Math.max(audio.currentTime, 1);
+        return 0;
+    };
+
+    // Handle Waveform seeking
     if (track && !playBtn) {
+        const rect = track.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const fraction = Math.min(1, Math.max(0, clickX / (rect.width || 1)));
+
         if (currentPlayingAudio && currentPlayingContainer === playerContainer) {
-            const rect = track.getBoundingClientRect();
-            const clickX = e.clientX - rect.left;
-            const fraction = Math.min(1, Math.max(0, clickX / rect.width));
-            if (currentPlayingAudio.duration) {
-                currentPlayingAudio.currentTime = fraction * currentPlayingAudio.duration;
-                updateWaveformProgress(playerContainer, currentPlayingAudio.currentTime, currentPlayingAudio.duration);
+            const dur = getSafeDuration(currentPlayingAudio, playerContainer);
+            if (dur > 0) {
+                currentPlayingAudio.currentTime = fraction * dur;
+                updateWaveformProgress(playerContainer, currentPlayingAudio.currentTime, dur);
             }
+            return;
+        } else {
+            // Tapped track before audio started: begin playback and seek to position
+            if (currentPlayingAudio) {
+                currentPlayingAudio.pause();
+                resetAudioPlayerUI(currentPlayingContainer);
+                currentPlayingAudio = null;
+                currentPlayingContainer = null;
+            }
+
+            hapticFeedback('light');
+            currentPlayingAudio = new Audio(audioSrc);
+            currentPlayingContainer = playerContainer;
+
+            const currentSpeed = parseFloat(playerSpeedBtn ? (playerSpeedBtn.dataset.speed || 1) : 1);
+            currentPlayingAudio.playbackRate = currentSpeed;
+
+            if (playIcon) playIcon.classList.add('hidden');
+            if (pauseIcon) pauseIcon.classList.remove('hidden');
+
+            const applySeek = () => {
+                const dur = getSafeDuration(currentPlayingAudio, playerContainer);
+                if (dur > 0) {
+                    try { currentPlayingAudio.currentTime = fraction * dur; } catch(err){}
+                    updateWaveformProgress(playerContainer, currentPlayingAudio.currentTime, dur);
+                }
+            };
+
+            currentPlayingAudio.addEventListener('loadedmetadata', applySeek, { once: true });
+            currentPlayingAudio.play().then(applySeek).catch(err => console.log('Audio playback error:', err));
+
+            currentPlayingAudio.addEventListener('timeupdate', () => { 
+                const dur = getSafeDuration(currentPlayingAudio, playerContainer);
+                updateWaveformProgress(playerContainer, currentPlayingAudio.currentTime, dur);
+            });
+
+            currentPlayingAudio.addEventListener('ended', () => { 
+                resetAudioPlayerUI(playerContainer);
+                currentPlayingAudio = null;
+                currentPlayingContainer = null;
+            });
             return;
         }
     }
@@ -4452,11 +4534,13 @@ document.getElementById('messages').addEventListener('click', (e) => {
         currentPlayingAudio.play().catch(err => console.log('Audio playback error:', err)); 
 
         currentPlayingAudio.addEventListener('loadedmetadata', () => {
-            updateWaveformProgress(playerContainer, 0, currentPlayingAudio.duration);
+            const dur = getSafeDuration(currentPlayingAudio, playerContainer);
+            updateWaveformProgress(playerContainer, 0, dur);
         });
 
         currentPlayingAudio.addEventListener('timeupdate', () => { 
-            updateWaveformProgress(playerContainer, currentPlayingAudio.currentTime, currentPlayingAudio.duration);
+            const dur = getSafeDuration(currentPlayingAudio, playerContainer);
+            updateWaveformProgress(playerContainer, currentPlayingAudio.currentTime, dur);
         });
 
         currentPlayingAudio.addEventListener('ended', () => { 
@@ -4726,7 +4810,7 @@ function normalizeWaveform(samples, barCount = 24) {
         const res = [];
         for (let i = 0; i < barCount; i++) {
             const idx = Math.min(samples.length - 1, Math.floor((i / barCount) * samples.length));
-            res.push(samples[idx]);
+            res.push(Math.max(18, Math.min(100, samples[idx])));
         }
         return res;
     }
@@ -4735,13 +4819,17 @@ function normalizeWaveform(samples, barCount = 24) {
     for (let i = 0; i < barCount; i++) {
         const start = Math.floor(i * chunkSize);
         const end = Math.floor((i + 1) * chunkSize);
+        let maxVal = 0;
         let sum = 0, count = 0;
         for (let j = start; j < end && j < samples.length; j++) {
-            sum += samples[j];
+            const v = samples[j];
+            sum += v;
+            if (v > maxVal) maxVal = v;
             count++;
         }
         const avg = count > 0 ? Math.round(sum / count) : 20;
-        res.push(Math.max(16, Math.min(100, avg)));
+        const blended = Math.round(maxVal * 0.7 + avg * 0.3);
+        res.push(Math.max(18, Math.min(100, blended)));
     }
     return res;
 }
@@ -4758,27 +4846,57 @@ function startLiveVisualizer(stream) {
         }
 
         analyserNode = audioContext.createAnalyser();
-        analyserNode.fftSize = 64;
-        analyserNode.smoothingTimeConstant = 0.45;
+        analyserNode.fftSize = 256;
+        analyserNode.smoothingTimeConstant = 0.4;
         
         micSourceNode = audioContext.createMediaStreamSource(stream);
         micSourceNode.connect(analyserNode);
 
         const waveBars = document.querySelectorAll('#recording-waves .rec-wave-bar');
-        const dataArray = new Uint8Array(analyserNode.frequencyBinCount);
+        const numBars = waveBars.length || 12;
+        const timeData = new Uint8Array(analyserNode.fftSize);
+        const freqData = new Uint8Array(analyserNode.frequencyBinCount);
+
+        let smoothedVoiceLevel = 0;
 
         function drawVisualizer() {
             if (!isRecording || isRecordingPaused) return;
-            analyserNode.getByteFrequencyData(dataArray);
 
-            let sum = 0;
-            for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
-            const avg = sum / (dataArray.length || 1);
+            analyserNode.getByteTimeDomainData(timeData);
+            analyserNode.getByteFrequencyData(freqData);
+
+            // 1. Calculate true time-domain acoustic RMS volume
+            let sumSq = 0;
+            for (let i = 0; i < timeData.length; i++) {
+                const amp = (timeData[i] - 128) / 128;
+                sumSq += amp * amp;
+            }
+            const rms = Math.sqrt(sumSq / timeData.length);
+
+            // Voice sensitivity boost: noise floor ~0.007, voice level 0.0 to 1.0
+            const rawVoiceLevel = Math.min(1, Math.max(0, (rms - 0.007) * 4.4));
+            // Smooth decay so wave looks organic rather than erratic
+            smoothedVoiceLevel = Math.max(rawVoiceLevel, smoothedVoiceLevel * 0.86);
+
+            const now = performance.now();
+            const speechBins = Math.min(20, freqData.length);
 
             waveBars.forEach((bar, idx) => {
-                const freq = dataArray[idx % dataArray.length] || 0;
-                const height = Math.min(100, Math.max(18, Math.round((freq / 255) * 80 + (avg / 255) * 20)));
-                bar.style.height = `${height}%`;
+                // Map bar index across vocal speech bands
+                const binIdx = 1 + Math.floor((idx / numBars) * speechBins);
+                const freqAmp = (freqData[binIdx] || 0) / 255;
+
+                // Center-weighted profile for pleasing voice-note curvature
+                const centerDist = Math.abs(idx - (numBars - 1) / 2) / ((numBars - 1) / 2);
+                const centerWeight = 0.65 + 0.35 * Math.cos(centerDist * Math.PI * 0.5);
+
+                // Subtle fluid wave harmonic
+                const waveHarmonic = Math.sin(now * 0.007 + idx * 0.55) * 0.15;
+
+                const combined = (smoothedVoiceLevel * 0.6 + freqAmp * 0.4 + waveHarmonic * smoothedVoiceLevel) * centerWeight;
+                const heightPercent = Math.min(100, Math.max(16, Math.round(combined * 84 + 16)));
+
+                bar.style.height = `${heightPercent}%`;
             });
 
             visualizerAnimFrame = requestAnimationFrame(drawVisualizer);
@@ -4789,12 +4907,17 @@ function startLiveVisualizer(stream) {
         clearInterval(sampleIntervalId);
         sampleIntervalId = setInterval(() => {
             if (!isRecording || isRecordingPaused || !analyserNode) return;
-            analyserNode.getByteFrequencyData(dataArray);
+            analyserNode.getByteTimeDomainData(timeData);
             let s = 0;
-            for (let i = 0; i < dataArray.length; i++) s += dataArray[i];
-            const val = Math.round(((s / (dataArray.length || 1)) / 255) * 100);
-            liveWaveformSamples.push(Math.max(16, Math.min(100, val)));
-        }, 80);
+            for (let i = 0; i < timeData.length; i++) {
+                const amp = (timeData[i] - 128) / 128;
+                s += amp * amp;
+            }
+            const rms = Math.sqrt(s / timeData.length);
+            const level = Math.min(1, Math.max(0, (rms - 0.007) * 4.0));
+            const sampleVal = Math.round(level * 82 + 18);
+            liveWaveformSamples.push(Math.max(18, Math.min(100, sampleVal)));
+        }, 75);
     } catch(e) {
         console.warn('Live audio visualizer error:', e);
     }
@@ -4814,7 +4937,7 @@ function stopLiveVisualizer() {
         micSourceNode = null;
     }
     const waveBars = document.querySelectorAll('#recording-waves .rec-wave-bar');
-    waveBars.forEach(bar => { bar.style.height = '20%'; });
+    waveBars.forEach(bar => { bar.style.height = '18%'; });
 }
 
 function cleanupPreviewAudio() {
@@ -4908,7 +5031,8 @@ async function startRecording(e) {
                 const audioBlob = new Blob(audioChunks, { type: finalMime }); 
                 if (audioBlob.size > 150) {
                     const normalizedWave = normalizeWaveform(liveWaveformSamples, 24);
-                    const finalDuration = Math.max(1, recordingSeconds);
+                    const elapsedSecs = Math.max(1, Math.round((Date.now() - recordStartTime) / 1000));
+                    const finalDuration = Math.max(elapsedSecs, recordingSeconds);
 
                     const reader = new FileReader();
                     reader.onload = (event) => { 
