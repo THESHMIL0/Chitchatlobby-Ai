@@ -3765,6 +3765,8 @@ li.system-message {
     border-radius: 16px;
     overflow: hidden;
     box-shadow: 0 1px 4px var(--shadow-color);
+    display: flex;
+    flex-direction: column;
 }
 
 /* Clean Rows with Inset Dividers */
@@ -3775,6 +3777,8 @@ li.system-message {
     gap: 12px;
     padding: 13px 16px;
     position: relative;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .clean-card .clean-row:not(:last-child)::after {
@@ -3906,6 +3910,8 @@ li.system-message {
     background: var(--input-bg);
     color: var(--accent);
     cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
     transition: all 0.18s ease;
 }
 
