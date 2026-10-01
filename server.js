@@ -870,16 +870,17 @@ io.on('connection', (socket) => {
         }
 
         if (data.xox) {
+            const isAIRoom = roomId === 'ai_lounge' || String(data.text || '').toLowerCase().includes('@bot');
             data.xox = {
                 board: Array.isArray(data.xox.board) && data.xox.board.length === 9 ? data.xox.board : Array(9).fill(''),
                 turn: data.xox.turn === 'O' ? 'O' : 'X',
                 players: {
                     X: data.xox.players?.X ? String(data.xox.players.X).substring(0, 30) : data.user,
-                    O: data.xox.players?.O ? String(data.xox.players.O).substring(0, 30) : null
+                    O: isAIRoom ? '🤖 Bot' : (data.xox.players?.O ? String(data.xox.players.O).substring(0, 30) : null)
                 },
                 playerAvatars: {
                     X: data.xox.playerAvatars?.X || data.avatar,
-                    O: data.xox.playerAvatars?.O || null
+                    O: isAIRoom ? 'https://api.dicebear.com/7.x/lorelei/svg?seed=ChitChatBot&backgroundColor=b6e3f4' : (data.xox.playerAvatars?.O || null)
                 },
                 status: 'in_progress',
                 winner: null,
@@ -930,6 +931,11 @@ io.on('connection', (socket) => {
         const isUserBot = data.user === '🤖 Bot';
 
         if ((isBotMention || isAILounge) && !isUserBot) {
+            if (data.xox) {
+                sendBotGameComment(roomId, "🎮 Challenge accepted! Make your first move as **X**, and I'll play as **O**!");
+                return;
+            }
+
             if (!canTriggerBotInRoom(roomId)) {
                 // Rate limited bot invocation in this room
                 return;
@@ -1047,7 +1053,7 @@ io.on('connection', (socket) => {
     });
 
     // ==========================
-    // 🎮 XOX (TIC TAC TOE) GAME ENGINE
+    // 🎮 XOX (TIC TAC TOE) GAME ENGINE WITH AI OPPONENT
     // ==========================
     const XOX_WINNING_COMBOS = [
         [0, 1, 2], [3, 4, 5], [6, 7, 8],
@@ -1066,6 +1072,131 @@ io.on('connection', (socket) => {
             return { winner: null, winningLine: null, status: 'draw' };
         }
         return { winner: null, winningLine: null, status: 'in_progress' };
+    }
+
+    function sendBotGameComment(roomId, text) {
+        setTimeout(() => {
+            const botMsg = {
+                id: Date.now() + "_bot_game",
+                user: '🤖 Bot',
+                text: text,
+                roomId,
+                type: 'chat',
+                status: 'delivered',
+                time: new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }),
+                color: '#00a884',
+                avatar: 'https://api.dicebear.com/7.x/lorelei/svg?seed=ChitChatBot&backgroundColor=b6e3f4'
+            };
+            db.run("INSERT INTO history VALUES (?, ?, ?, ?)", [botMsg.id, roomId, Date.now(), JSON.stringify(botMsg)]);
+            io.to(roomId).emit('chat message', botMsg);
+        }, 350);
+    }
+
+    function getBestXoxMove(board, aiSymbol = 'O', humanSymbol = 'X') {
+        const emptyIndices = [];
+        board.forEach((val, idx) => {
+            if (!val) emptyIndices.push(idx);
+        });
+
+        if (emptyIndices.length === 0) return -1;
+
+        // 1. Can AI win on this move? (Take winning square)
+        for (const idx of emptyIndices) {
+            board[idx] = aiSymbol;
+            const win = XOX_WINNING_COMBOS.some(([a, b, c]) => board[a] === aiSymbol && board[b] === aiSymbol && board[c] === aiSymbol);
+            board[idx] = '';
+            if (win) return idx;
+        }
+
+        // 2. Can Human win on next turn? (Block winning square)
+        for (const idx of emptyIndices) {
+            board[idx] = humanSymbol;
+            const block = XOX_WINNING_COMBOS.some(([a, b, c]) => board[a] === humanSymbol && board[b] === humanSymbol && board[c] === humanSymbol);
+            board[idx] = '';
+            if (block) return idx;
+        }
+
+        // 3. Take center square if open
+        if (emptyIndices.includes(4)) {
+            return 4;
+        }
+
+        // 4. Take an open corner (0, 2, 6, 8)
+        const corners = [0, 2, 6, 8].filter(c => emptyIndices.includes(c));
+        if (corners.length > 0) {
+            return corners[Math.floor(Math.random() * corners.length)];
+        }
+
+        // 5. Take any remaining open edge (1, 3, 5, 7)
+        return emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+    }
+
+    function scheduleBotXoxMove(msgId, roomId) {
+        const item = historyStore.find(h => h.id === msgId);
+        if (!item) return;
+
+        let data;
+        try {
+            data = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
+        } catch (e) {
+            return;
+        }
+
+        if (!data || !data.xox || data.xox.status !== 'in_progress' || data.xox.turn !== 'O') return;
+
+        // Display typing indicator for realism
+        io.to(roomId).emit('user typing', { name: '🤖 Bot', isTyping: true });
+
+        setTimeout(() => {
+            const freshItem = historyStore.find(h => h.id === msgId);
+            if (!freshItem) {
+                io.to(roomId).emit('user typing', { name: '🤖 Bot', isTyping: false });
+                return;
+            }
+
+            let freshData;
+            try {
+                freshData = typeof freshItem.data === 'string' ? JSON.parse(freshItem.data) : freshItem.data;
+            } catch (e) {
+                io.to(roomId).emit('user typing', { name: '🤖 Bot', isTyping: false });
+                return;
+            }
+
+            if (!freshData || !freshData.xox || freshData.xox.status !== 'in_progress' || freshData.xox.turn !== 'O') {
+                io.to(roomId).emit('user typing', { name: '🤖 Bot', isTyping: false });
+                return;
+            }
+
+            const moveIdx = getBestXoxMove(freshData.xox.board, 'O', 'X');
+            if (moveIdx !== -1) {
+                freshData.xox.board[moveIdx] = 'O';
+                freshData.xox.players.O = '🤖 Bot';
+                freshData.xox.playerAvatars.O = 'https://api.dicebear.com/7.x/lorelei/svg?seed=ChitChatBot&backgroundColor=b6e3f4';
+
+                const evalRes = evaluateXoxBoard(freshData.xox.board);
+                freshData.xox.status = evalRes.status;
+                freshData.xox.winner = evalRes.winner;
+                freshData.xox.winningLine = evalRes.winningLine;
+
+                if (evalRes.status === 'in_progress') {
+                    freshData.xox.turn = 'X';
+                }
+
+                freshItem.data = JSON.stringify(freshData);
+                scheduleDataSave();
+
+                io.to(roomId).emit('user typing', { name: '🤖 Bot', isTyping: false });
+                io.to(roomId).emit('xox updated', freshData);
+
+                if (evalRes.status === 'won' && evalRes.winner === 'O') {
+                    sendBotGameComment(roomId, "🎉 Good game! I got 3 in a row. Tap 'Play Again' for a rematch!");
+                } else if (evalRes.status === 'draw') {
+                    sendBotGameComment(roomId, "🤝 Well played! A perfectly matched tie. Tap 'Play Again' to go again!");
+                }
+            } else {
+                io.to(roomId).emit('user typing', { name: '🤖 Bot', isTyping: false });
+            }
+        }, 550);
     }
 
     socket.on('play xox move', ({ msgId, index, userName, userAvatar }) => {
@@ -1090,6 +1221,12 @@ io.on('connection', (socket) => {
                 const player = userName || activeUsersById[socket.id]?.name || 'Guest';
                 const avatar = userAvatar || activeUsersById[socket.id]?.avatar || `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(player)}`;
 
+                // In AI Lounge, auto-assign AI Bot as Player O if unassigned
+                if ((data.roomId === 'ai_lounge' || String(data.text || '').toLowerCase().includes('@bot')) && !players.O) {
+                    players.O = '🤖 Bot';
+                    data.xox.playerAvatars.O = 'https://api.dicebear.com/7.x/lorelei/svg?seed=ChitChatBot&backgroundColor=b6e3f4';
+                }
+
                 // Player Turn Authorization & Slot Claiming
                 if (currentTurn === 'X') {
                     if (!players.X) {
@@ -1105,7 +1242,7 @@ io.on('connection', (socket) => {
                         }
                         players.O = player;
                         data.xox.playerAvatars.O = avatar;
-                    } else if (players.O !== player) {
+                    } else if (players.O !== player && players.O !== '🤖 Bot') {
                         return socket.emit('xox error', { msgId, message: `🌸 It's ${players.O}'s (O) turn! Please wait for them to move.` });
                     }
                 }
@@ -1127,6 +1264,17 @@ io.on('connection', (socket) => {
                 item.data = JSON.stringify(data);
                 scheduleDataSave();
                 io.to(data.roomId).emit('xox updated', data);
+
+                const isAIGame = data.roomId === 'ai_lounge' || players.O === '🤖 Bot' || String(data.text || '').toLowerCase().includes('@bot');
+                if (isAIGame) {
+                    if (evalRes.status === 'won' && evalRes.winner === 'X') {
+                        sendBotGameComment(data.roomId, "🏆 Brilliant move! You got 3 in a row and won! Rematch?");
+                    } else if (evalRes.status === 'draw') {
+                        sendBotGameComment(data.roomId, "🤝 Well played! It's a draw! Tap 'Play Again' to go again.");
+                    } else if (evalRes.status === 'in_progress' && data.xox.turn === 'O') {
+                        scheduleBotXoxMove(msgId, data.roomId);
+                    }
+                }
             }
         }
     });
@@ -1136,14 +1284,23 @@ io.on('connection', (socket) => {
         if (item) {
             const data = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
             if (data.xox) {
+                const isAIGame = data.roomId === 'ai_lounge' || data.xox.players?.O === '🤖 Bot';
                 data.xox.board = Array(9).fill('');
                 data.xox.status = 'in_progress';
                 data.xox.winner = null;
                 data.xox.winningLine = null;
                 data.xox.turn = 'X';
+                if (isAIGame) {
+                    data.xox.players.O = '🤖 Bot';
+                    data.xox.playerAvatars.O = 'https://api.dicebear.com/7.x/lorelei/svg?seed=ChitChatBot&backgroundColor=b6e3f4';
+                }
                 item.data = JSON.stringify(data);
                 scheduleDataSave();
                 io.to(data.roomId).emit('xox updated', data);
+
+                if (isAIGame) {
+                    sendBotGameComment(data.roomId, "✨ Rematch started! Your turn as **X**.");
+                }
             }
         }
     });

@@ -2513,6 +2513,26 @@ function emitMarkRead(msgId = null) {
     }
 }
 
+function renderPencilMark(symbol, isNew = false) {
+    const animClass = isNew ? 'draw-animated' : '';
+    if (symbol === 'X') {
+        return `
+            <svg class="pencil-svg pencil-x ${animClass}" viewBox="0 0 50 50" aria-label="X" role="img" focusable="false">
+                <path class="pencil-path stroke-x-1" pathLength="100" d="M 13.5 12.5 C 19 19, 28 30, 37.5 37.5" />
+                <path class="pencil-path stroke-x-2" pathLength="100" d="M 36.5 13 C 29 21.5, 19.5 30, 12.5 37" />
+            </svg>
+        `;
+    }
+    if (symbol === 'O') {
+        return `
+            <svg class="pencil-svg pencil-o ${animClass}" viewBox="0 0 50 50" aria-label="O" role="img" focusable="false">
+                <path class="pencil-path stroke-o" pathLength="100" d="M 27 11 C 19 9.5, 11 16, 11 25.5 C 11 34.5, 18 40, 26 39.5 C 34 39, 39.5 32.5, 39 23.5 C 38.5 15, 32 9.8, 25 11.2" />
+            </svg>
+        `;
+    }
+    return '';
+}
+
 function getMessageInnerHTML(data, isMe, isStacked) {
     let contentText = escapeHTML(data.text || '');
     if(data.isEdited) contentText += `<span class="edited-tag">(edited)</span>`;
@@ -2541,15 +2561,15 @@ function getMessageInnerHTML(data, isMe, isStacked) {
 
         let statusText = '';
         if (status === 'won') {
-            const winnerName = winner === 'X' ? playerXName : (playerOName || 'Player O');
+            const winnerName = winner === 'X' ? playerXName : (playerOName || 'Opponent');
             statusText = `🎉 <strong class="winner-highlight">${escapeHTML(winnerName)}</strong> won! 🏆`;
         } else if (status === 'draw') {
             statusText = `🤝 It's a draw! Well played!`;
         } else {
-            const activePlayerName = currentTurn === 'X' ? playerXName : (playerOName || 'Player O');
             if (currentTurn === 'O' && !playerOName) {
-                statusText = `⏳ Waiting for Player O to join...`;
+                statusText = `⏳ Waiting for opponent to join...`;
             } else {
+                const activePlayerName = currentTurn === 'X' ? playerXName : (playerOName || '(waiting...)');
                 statusText = `🌸 It's <strong>${escapeHTML(activePlayerName)}</strong>'s (${currentTurn}) turn`;
             }
         }
@@ -2563,10 +2583,15 @@ function getMessageInnerHTML(data, isMe, isStacked) {
             return `
                 <button class="xox-cell ${val ? 'filled' : 'empty'} ${isWinningCell ? 'winning-cell' : ''}" 
                         data-msgid="${data.id}" data-idx="${idx}" type="button" aria-label="Square ${idx + 1}: ${val || 'Empty'}">
-                    ${val ? `<span class="xox-symbol ${valClass}">${val}</span>` : ''}
+                    ${val ? `<span class="xox-symbol ${valClass}">${renderPencilMark(val, false)}</span>` : ''}
                 </button>
             `;
         }).join('');
+
+        const playerXDisplayName = escapeHTML(playerXName) + (isMePlayerX ? ' (You)' : '');
+        const playerODisplayName = playerOName 
+            ? (escapeHTML(playerOName) + (isMePlayerO ? ' (You)' : '')) 
+            : '(waiting...)';
 
         content = `
             <div class="xox-game-card ${status !== 'in_progress' ? 'game-finished' : ''}" data-msgid="${data.id}">
@@ -2586,7 +2611,7 @@ function getMessageInnerHTML(data, isMe, isStacked) {
                             <div class="xox-ring-glow"></div>
                         </div>
                         <div class="xox-player-meta">
-                            <span class="xox-pname" title="${escapeHTML(playerXName)}">${escapeHTML(playerXName)}${isMePlayerX ? ' (You)' : ''}</span>
+                            <span class="xox-pname" title="${escapeHTML(playerXName)}">${playerXDisplayName}</span>
                         </div>
                     </div>
 
@@ -2598,12 +2623,12 @@ function getMessageInnerHTML(data, isMe, isStacked) {
                         <div class="xox-avatar-ring">
                             ${playerOAvatar 
                                 ? `<img src="${escapeHTML(playerOAvatar)}" class="xox-player-avatar" alt="${escapeHTML(playerOName)}" title="${escapeHTML(playerOName)}">`
-                                : `<div class="xox-player-avatar xox-empty-avatar" title="Waiting for Player O"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></div>`}
+                                : `<div class="xox-player-avatar xox-empty-avatar" title="Waiting for opponent"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></div>`}
                             <span class="xox-badge badge-o">O</span>
                             <div class="xox-ring-glow"></div>
                         </div>
                         <div class="xox-player-meta">
-                            <span class="xox-pname" title="${playerOName ? escapeHTML(playerOName) : 'Tap to Join as O'}">${playerOName ? (escapeHTML(playerOName) + (isMePlayerO ? ' (You)' : '')) : 'Join as O'}</span>
+                            <span class="xox-pname ${!playerOName ? 'xox-pname-waiting' : ''}" title="${playerOName ? escapeHTML(playerOName) : 'Waiting for opponent'}">${playerODisplayName}</span>
                         </div>
                     </div>
                 </div>
@@ -2803,7 +2828,9 @@ function getMessageInnerHTML(data, isMe, isStacked) {
     const displayTimeStr = formatTo12HourTime(data.time);
     const tickHTML = isMe ? getTickHTML(data.status, data.id) : '';
     
-    const isMediaOnly = !!((data.uploadedImage || data.image) && !data.isAudio && !contentText && !replyHTML);
+    const hasMedia = !!(data.uploadedImage || data.image);
+    const hasTextContent = !!((data.text && String(data.text).trim().length > 0) || (data.message && String(data.message).trim().length > 0));
+    const isMediaOnly = !!(hasMedia && !data.isAudio && !hasTextContent && !replyHTML);
 
     if (isMe) {
         return `
@@ -2939,9 +2966,16 @@ if (socket) {
             xoxGamesMap.set(data.id, data);
             const li = document.getElementById(`msg-${data.id}`);
             if (li) {
-                const isMe = checkIsMe(data);
-                const isStacked = li.classList.contains('stacked');
-                li.innerHTML = getMessageInnerHTML(data, isMe, isStacked);
+                const card = li.querySelector('.xox-game-card');
+                let updated = false;
+                if (card) {
+                    updated = updateXoxGameCard(card, data);
+                }
+                if (!updated) {
+                    const isMe = checkIsMe(data);
+                    const isStacked = li.classList.contains('stacked');
+                    li.innerHTML = getMessageInnerHTML(data, isMe, isStacked);
+                }
             }
 
             if (data.xox.status === 'won') {
@@ -2966,6 +3000,141 @@ if (socket) {
 
 const xoxGamesMap = new Map();
 
+function updateXoxGameCard(card, data) {
+    if (!card || !data || !data.xox) return false;
+    const xox = data.xox;
+    const board = Array.isArray(xox.board) ? xox.board : Array(9).fill('');
+    const status = xox.status || 'in_progress';
+    const currentTurn = xox.turn || 'X';
+    const winner = xox.winner;
+    const winningLine = Array.isArray(xox.winningLine) ? xox.winningLine : [];
+    const players = xox.players || { X: 'Player X', O: null };
+    const avatars = xox.playerAvatars || { X: '', O: '' };
+
+    // 1. Update card top turn / finished status
+    card.classList.toggle('game-finished', status !== 'in_progress');
+    const subtag = card.querySelector('.xox-room-subtag');
+    if (subtag) {
+        subtag.textContent = status === 'in_progress' ? `Turn: ${currentTurn}` : (status === 'won' ? 'Game Over' : 'Draw');
+    }
+
+    // 2. Update players bar
+    const playerXBox = card.querySelector('.player-x-box');
+    const playerOBox = card.querySelector('.player-o-box');
+    const isXTurn = status === 'in_progress' && currentTurn === 'X';
+    const isOTurn = status === 'in_progress' && currentTurn === 'O';
+    if (playerXBox) playerXBox.classList.toggle('active-turn', isXTurn);
+    if (playerOBox) {
+        playerOBox.classList.toggle('active-turn', isOTurn);
+        playerOBox.classList.toggle('waiting-slot', !players.O);
+
+        // Update player O name & avatar if changed
+        const oAvatarContainer = playerOBox.querySelector('.xox-avatar-ring');
+        const oNameSpan = playerOBox.querySelector('.xox-pname');
+        if (players.O && oNameSpan && oNameSpan.classList.contains('xox-pname-waiting')) {
+            const isMePlayerO = currentUser && currentUser.name && currentUser.name === players.O;
+            const playerODisplayName = escapeHTML(players.O) + (isMePlayerO ? ' (You)' : '');
+            oNameSpan.className = 'xox-pname';
+            oNameSpan.title = escapeHTML(players.O);
+            oNameSpan.innerHTML = playerODisplayName;
+
+            const playerOAvatar = avatars.O || `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(players.O)}`;
+            if (oAvatarContainer) {
+                oAvatarContainer.innerHTML = `
+                    <img src="${escapeHTML(playerOAvatar)}" class="xox-player-avatar" alt="${escapeHTML(players.O)}" title="${escapeHTML(players.O)}">
+                    <span class="xox-badge badge-o">O</span>
+                    <div class="xox-ring-glow"></div>
+                `;
+            }
+        }
+    }
+
+    // 3. Status text
+    const statusRow = card.querySelector('.xox-status-row');
+    if (statusRow) {
+        let statusText = '';
+        if (status === 'won') {
+            const winnerName = winner === 'X' ? (players.X || 'Player X') : (players.O || 'Opponent');
+            statusText = `🎉 <strong class="winner-highlight">${escapeHTML(winnerName)}</strong> won! 🏆`;
+        } else if (status === 'draw') {
+            statusText = `🤝 It's a draw! Well played!`;
+        } else {
+            if (currentTurn === 'O' && !players.O) {
+                statusText = `⏳ Waiting for opponent to join...`;
+            } else {
+                const activePlayerName = currentTurn === 'X' ? (players.X || 'Player X') : (players.O || '(waiting...)');
+                statusText = `🌸 It's <strong>${escapeHTML(activePlayerName)}</strong>'s (${currentTurn}) turn`;
+            }
+        }
+        statusRow.innerHTML = statusText;
+    }
+
+    // 4. In-place Cell Updates (NO flicker, NO redrawing of existing marks!)
+    const cells = card.querySelectorAll('.xox-cell');
+    cells.forEach((btn) => {
+        const idx = parseInt(btn.getAttribute('data-idx'), 10);
+        if (isNaN(idx)) return;
+        const val = board[idx] || '';
+        const isWinningCell = winningLine.includes(idx);
+        btn.classList.toggle('winning-cell', isWinningCell);
+
+        const currentSvg = btn.querySelector('.pencil-svg');
+
+        if (!val) {
+            // Cell is empty
+            if (btn.classList.contains('filled')) {
+                btn.className = 'xox-cell empty';
+                btn.innerHTML = '';
+            }
+            btn.setAttribute('aria-label', `Square ${idx + 1}: Empty`);
+        } else {
+            const hasCorrectSymbol = currentSvg && (
+                (val === 'X' && currentSvg.classList.contains('pencil-x')) ||
+                (val === 'O' && currentSvg.classList.contains('pencil-o'))
+            );
+
+            if (!hasCorrectSymbol) {
+                // Brand new mark placed in this turn: animate ONLY this newly drawn mark!
+                btn.className = `xox-cell filled ${isWinningCell ? 'winning-cell' : ''}`;
+                btn.setAttribute('aria-label', `Square ${idx + 1}: ${val}`);
+                const valClass = val === 'X' ? 'val-x' : 'val-o';
+                btn.innerHTML = `<span class="xox-symbol ${valClass}">${renderPencilMark(val, true)}</span>`;
+                
+                // Clean up animation class after drawing completes so it stays completely static
+                setTimeout(() => {
+                    const svg = btn.querySelector('.pencil-svg');
+                    if (svg) svg.classList.remove('draw-animated');
+                }, 500);
+            } else {
+                // Mark already existed on board: DO NOT recreate or touch its SVG paths!
+                if (currentSvg && currentSvg.classList.contains('draw-animated')) {
+                    currentSvg.classList.remove('draw-animated');
+                }
+            }
+        }
+    });
+
+    // 5. Rematch footer
+    let footerRow = card.querySelector('.xox-footer-row');
+    if (status !== 'in_progress') {
+        if (!footerRow) {
+            footerRow = document.createElement('div');
+            footerRow.className = 'xox-footer-row';
+            footerRow.innerHTML = `
+                <button class="xox-btn-rematch" data-msgid="${data.id}" type="button">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                    <span>Play Again</span>
+                </button>
+            `;
+            card.appendChild(footerRow);
+        }
+    } else {
+        if (footerRow) footerRow.remove();
+    }
+
+    return true;
+}
+
 function sendXoxGame() {
     if (!currentUser || !currentUser.name) {
         showToast('Please set your username first!', { icon: '🌸', type: 'error' });
@@ -2976,6 +3145,7 @@ function sendXoxGame() {
     hapticFeedback('medium');
     playUiSound('pop');
 
+    const isAILounge = activeRoomId === 'ai_lounge';
     const gameId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
     const gameMsg = {
         id: gameId,
@@ -2985,12 +3155,18 @@ function sendXoxGame() {
         userId: currentUser.id || currentUser.userId || currentUser.name,
         time: formatTo12HourTime(new Date()),
         status: 'sent',
-        text: '🎮 Tic-Tac-Toe match started! Tap squares to play.',
+        text: isAILounge ? '🎮 Tic-Tac-Toe match vs 🤖 Bot started! Tap squares to play.' : '🎮 Tic-Tac-Toe match started! Tap squares to play.',
         xox: {
             board: Array(9).fill(''),
             turn: 'X',
-            players: { X: currentUser.name, O: null },
-            playerAvatars: { X: currentUser.avatar || `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(currentUser.name || 'Alex')}`, O: null },
+            players: { 
+                X: currentUser.name, 
+                O: isAILounge ? '🤖 Bot' : null 
+            },
+            playerAvatars: { 
+                X: currentUser.avatar || `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(currentUser.name || 'Alex')}`, 
+                O: isAILounge ? 'https://api.dicebear.com/7.x/lorelei/svg?seed=ChitChatBot&backgroundColor=b6e3f4' : null 
+            },
             status: 'in_progress',
             winner: null,
             winningLine: null
@@ -2999,7 +3175,7 @@ function sendXoxGame() {
 
     if (socket) {
         socket.emit('chat message', gameMsg);
-        showToast('🎮 Tic-Tac-Toe challenge sent!', { icon: '🎮', type: 'game' });
+        showToast(isAILounge ? '🎮 Challenge vs AI started!' : '🎮 Tic-Tac-Toe challenge sent!', { icon: isAILounge ? '🤖' : '🎮', type: 'game' });
     }
 }
 
@@ -3035,8 +3211,28 @@ function handleXoxCellClick(msgId, index) {
                     return;
                 }
             } else if (players.O !== myName) {
-                showToast(`🌸 It's ${players.O}'s (O) turn! Please wait for them to move.`, { icon: '🌸', type: 'game' });
+                if (players.O === '🤖 Bot') {
+                    showToast("🤖 AI Bot is thinking...", { icon: '🤖', type: 'game' });
+                } else {
+                    showToast(`🌸 It's ${players.O}'s (O) turn! Please wait for them to move.`, { icon: '🌸', type: 'game' });
+                }
                 return;
+            }
+        }
+
+        // Instant optimistic feedback on tapped cell
+        const cardEl = document.querySelector(`.xox-game-card[data-msgid="${msgId}"]`);
+        if (cardEl) {
+            const targetBtn = cardEl.querySelector(`.xox-cell[data-idx="${index}"]`);
+            if (targetBtn && !targetBtn.classList.contains('filled')) {
+                targetBtn.className = 'xox-cell filled';
+                targetBtn.setAttribute('aria-label', `Square ${index + 1}: ${currentTurn}`);
+                const valClass = currentTurn === 'X' ? 'val-x' : 'val-o';
+                targetBtn.innerHTML = `<span class="xox-symbol ${valClass}">${renderPencilMark(currentTurn, true)}</span>`;
+                setTimeout(() => {
+                    const svg = targetBtn.querySelector('.pencil-svg');
+                    if (svg) svg.classList.remove('draw-animated');
+                }, 500);
             }
         }
     }
@@ -3198,7 +3394,9 @@ function displayMessage(data, isHistory) {
     if(isStacked) li.classList.add('stacked');
     if(data.isGhost) li.classList.add('ghost-message');
     if(data.xox) li.classList.add('xox-message');
-    if((data.uploadedImage || data.image) && !data.isAudio && !data.text && !data.message) li.classList.add('media-only-message');
+    const hasMsgMedia = !!(data.uploadedImage || data.image);
+    const hasMsgText = !!((data.text && String(data.text).trim().length > 0) || (data.message && String(data.message).trim().length > 0));
+    if(hasMsgMedia && !data.isAudio && !hasMsgText) li.classList.add('media-only-message');
     if (data.color) li.style.setProperty('--bubble-color', data.color);
 
     li.innerHTML = getMessageInnerHTML(data, isMe, isStacked);

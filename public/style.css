@@ -1412,36 +1412,42 @@ input { user-select: auto; -webkit-user-select: auto; }
     min-height: 0;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    overflow: hidden !important;
+    overflow-x: hidden !important;
+    overflow-y: hidden !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+    max-width: 100% !important;
 }
 
 #chat-body-container::-webkit-scrollbar {
-    display: none;
-    width: 0;
-    height: 0;
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
 }
 
-/* Messages List */
+/* Messages List - Completely hidden scrollbar, no side scrollbar, smooth vertical scroll */
 #messages { 
     list-style: none; 
     padding: 16px 12px 16px 12px; 
     flex-grow: 1; 
-    overflow-y: auto; 
-    overflow-x: hidden;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    overflow-y: auto !important; 
+    overflow-x: hidden !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
     display: flex; 
     flex-direction: column; 
     gap: 6px; 
     touch-action: pan-y !important; 
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
 }
 
 #messages::-webkit-scrollbar {
-    display: none;
-    width: 0;
-    height: 0;
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
 }
 
 #messages li { 
@@ -1566,12 +1572,16 @@ input { user-select: auto; -webkit-user-select: auto; }
    🖼️ PICTURE / MEDIA MESSAGE UNBOXING
 ==================================== */
 /* Completely remove outer box & border from picture messages */
+.media-only-message,
+.media-only-message .msg-content-wrapper,
 .media-only-message .msg-bubble,
 .msg-bubble-media-only,
-.msg-bubble:has(> .chat-image:only-child),
-.msg-bubble:has(> .chat-video:only-child),
+.msg-bubble:has(> .chat-image),
+.msg-bubble:has(> .chat-video),
 .msg-bubble:has(.chat-image):not(:has(.message-text)):not(:has(.reply-quote-box)),
-.msg-bubble:has(.chat-video):not(:has(.message-text)):not(:has(.reply-quote-box)) {
+.msg-bubble:has(.chat-video):not(:has(.message-text)):not(:has(.reply-quote-box)),
+li:has(.chat-image:only-child) .msg-bubble,
+li:has(.chat-video:only-child) .msg-bubble {
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
@@ -1582,7 +1592,7 @@ input { user-select: auto; -webkit-user-select: auto; }
     display: inline-block;
 }
 
-/* Ensure picture has clean rounded corners without any box border */
+/* Ensure picture has clean rounded corners without any border, box, or shadow */
 .chat-image, .chat-video {
     max-width: 260px;
     max-height: 320px;
@@ -1592,7 +1602,7 @@ input { user-select: auto; -webkit-user-select: auto; }
     object-fit: cover;
     display: block;
     margin: 0;
-    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.12);
+    box-shadow: none !important;
     clear: both;
     cursor: pointer;
     transition: transform 0.15s ease, opacity 0.15s ease;
@@ -4980,86 +4990,7 @@ li.system-message {
     opacity: 0.6;
 }
 
-/* Board Grid */
-.xox-board-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 7px;
-    width: 100%;
-    aspect-ratio: 1 / 1;
-}
-
-.xox-cell {
-    background: var(--bg-screen, #f8fafc);
-    border: 1.5px solid var(--border-color, #e2e8f0);
-    border-radius: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.18s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    user-select: none;
-    -webkit-user-select: none;
-    padding: 0;
-    outline: none;
-}
-
-.xox-cell:hover:not(:disabled) {
-    background: rgba(16, 185, 129, 0.12);
-    border-color: var(--accent);
-    transform: scale(1.05);
-}
-
-.xox-cell:active:not(:disabled) {
-    transform: scale(0.95);
-}
-
-.xox-cell:disabled {
-    cursor: default;
-}
-
-.xox-mark-svg {
-    stroke-dasharray: 100;
-    stroke-dashoffset: 0;
-    animation: markPop 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-}
-
-@keyframes markPop {
-    0% { transform: scale(0.3) rotate(-15deg); opacity: 0; }
-    80% { transform: scale(1.15) rotate(3deg); opacity: 1; }
-    100% { transform: scale(1) rotate(0deg); opacity: 1; }
-}
-
-.xox-cell.cell-x {
-    color: #ef4444;
-    background: rgba(239, 68, 68, 0.08);
-    border-color: rgba(239, 68, 68, 0.3);
-}
-
-.xox-cell.cell-o {
-    color: #3b82f6;
-    background: rgba(59, 130, 246, 0.08);
-    border-color: rgba(59, 130, 246, 0.3);
-}
-
-.xox-cell.winning-cell {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
-    color: #ffffff !important;
-    border-color: #f59e0b !important;
-    transform: scale(1.08);
-    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.45);
-    animation: winCellPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.xox-cell.winning-cell .xox-mark-svg {
-    stroke: #ffffff !important;
-}
-
-@keyframes winCellPop {
-    0% { transform: scale(0.8); }
-    50% { transform: scale(1.15); }
-    100% { transform: scale(1.08); }
-}
+/* Legacy board grid removed in favor of modern divider lines grid */
 
 .xox-footer {
     display: flex;
@@ -5246,10 +5177,11 @@ li[id^="msg-msg_"] .meta-row {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    background: var(--header-card-bg, #ffffff);
-    padding: 10px 12px;
-    border-radius: 16px;
-    border: 1px solid var(--border-color, #e2e8f0);
+    background: transparent !important;
+    padding: 2px 2px 6px 2px;
+    border-radius: 0;
+    border: none !important;
+    box-shadow: none !important;
     position: relative;
 }
 
@@ -5368,6 +5300,27 @@ li[id^="msg-msg_"] .meta-row {
     white-space: nowrap;
 }
 
+.xox-pname.xox-pname-waiting {
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.2px;
+    opacity: 0.85;
+}
+
+.xox-player-box.waiting-slot .xox-empty-avatar {
+    border: 2px dashed var(--accent);
+    background: rgba(16, 185, 129, 0.08);
+    color: var(--accent);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.xox-player-box.waiting-slot:hover .xox-empty-avatar {
+    background: rgba(16, 185, 129, 0.16);
+    transform: scale(1.05);
+}
+
 .xox-vs-pill {
     font-size: 11px;
     font-weight: 800;
@@ -5413,31 +5366,54 @@ li[id^="msg-msg_"] .meta-row {
 .xox-board-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 7px;
+    grid-template-rows: repeat(3, 1fr);
+    gap: 0;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    margin: 4px 0 2px 0;
+    position: relative;
+    border: none;
+    background: transparent;
 }
 
 .xox-cell {
     aspect-ratio: 1 / 1;
-    background: var(--header-card-bg, #ffffff);
-    border: 1.5px solid var(--border-color, #e2e8f0);
-    border-radius: 14px;
+    background: transparent;
+    border: none;
+    border-radius: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     font-family: inherit;
-    transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    transition: background-color 0.16s ease;
+    box-shadow: none;
+    padding: 0;
+    margin: 0;
+    outline: none;
+    position: relative;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* Dividing lines between cells (classic # grid) */
+/* Vertical dividing lines between column 1 & 2, and column 2 & 3 */
+.xox-cell:nth-child(3n + 1),
+.xox-cell:nth-child(3n + 2) {
+    border-right: 2px solid var(--border-color);
+}
+
+/* Horizontal dividing lines between row 1 & 2, and row 2 & 3 */
+.xox-cell:nth-child(-n + 6) {
+    border-bottom: 2px solid var(--border-color);
 }
 
 .xox-cell:hover:not(.filled) {
-    border-color: var(--accent);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.16);
+    background: rgba(16, 185, 129, 0.08);
 }
 
 .xox-cell:active:not(.filled) {
-    transform: scale(0.95);
+    background: rgba(16, 185, 129, 0.16);
 }
 
 .xox-cell.filled {
@@ -5445,39 +5421,92 @@ li[id^="msg-msg_"] .meta-row {
 }
 
 .xox-symbol {
-    font-size: 26px;
-    font-weight: 900;
-    line-height: 1;
-    animation: xoxSymbolPop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
 }
 
-@keyframes xoxSymbolPop {
-    0% { transform: scale(0.4); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
+/* Pencil SVG & Hand-Drawn Marks */
+.pencil-svg {
+    width: 42px;
+    height: 42px;
+    max-width: 82%;
+    max-height: 82%;
+    display: block;
+    overflow: visible;
 }
 
-.xox-symbol.val-x {
-    color: #10b981;
+.pencil-path {
+    fill: none;
+    stroke-width: 4.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 102;
+    stroke-dashoffset: 0; /* Fully drawn by default - prevents flickering and redrawing */
+    filter: url(#pencil-texture) drop-shadow(0 1px 1px rgba(0, 0, 0, 0.08));
+    opacity: 0.96;
 }
 
-.xox-symbol.val-o {
-    color: #f43f5e;
+/* Pencil Colors: authentic colored pencil tones */
+.xox-symbol.val-x .pencil-path {
+    stroke: #10b981;
+}
+
+.xox-symbol.val-o .pencil-path {
+    stroke: #f43f5e;
+}
+
+/* Drawing animations: ONLY applied to newly placed marks (.draw-animated) */
+.pencil-svg.draw-animated .pencil-path {
+    stroke-dashoffset: 102;
+    will-change: stroke-dashoffset;
+}
+
+/* X stroke 1: top-left to bottom-right */
+.pencil-svg.draw-animated.pencil-x .stroke-x-1 {
+    animation: drawPencilStroke 0.22s cubic-bezier(0.33, 1, 0.68, 1) forwards;
+}
+
+/* X stroke 2: top-right to bottom-left with organic delay */
+.pencil-svg.draw-animated.pencil-x .stroke-x-2 {
+    animation: drawPencilStroke 0.22s cubic-bezier(0.33, 1, 0.68, 1) 0.16s forwards;
+}
+
+/* O loop: smooth continuous pencil sketch */
+.pencil-svg.draw-animated.pencil-o .stroke-o {
+    animation: drawPencilStroke 0.38s cubic-bezier(0.33, 1, 0.68, 1) forwards;
+}
+
+@keyframes drawPencilStroke {
+    from {
+        stroke-dashoffset: 102;
+    }
+    to {
+        stroke-dashoffset: 0;
+    }
 }
 
 .xox-cell.winning-cell {
-    background: rgba(16, 185, 129, 0.15);
-    border-color: #10b981;
-    animation: winCellGlow 0.9s infinite alternate ease-in-out;
+    background: rgba(16, 185, 129, 0.14) !important;
 }
 
-@keyframes winCellGlow {
+.xox-cell.winning-cell .pencil-svg {
+    animation: winPencilPulse 0.85s infinite alternate ease-in-out;
+}
+
+.xox-cell.winning-cell .pencil-path {
+    filter: url(#pencil-texture) drop-shadow(0 0 8px currentColor);
+}
+
+@keyframes winPencilPulse {
     0% {
-        box-shadow: 0 0 6px rgba(16, 185, 129, 0.3);
         transform: scale(1);
     }
     100% {
-        box-shadow: 0 0 16px rgba(16, 185, 129, 0.6);
-        transform: scale(1.05);
+        transform: scale(1.15);
     }
 }
 
