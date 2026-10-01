@@ -4867,6 +4867,10 @@ async function startRecording(e) {
     if ((input && input.value && input.value.trim().length > 0) || activeRoomId === 'ai_lounge') return; 
     if (isRecording) return;
 
+    if (input) {
+        try { input.blur(); } catch(e){}
+    }
+
     if (!navigator || !navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
         showToast("Microphone is not supported in this browser/connection (requires HTTPS or localhost)!");
         return;
@@ -5120,17 +5124,57 @@ if (sendRecBtn) {
 // ✅ THE FLAWLESS SEND & MIC BUTTON HANDLERS
 // ==========================
 if (sendMicBtn) {
-    sendMicBtn.addEventListener('click', (e) => {
-        e.preventDefault();
+    let lastSendTriggerTime = 0;
+
+    function handleSendOrMicAction(e) {
+        if (e && e.cancelable) {
+            e.preventDefault();
+        }
+        const now = Date.now();
+        if (now - lastSendTriggerTime < 300) return;
+        lastSendTriggerTime = now;
+
         const hasText = input && input.value && input.value.trim().length > 0;
         const currentState = sendMicBtn.dataset.state || (hasText ? 'send' : 'mic');
         if (hasText || currentState === 'send' || currentState === 'check') {
             sendMessage();
+            if (input) {
+                try { input.focus({ preventScroll: true }); } catch (err) {}
+            }
         } else {
             if (!isRecording) {
                 startRecording(e);
             }
         }
+    }
+
+    // Prevent input blur on pointerdown, mousedown, and touchstart
+    // This stops mobile virtual keyboards from collapsing on the first tap!
+    const preventSendBlur = (e) => {
+        const hasText = input && input.value && input.value.trim().length > 0;
+        const currentState = sendMicBtn.dataset.state || (hasText ? 'send' : 'mic');
+        if (hasText || currentState === 'send' || currentState === 'check') {
+            if (e && e.cancelable) e.preventDefault();
+        }
+    };
+
+    sendMicBtn.addEventListener('pointerdown', preventSendBlur);
+    sendMicBtn.addEventListener('mousedown', preventSendBlur);
+    sendMicBtn.addEventListener('touchstart', preventSendBlur, { passive: false });
+
+    // Handle touchend immediately so touch users send on the very first tap with zero latency
+    sendMicBtn.addEventListener('touchend', (e) => {
+        const hasText = input && input.value && input.value.trim().length > 0;
+        const currentState = sendMicBtn.dataset.state || (hasText ? 'send' : 'mic');
+        if (hasText || currentState === 'send' || currentState === 'check') {
+            handleSendOrMicAction(e);
+        } else {
+            handleHoldRelease(e);
+        }
+    });
+
+    sendMicBtn.addEventListener('click', (e) => {
+        handleSendOrMicAction(e);
     });
 
     function handleHoldRelease(e) {
@@ -5139,9 +5183,16 @@ if (sendMicBtn) {
         }
     }
 
-    sendMicBtn.addEventListener('touchend', handleHoldRelease);
     sendMicBtn.addEventListener('mouseup', handleHoldRelease);
     sendMicBtn.addEventListener('contextmenu', e => e.preventDefault());
+}
+
+if (messages) {
+    messages.addEventListener('touchstart', () => {
+        if (input && document.activeElement === input) {
+            input.blur();
+        }
+    }, { passive: true });
 }
 
 // Register Service Worker for PWA Installation
