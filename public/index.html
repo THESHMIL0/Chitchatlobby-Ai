@@ -12,11 +12,21 @@
     <link rel="stylesheet" href="style.css?v=2.9">
     <link rel="manifest" href="manifest.json">
     <script src="/socket.io/socket.io.js"></script>
+    <script>
+        (function() {
+            try {
+                var theme = localStorage.getItem('chitchat_theme');
+                if (theme && theme !== 'light') {
+                    document.documentElement.setAttribute('data-theme', theme);
+                }
+            } catch(e) {}
+        })();
+    </script>
 </head>
 <body>
 
     <!-- SVG Filters for Hand-Drawn Pencil & Sketch Effects -->
-    <svg style="position: absolute; width: 0; height: 0; overflow: hidden; pointer-events: none;" aria-hidden="true" focusable="false">
+    <svg class="pencil-filters-svg" aria-hidden="true" focusable="false">
         <defs>
             <filter id="pencil-texture" x="-20%" y="-20%" width="140%" height="140%">
                 <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="3" result="pencilNoise" />
@@ -25,13 +35,61 @@
         </defs>
     </svg>
 
-    <!-- Loading Screen -->
-    <div id="loading-screen" class="screen hidden">
+    <!-- Cute & Well-Optimized App Opening Animation Screen -->
+    <div id="loading-screen" class="loading-screen" role="status" aria-live="polite">
+        <!-- Ambient Floating Pastel Glow Orbs -->
+        <div class="loading-ambient-bg" aria-hidden="true">
+            <div class="ambient-orb orb-1"></div>
+            <div class="ambient-orb orb-2"></div>
+            <div class="ambient-orb orb-3"></div>
+        </div>
+
         <div class="loading-container">
-            <div class="app-logo-glow"><img src="/icon.svg" alt="Chit Chat Logo" title="Chit Chat Logo" class="brand-app-logo"></div>
-            <div class="spinner"></div>
-            <h2 class="loading-title">Chit Chat</h2>
-            <p class="loading-sub">Connecting securely...</p>
+            <!-- Cute Floating Sparkles / Bubbles around Logo -->
+            <div class="cute-charms-layer" aria-hidden="true">
+                <span class="cute-charm charm-1" title="sparkle">✨</span>
+                <span class="cute-charm charm-2" title="chat">💬</span>
+                <span class="cute-charm charm-3" title="love">💖</span>
+                <span class="cute-charm charm-4" title="blossom">🌸</span>
+            </div>
+
+            <!-- Logo with Bouncy Pop-In & Animated Breathing Ring -->
+            <div class="app-logo-wrapper">
+                <div class="logo-inner-glow"></div>
+                <div class="logo-outer-ring"></div>
+                <div class="logo-bounce-box" id="loading-logo-box">
+                    <img src="/icon.svg" alt="Chit Chat Logo" title="Chit Chat Logo" class="loading-logo-img" width="76" height="76">
+                </div>
+            </div>
+
+            <!-- Brand Header & Cute Tagline -->
+            <div class="loading-brand-header">
+                <h1 class="loading-title">Chit Chat</h1>
+                <div class="loading-badge">
+                    <span class="badge-dot"></span>
+                    <span>LOBBY &bull; AI &bull; CHAT</span>
+                </div>
+            </div>
+
+            <!-- Shimmering Progress Bar & Cute Step Status -->
+            <div class="loading-progress-box">
+                <div class="loading-progress-track">
+                    <div class="loading-progress-fill" id="loading-progress-fill"></div>
+                </div>
+                <div class="loading-status-row">
+                    <div class="loading-sub-wrapper">
+                        <span class="loading-sub" id="loading-sub-text">Warming up the lobby... ☕</span>
+                    </div>
+                    <span class="loading-percent" id="loading-percent-text">15%</span>
+                </div>
+            </div>
+
+            <!-- Kawaii Wave Typing Dots -->
+            <div class="cute-typing-wave" aria-hidden="true">
+                <span class="wave-dot dot-1"></span>
+                <span class="wave-dot dot-2"></span>
+                <span class="wave-dot dot-3"></span>
+            </div>
         </div>
     </div>
 
@@ -940,8 +998,6 @@
     <script src="script.js?v=2.9"></script>
     <script>
         (function() {
-            var ls = document.getElementById('loading-screen');
-            if (ls) ls.classList.add('hidden');
             try {
                 if (typeof initAppView === 'function') {
                     initAppView();

@@ -150,7 +150,12 @@ function sendPushToAllExceptSender(senderEndpoint, senderName, roomName, roomId,
 // Socket.IO Server with strict buffer limits (12MB) to prevent memory-exhaustion DoS
 const io = new Server(server, { 
     maxHttpBufferSize: 12 * 1024 * 1024,
-    cors: { origin: "*", methods: ["GET", "POST"] }
+    cors: {
+        // In production set ALLOWED_ORIGIN env var (e.g. https://yourapp.com)
+        // In dev fallback to '*' for convenience
+        origin: process.env.ALLOWED_ORIGIN || (process.env.NODE_ENV === 'production' ? false : '*'),
+        methods: ["GET", "POST"]
+    }
 }); 
 
 // Express Middleware
@@ -256,7 +261,11 @@ function verifyPassword(password, storedPassword) {
     if (!storedPassword) return false;
     // Backwards-compatibility for older plaintext entries
     if (!storedPassword.includes(':')) {
-        return password === storedPassword;
+        try {
+            const a = Buffer.alloc(64); const b = Buffer.alloc(64);
+            Buffer.from(password || '').copy(a); Buffer.from(storedPassword).copy(b);
+            return a.length === b.length && crypto.timingSafeEqual(a, b);
+        } catch(e) { return false; }
     }
     try {
         const [salt, key] = storedPassword.split(':');
@@ -279,6 +288,7 @@ const rooms = new Map([
 ]);
 
 const historyStore = []; // Array of { id, roomId, timestamp, data }
+const historyById = new Map(); // O(1) message lookup: id -> historyStore item
 const usersStore = new Map(); // name -> { name, avatar, about, isOnline, lastSeen, bubbleColor }
 
 function loadChatData() {
@@ -299,6 +309,8 @@ function loadChatData() {
             }
             if (Array.isArray(raw.historyStore)) {
                 historyStore.push(...raw.historyStore);
+                // Rebuild O(1) lookup index from loaded data
+                historyStore.forEach(h => { if (h && h.id) historyById.set(h.id, h); });
             }
             if (Array.isArray(raw.usersStore)) {
                 raw.usersStore.forEach(([name, user]) => {
@@ -351,7 +363,14 @@ const db = {
                 scheduleDataSave();
             } else if (sql.includes('INSERT INTO history') || sql.includes('INSERT OR REPLACE INTO history')) {
                 const [id, roomId, timestamp, data] = params;
-                historyStore.push({ id, roomId, timestamp, data });
+                const item = { id, roomId, timestamp, data };
+                historyStore.push(item);
+                historyById.set(id, item);
+                // Cap in-memory history to prevent RAM exhaustion (independent of disk save)
+                if (historyStore.length > 2000) {
+                    const removed = historyStore.splice(0, historyStore.length - 2000);
+                    removed.forEach(r => historyById.delete(r.id));
+                }
                 scheduleDataSave();
             } else if (sql.includes('INSERT OR REPLACE INTO users')) {
                 const [name, avatar, about, isOnline, lastSeen, bubbleColor] = params;
@@ -701,7 +720,7 @@ io.on('connection', (socket) => {
                 ? userObj.avatar.substring(0, 500)
                 : '';
             const safeAbout = String(userObj.about || 'Using Chit Chat').substring(0, 100);
-            const safeColor = String(userObj.color || '#dcf8c6').substring(0, 20);
+            const safeColor = /^#[0-9a-fA-F]{3,8}$/.test(userObj.color) ? userObj.color : '#dcf8c6';
             const userId = String(userObj.id || ('usr_' + socket.id));
 
             activeUsersById[socket.id] = { 
@@ -771,7 +790,7 @@ io.on('connection', (socket) => {
         }
 
         const cleanAbout = String(user.about || 'Using Chit Chat').substring(0, 100);
-        const cleanColor = String(user.color || '#dcf8c6').substring(0, 20);
+        const cleanColor = /^#[0-9a-fA-F]{3,8}$/.test(user.color) ? user.color : '#dcf8c6';
 
         if (activeUsersById[socket.id]) { 
             activeUsersById[socket.id].name = cleanName; 
@@ -943,7 +962,7 @@ io.on('connection', (socket) => {
 
             // Bot reads the user's message immediately (triggers blue ticks)
             setTimeout(() => {
-                const item = historyStore.find(h => h.id === data.id);
+                const item = historyById.get(data.id);
                 if (item) {
                     try {
                         const m = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
@@ -1001,7 +1020,7 @@ io.on('connection', (socket) => {
     socket.on('vote poll', ({ msgId, optionIndex }) => {
         if (!checkSocketRateLimit(socket.id, 10, 2000)) return;
 
-        const item = historyStore.find(h => h.id === msgId);
+        const item = historyById.get(msgId);
         if (item) {
             const data = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
             if (data.poll && !data.poll.isClosed && data.poll.options[optionIndex]) {
@@ -1032,7 +1051,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('close poll', ({ msgId }) => {
-        const item = historyStore.find(h => h.id === msgId);
+        const item = historyById.get(msgId);
         if (item) {
             const data = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
             if (data.poll) {
@@ -1132,7 +1151,7 @@ io.on('connection', (socket) => {
     }
 
     function scheduleBotXoxMove(msgId, roomId) {
-        const item = historyStore.find(h => h.id === msgId);
+        const item = historyById.get(msgId) || historyStore.find(h => h.id === msgId);
         if (!item) return;
 
         let data;
@@ -1148,7 +1167,7 @@ io.on('connection', (socket) => {
         io.to(roomId).emit('user typing', { name: '🤖 Bot', isTyping: true });
 
         setTimeout(() => {
-            const freshItem = historyStore.find(h => h.id === msgId);
+            const freshItem = historyById.get(msgId) || historyStore.find(h => h.id === msgId);
             if (!freshItem) {
                 io.to(roomId).emit('user typing', { name: '🤖 Bot', isTyping: false });
                 return;
@@ -1200,7 +1219,7 @@ io.on('connection', (socket) => {
     }
 
     socket.on('play xox move', ({ msgId, index, userName, userAvatar }) => {
-        const item = historyStore.find(h => h.id === msgId);
+        const item = historyById.get(msgId) || historyStore.find(h => h.id === msgId);
         if (item) {
             const data = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
             if (data.xox) {
@@ -1280,7 +1299,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('reset xox game', ({ msgId }) => {
-        const item = historyStore.find(h => h.id === msgId);
+        const item = historyById.get(msgId) || historyStore.find(h => h.id === msgId);
         if (item) {
             const data = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
             if (data.xox) {
@@ -1310,7 +1329,7 @@ io.on('connection', (socket) => {
         const cleanEmoji = String(emoji || '').trim().substring(0, 10);
         if (!cleanEmoji) return;
 
-        const item = historyStore.find(h => h.id === msgId);
+        const item = historyById.get(msgId);
         if (item) {
             const data = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
             data.reactions = data.reactions || {};
@@ -1334,7 +1353,7 @@ io.on('connection', (socket) => {
             return socket.emit('action error', 'Invalid message content (maximum 4000 characters).');
         }
 
-        const item = historyStore.find(h => h.id === msgId);
+        const item = historyById.get(msgId);
         if (!item) return socket.emit('action error', 'Message not found.');
 
         const data = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
@@ -1361,10 +1380,10 @@ io.on('connection', (socket) => {
             return socket.emit('rate limit', 'Too many requests. Please slow down.');
         }
 
-        const idx = historyStore.findIndex(h => h.id === msgId);
-        if (idx === -1) return socket.emit('action error', 'Message not found.');
+        const item = historyById.get(msgId);
+        if (!item) return socket.emit('action error', 'Message not found.');
 
-        const item = historyStore[idx];
+        const idx = historyStore.indexOf(item);
         const data = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
         const currentUser = activeUsersById[socket.id];
 
@@ -1378,7 +1397,8 @@ io.on('connection', (socket) => {
             return socket.emit('action error', 'Permission denied: You can only delete your own messages.');
         }
 
-        historyStore.splice(idx, 1);
+        if (idx !== -1) historyStore.splice(idx, 1);
+        historyById.delete(msgId);
         scheduleDataSave();
         io.to(data.roomId).emit('message edited', { id: msgId, newText: '🚫 Message deleted' });
     });
@@ -1387,11 +1407,15 @@ io.on('connection', (socket) => {
         const roomId = activeUsersById[socket.id]?.roomId;
         if (roomId && rooms.has(roomId)) {
             if (!msg || typeof msg !== 'object') return;
+            const currentUser = activeUsersById[socket.id];
+            const room = rooms.get(roomId);
+            // Only room creator can pin messages
+            const isCreator = room && currentUser && (room.createdBy === currentUser.userId || room.createdBy === socket.id);
+            if (!isCreator) return socket.emit('action error', 'Only the room creator can pin messages.');
             const cleanMsg = {
                 user: String(msg.user || 'User').substring(0, 30),
                 text: String(msg.text || 'Pinned Item').substring(0, 300)
             };
-            const room = rooms.get(roomId);
             room.pinnedMessage = cleanMsg;
             scheduleDataSave();
             io.to(roomId).emit('pinned updated', cleanMsg);
@@ -1416,6 +1440,11 @@ io.on('connection', (socket) => {
         }
 
         const targetRoom = rooms.get(roomId);
+        const currentUser = activeUsersById[socket.id];
+        // Only room creator can update group info
+        const isCreator = targetRoom && currentUser && (targetRoom.createdBy === currentUser.userId || targetRoom.createdBy === socket.id);
+        if (!isCreator) return socket.emit('action error', 'Only the room creator can update group info.');
+
         if (name && typeof name === 'string') {
             const cleanName = name.trim().substring(0, 40);
             if (cleanName) targetRoom.name = cleanName;

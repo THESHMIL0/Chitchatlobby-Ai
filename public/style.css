@@ -141,12 +141,12 @@ body {
     top: 0; 
     left: 0; 
     overflow: hidden; 
-    user-select: none; 
     -webkit-user-select: none;
+    user-select: none;
     transition: background 0.4s ease; 
 }
 
-input { user-select: auto; -webkit-user-select: auto; }
+input { -webkit-user-select: auto; user-select: auto; }
 .hidden { display: none !important; }
 
 /* Screen Container */
@@ -399,8 +399,8 @@ input { user-select: auto; -webkit-user-select: auto; }
 .login-theme-pills {
     display: flex;
     background: var(--header-card-bg);
-    backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
     border: 1px solid var(--border-color);
     padding: 4px;
     border-radius: 24px;
@@ -440,8 +440,8 @@ input { user-select: auto; -webkit-user-select: auto; }
 /* Login Card - Clean borderless layout on login screen */
 .login-card { 
     background: transparent; 
-    backdrop-filter: none; 
-    -webkit-backdrop-filter: none; 
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
     padding: 16px 12px; 
     border-radius: 0; 
     box-shadow: none; 
@@ -457,8 +457,8 @@ input { user-select: auto; -webkit-user-select: auto; }
 
 #app-lock-screen .login-card {
     background: var(--header-card-bg);
-    backdrop-filter: blur(28px);
     -webkit-backdrop-filter: blur(28px);
+    backdrop-filter: blur(28px);
     padding: 38px 28px;
     border-radius: 32px;
     box-shadow: 0 20px 50px var(--shadow-color);
@@ -712,8 +712,8 @@ input { user-select: auto; -webkit-user-select: auto; }
 /* App Headers */
 .app-header { 
     background-color: var(--header-bg); 
-    backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
     color: var(--text-primary); 
     padding: 14px 18px; 
     display: flex; 
@@ -726,8 +726,8 @@ input { user-select: auto; -webkit-user-select: auto; }
 .lobby-header {
     padding: 14px 20px;
     background: var(--header-card-bg);
-    backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
     border-bottom: 1px solid var(--border-color);
     box-shadow: 0 4px 20px var(--shadow-color);
 }
@@ -1061,8 +1061,8 @@ input { user-select: auto; -webkit-user-select: auto; }
 
 .room-card-item, .room-item { 
     background: var(--header-card-bg);
-    backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
     border: 1px solid var(--border-color);
     border-radius: 20px;
     padding: 12px 16px; 
@@ -1242,8 +1242,8 @@ input { user-select: auto; -webkit-user-select: auto; }
     padding: 40px 24px;
     text-align: center;
     background: var(--header-card-bg);
-    backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
     border: 1.5px dashed var(--border-color);
     border-radius: 24px;
     margin: 20px 0;
@@ -1339,7 +1339,8 @@ input { user-select: auto; -webkit-user-select: auto; }
 #chat-search-container { 
     position: relative; 
     background: var(--header-card-bg); 
-    backdrop-filter: blur(12px); 
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
     padding: 10px 16px; 
     display: flex; 
     gap: 10px; 
@@ -1376,6 +1377,7 @@ input { user-select: auto; -webkit-user-select: auto; }
 
 #pinned-banner {
     background: var(--header-card-bg);
+    -webkit-backdrop-filter: blur(12px);
     backdrop-filter: blur(12px);
     padding: 10px 16px;
     border-bottom: 1px solid var(--border-color);
@@ -1415,7 +1417,6 @@ input { user-select: auto; -webkit-user-select: auto; }
     overflow: hidden !important;
     overflow-x: hidden !important;
     overflow-y: hidden !important;
-    scrollbar-width: none !important;
     -ms-overflow-style: none !important;
     max-width: 100% !important;
 }
@@ -1433,7 +1434,6 @@ input { user-select: auto; -webkit-user-select: auto; }
     flex-grow: 1; 
     overflow-y: auto !important; 
     overflow-x: hidden !important;
-    scrollbar-width: none !important;
     -ms-overflow-style: none !important;
     display: flex; 
     flex-direction: column; 
@@ -1521,8 +1521,8 @@ input { user-select: auto; -webkit-user-select: auto; }
     align-items: center;
     flex-wrap: wrap;
     gap: 4px;
-    user-select: none;
     -webkit-user-select: none;
+    user-select: none;
     max-width: 100%;
     min-width: 0;
 }
@@ -1622,8 +1622,8 @@ li:has(.chat-video:only-child) .msg-bubble {
     right: 8px;
     margin: 0;
     background: rgba(0, 0, 0, 0.52);
-    backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
     color: #ffffff !important;
     padding: 2.5px 8px;
     border-radius: 12px;
@@ -1663,7 +1663,6 @@ li:has(.chat-video:only-child) .msg-bubble {
     overflow-wrap: anywhere;
     word-break: break-word;
     white-space: pre-wrap;
-    text-wrap: pretty;
     min-width: 0;
     display: inline;
 }
@@ -1681,8 +1680,8 @@ li:has(.chat-video:only-child) .msg-bubble {
     position: relative;
     top: 1px;
     flex-shrink: 0;
-    user-select: none;
     -webkit-user-select: none;
+    user-select: none;
 }
 
 .chat-image + .meta-row, 
@@ -1702,6 +1701,7 @@ li:has(.chat-video:only-child) .msg-bubble {
     transition: color 0.22s ease, opacity 0.22s ease, transform 0.2s ease;
     vertical-align: middle;
     margin-left: 3px;
+    -webkit-user-select: none;
     user-select: none;
 } 
 
@@ -1798,8 +1798,8 @@ li.system-message {
     position: relative;
     overflow: hidden;
     transition: background 0.18s ease, transform 0.12s ease;
-    user-select: none;
     -webkit-user-select: none;
+    user-select: none;
     max-width: 100%;
     min-width: 0;
     width: fit-content;
@@ -1849,6 +1849,7 @@ li.system-message {
     color: var(--text-secondary);
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
     word-break: break-word;
@@ -1875,8 +1876,8 @@ li.system-message {
 #reply-preview-container { 
     padding: 10px 16px; 
     background: var(--header-card-bg); 
-    backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
     border-top: 1px solid var(--border-color); 
     display: flex; 
     align-items: center; 
@@ -1950,6 +1951,7 @@ li.system-message {
 /* Emoji Drawer */
 .emoji-drawer {
     background: var(--header-card-bg);
+    -webkit-backdrop-filter: blur(16px);
     backdrop-filter: blur(16px);
     border-top: 1px solid var(--border-color);
     padding: 12px 16px;
@@ -2001,8 +2003,8 @@ li.system-message {
     gap: 8px; 
     align-items: center; 
     background: var(--header-bg); 
-    backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
     border-top: 1px solid var(--border-color);
     width: 100%;
     box-sizing: border-box;
@@ -2127,8 +2129,8 @@ li.system-message {
     width: 100%; 
     height: 100dvh; 
     background: rgba(15, 23, 42, 0.4); 
-    backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
     z-index: 200; 
     display: flex; 
     justify-content: center; 
@@ -2137,8 +2139,8 @@ li.system-message {
 
 .modal-content { 
     background: var(--modal-bg); 
-    backdrop-filter: blur(20px); 
-    -webkit-backdrop-filter: blur(20px); 
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
     width: 100%; 
     max-width: 520px; 
     padding: 20px 24px 32px 24px; 
@@ -2219,8 +2221,8 @@ li.system-message {
     align-items: center; 
     gap: 12px; 
     background: transparent !important; 
-    backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
     padding: 4px 2px 2px 2px; 
     min-width: 210px; 
     max-width: 280px;
@@ -2380,8 +2382,8 @@ li.system-message {
     justify-content: space-between;
     padding: 0 16px;
     background: var(--header-card-bg);
-    backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
     border-bottom: 1px solid var(--border-color);
     z-index: 10;
 }
@@ -2617,7 +2619,6 @@ li.system-message {
     gap: 12px;
     overflow-x: auto;
     padding: 4px 2px 8px 2px;
-    scrollbar-width: thin;
 }
 
 .preset-wrapper {
@@ -2730,7 +2731,6 @@ li.system-message {
     gap: 8px;
     overflow-x: auto;
     padding-bottom: 4px;
-    scrollbar-width: thin;
 }
 
 .status-chip-btn {
@@ -2939,6 +2939,7 @@ li.system-message {
     min-width: 250px;
     max-width: 320px;
     box-shadow: none;
+    -webkit-backdrop-filter: none;
     backdrop-filter: none;
 }
 
@@ -3290,8 +3291,8 @@ li.system-message {
     color: var(--accent);
     box-shadow: 0 2px 8px var(--shadow-color);
     animation: msgPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
 }
 
 .typing-dots {
@@ -3451,8 +3452,8 @@ li.system-message {
     padding: 14px 20px;
     background: var(--header-card-bg);
     border-bottom: 1px solid var(--border-color);
-    backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
     z-index: 10;
 }
 
@@ -3494,8 +3495,6 @@ li.system-message {
     max-width: 580px;
     margin: 0 auto;
     width: 100%;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
     -ms-overflow-style: none;
 }
 
@@ -3885,6 +3884,7 @@ li.system-message {
     cursor: pointer;
     transition: all 0.15s ease;
     letter-spacing: 0.3px;
+    -webkit-user-select: none;
     user-select: none;
 }
 
@@ -3939,8 +3939,8 @@ li.system-message {
     align-items: center;
     gap: 10px;
     background: var(--header-card-bg);
-    backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
     border: 1px solid var(--border-color);
     padding: 7px 14px 7px 9px;
     border-radius: 20px;
@@ -3949,6 +3949,7 @@ li.system-message {
     animation: typingPopIn 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, typingFloatPulse 2.8s ease-in-out infinite alternate;
     transition: opacity 0.2s ease, transform 0.2s ease;
     cursor: pointer;
+    -webkit-user-select: none;
     user-select: none;
     max-width: 85%;
 }
@@ -4577,6 +4578,7 @@ li.system-message {
     position: absolute;
     bottom: 0;
     pointer-events: none;
+    -webkit-user-select: none;
     user-select: none;
     will-change: transform, opacity;
     display: flex;
@@ -4628,8 +4630,8 @@ li.system-message {
     gap: 12px;
     cursor: pointer;
     transition: transform 0.32s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.25s ease;
-    backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
 }
 
 .in-app-notif-banner.hidden {
@@ -5043,13 +5045,14 @@ li.system-message {
     justify-content: center;
     gap: 10px;
     box-shadow: 0 14px 40px var(--shadow-color, rgba(0, 0, 0, 0.18)), 0 4px 12px rgba(0, 0, 0, 0.08);
-    backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
     max-width: min(calc(100vw - 32px), 440px);
     text-align: left;
     white-space: normal;
     word-break: break-word;
     transition: opacity 0.2s ease, transform 0.25s ease;
+    -webkit-user-select: none;
     user-select: none;
 }
 
@@ -5144,6 +5147,7 @@ li[id^="msg-msg_"] .meta-row {
     flex-direction: column;
     gap: 10px;
     box-shadow: 0 4px 16px var(--shadow-color, rgba(15, 23, 42, 0.06));
+    -webkit-user-select: none;
     user-select: none;
     transition: all 0.25s ease;
 }
@@ -5392,8 +5396,8 @@ li[id^="msg-msg_"] .meta-row {
     margin: 0;
     outline: none;
     position: relative;
-    user-select: none;
     -webkit-user-select: none;
+    user-select: none;
 }
 
 /* Dividing lines between cells (classic # grid) */
@@ -5430,6 +5434,14 @@ li[id^="msg-msg_"] .meta-row {
 }
 
 /* Pencil SVG & Hand-Drawn Marks */
+.pencil-filters-svg {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
 .pencil-svg {
     width: 42px;
     height: 42px;
@@ -5630,7 +5642,6 @@ li[id^="msg-msg_"] .meta-row {
 .poll-modal-content {
     max-height: 85dvh;
     overflow-y: auto;
-    scrollbar-width: none;
     -ms-overflow-style: none;
 }
 
@@ -5664,8 +5675,6 @@ li[id^="msg-msg_"] .meta-row {
     gap: 6px;
     overflow-x: auto;
     padding-bottom: 6px;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
     -ms-overflow-style: none;
 }
 

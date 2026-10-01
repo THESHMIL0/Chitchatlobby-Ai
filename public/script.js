@@ -524,10 +524,106 @@ document.querySelectorAll('.login-theme-pills .theme-pill').forEach(pill => {
     };
 });
 
-// Hide Splash/Loading screen & initialize starting route
+// ========================================================
+// 🌸 CUTE & WELL-OPTIMIZED APP OPENING ANIMATION CONTROLLER
+// ========================================================
+let appOpeningFinished = false;
+let completeAppOpening = null;
+
+function playAppOpeningAnimation() {
+    const screen = document.getElementById('loading-screen');
+    if (!screen) {
+        appOpeningFinished = true;
+        return;
+    }
+
+    const fillEl = document.getElementById('loading-progress-fill');
+    const textEl = document.getElementById('loading-sub-text');
+    const percentEl = document.getElementById('loading-percent-text');
+    const logoBox = document.getElementById('loading-logo-box');
+
+    const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    let isDismissed = false;
+
+    function finishSequence() {
+        if (isDismissed) return;
+        isDismissed = true;
+        appOpeningFinished = true;
+
+        if (fillEl) fillEl.style.width = '100%';
+        if (percentEl) percentEl.textContent = '100%';
+        if (textEl) textEl.textContent = 'Ready to chit-chat! 💖';
+
+        if (logoBox && !prefersReducedMotion) {
+            logoBox.classList.add('pop-celebrate');
+        }
+
+        try {
+            if (typeof hapticFeedback === 'function') hapticFeedback('light');
+        } catch(e) {}
+
+        const exitDelay = prefersReducedMotion ? 100 : 240;
+        setTimeout(() => {
+            screen.classList.add('fade-out');
+            setTimeout(() => {
+                screen.classList.add('hidden');
+                screen.style.display = 'none';
+            }, 420);
+        }, exitDelay);
+    }
+
+    completeAppOpening = function() {
+        if (!isDismissed) {
+            setTimeout(finishSequence, 160);
+        }
+    };
+
+    if (prefersReducedMotion) {
+        finishSequence();
+        return;
+    }
+
+    // Step 1: Initial state
+    if (fillEl) fillEl.style.width = '18%';
+    if (percentEl) percentEl.textContent = '18%';
+
+    // Step 2: Mid-way (240ms)
+    setTimeout(() => {
+        if (isDismissed) return;
+        if (fillEl) fillEl.style.width = '55%';
+        if (percentEl) percentEl.textContent = '55%';
+        if (textEl) textEl.textContent = 'Sprinkling fairy dust ✨';
+    }, 240);
+
+    // Step 3: Almost there (540ms)
+    setTimeout(() => {
+        if (isDismissed) return;
+        if (fillEl) fillEl.style.width = '90%';
+        if (percentEl) percentEl.textContent = '90%';
+        if (textEl) textEl.textContent = 'Connecting cozy lobby... 💬';
+    }, 540);
+
+    // Step 4: Standard finish (780ms)
+    setTimeout(() => {
+        finishSequence();
+    }, 780);
+
+    // Safety timeout: guaranteed dismiss by 1400ms max
+    setTimeout(() => {
+        finishSequence();
+    }, 1400);
+}
+
+// Prepare starting route behind the opening curtain
 function initAppView() {
-    const lScreen = document.getElementById('loading-screen');
-    if (lScreen) lScreen.classList.add('hidden');
+    if (appOpeningFinished) {
+        const lScreen = document.getElementById('loading-screen');
+        if (lScreen) {
+            lScreen.classList.add('hidden');
+            lScreen.style.display = 'none';
+        }
+    }
     
     const savedUserStr = localStorage.getItem('chitchat_user');
     let hasName = false;
@@ -556,9 +652,7 @@ function initAppView() {
 }
 
 initAppView();
-setTimeout(initAppView, 100);
-setTimeout(initAppView, 500);
-document.addEventListener('DOMContentLoaded', initAppView);
+playAppOpeningAnimation();
 
 if (profilePicUpload) {
     profilePicUpload.addEventListener('change', function() {
@@ -1139,7 +1233,11 @@ if (joinRoomSubmit) {
 function joinRoom(roomId, password, isReconnect) { socket.emit('join room', { roomId, password, user: currentUser, isReconnect }); }
 
 socket.on('connect', () => { 
-    loadingScreen.classList.add('hidden');
+    if (typeof completeAppOpening === 'function') {
+        completeAppOpening();
+    } else if (loadingScreen) {
+        loadingScreen.classList.add('hidden');
+    }
     if (currentUser.name) { socket.emit('update profile', currentUser); loginScreen.classList.add('hidden'); roomListScreen.classList.remove('hidden'); }
     if (currentUser.name && activeRoomId) joinRoom(activeRoomId, currentRoomPassword, true); 
 });
@@ -2824,7 +2922,7 @@ function getMessageInnerHTML(data, isMe, isStacked) {
                 </div>
             </div>`;
     }
-    let reactionsHTML = ''; if (data.reactions && Object.keys(data.reactions).length > 0) reactionsHTML = `<div class="reaction-badge" id="reaction-count-${data.id}">${Object.entries(data.reactions).map(([e, c]) => `${e} ${c}`).join(' ')}</div>`;
+    let reactionsHTML = ''; if (data.reactions && Object.keys(data.reactions).length > 0) reactionsHTML = `<div class="reaction-badge" id="reaction-count-${data.id}">${Object.entries(data.reactions).map(([e, c]) => `${escapeHTML(e)} ${escapeHTML(String(c))}`).join(' ')}</div>`;
     const displayTimeStr = formatTo12HourTime(data.time);
     const tickHTML = isMe ? getTickHTML(data.status, data.id) : '';
     
