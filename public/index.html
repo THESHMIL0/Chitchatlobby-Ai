@@ -181,7 +181,14 @@
                 </button>
             </div>
 
-            <button id="unlock-app-btn" class="app-lock-text-btn" type="button">Use Biometrics</button>
+            <button id="unlock-app-btn" class="app-lock-text-btn" type="button" title="Scan Fingerprint or Touch ID" aria-label="Scan Fingerprint or Touch ID">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 11c0 2.5-1.5 4.5-3.5 4.5S5 13.5 5 11a7 7 0 0 1 14 0c0 3-1.5 5.5-4 7"/>
+                    <path d="M12 7c-1.5 0-3 1.2-3 3 0 1.5.8 2.8 2 3.3"/>
+                    <path d="M9 18.5c1 .5 2 .5 3 .5 4 0 7-3 7-8"/>
+                </svg>
+                <span>Scan Fingerprint / Face ID</span>
+            </button>
         </div>
     </div>
 
@@ -913,6 +920,28 @@
                             <button id="change-passcode-btn" class="clean-subtle-btn hidden" title="Change 4-Digit Passcode" aria-label="Change Passcode" type="button">Change PIN</button>
                             <label class="switch" for="toggle-app-lock">
                                 <input type="checkbox" id="toggle-app-lock" title="App Passcode Lock" aria-label="App Passcode Lock">
+                                <span class="slider"></span>
+                            </label>
+                    </div>
+
+                    <div class="clean-row clean-fingerprint-row" id="fingerprint-settings-row">
+                        <div class="clean-row-lead">
+                            <div class="clean-icon-box icon-fingerprint">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 11c0 2.5-1.5 4.5-3.5 4.5S5 13.5 5 11a7 7 0 0 1 14 0c0 3-1.5 5.5-4 7"/>
+                                    <path d="M12 7c-1.5 0-3 1.2-3 3 0 1.5.8 2.8 2 3.3"/>
+                                    <path d="M9 18.5c1 .5 2 .5 3 .5 4 0 7-3 7-8"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <label for="toggle-fingerprint-unlock" class="clean-label">Fingerprint / Touch ID</label>
+                                <span id="fingerprint-status-sublabel" class="clean-sublabel">Unlock with your biometric sensor</span>
+                            </div>
+                        </div>
+                        <div class="clean-row-actions">
+                            <button id="setup-fingerprint-btn" class="clean-subtle-btn hidden" title="Register Fingerprint" aria-label="Register Fingerprint" type="button">Set Up</button>
+                            <label class="switch" for="toggle-fingerprint-unlock">
+                                <input type="checkbox" id="toggle-fingerprint-unlock" title="Fingerprint / Touch ID" aria-label="Fingerprint Unlock">
                                 <span class="slider"></span>
                             </label>
                         </div>

@@ -189,6 +189,10 @@ const setupKeypadBackspaceBtn = document.getElementById('setup-keypad-backspace-
 const changePasscodeBtn = document.getElementById('change-passcode-btn');
 const appLockStatusSublabel = document.getElementById('app-lock-status-sublabel');
 const toggleAppLock = document.getElementById('toggle-app-lock');
+const toggleFingerprintUnlock = document.getElementById('toggle-fingerprint-unlock');
+const setupFingerprintBtn = document.getElementById('setup-fingerprint-btn');
+const fingerprintStatusSublabel = document.getElementById('fingerprint-status-sublabel');
+const fingerprintSettingsRow = document.getElementById('fingerprint-settings-row');
 
 let enteredPasscode = '';
 let isAppLockedSession = false;
@@ -209,6 +213,49 @@ function isAppLockActive() {
     return localStorage.getItem('chitchat_applock') === 'true';
 }
 
+function isBiometricEnabled() {
+    return localStorage.getItem('chitchat_fingerprint') === 'true';
+}
+
+async function checkDeviceBiometricSupport() {
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.NativeBiometric) {
+        return { supported: true, type: 'capacitor' };
+    }
+    if (window.PublicKeyCredential && typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable === 'function') {
+        try {
+            const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+            if (available) {
+                return { supported: true, type: 'webauthn' };
+            }
+        } catch(e) {
+            console.warn('WebAuthn check error:', e);
+        }
+    }
+    return { supported: false, type: 'none' };
+}
+
+async function updateBiometricSettingsUI() {
+    const bioInfo = await checkDeviceBiometricSupport();
+    const isEnrolled = isBiometricEnabled();
+
+    if (toggleFingerprintUnlock) {
+        toggleFingerprintUnlock.checked = isEnrolled;
+    }
+
+    if (fingerprintStatusSublabel) {
+        if (!bioInfo.supported) {
+            fingerprintStatusSublabel.textContent = 'No biometric sensor detected on this device';
+            if (toggleFingerprintUnlock) toggleFingerprintUnlock.disabled = true;
+        } else if (isEnrolled) {
+            fingerprintStatusSublabel.textContent = 'Fingerprint active (Touch sensor to unlock)';
+            if (toggleFingerprintUnlock) toggleFingerprintUnlock.disabled = false;
+        } else {
+            fingerprintStatusSublabel.textContent = 'Hardware sensor available (Tap toggle to enable)';
+            if (toggleFingerprintUnlock) toggleFingerprintUnlock.disabled = false;
+        }
+    }
+}
+
 function updateAppLockSettingsUI() {
     const active = isAppLockActive();
     if (toggleAppLock) toggleAppLock.checked = active;
@@ -220,6 +267,7 @@ function updateAppLockSettingsUI() {
         if (active) appLockStatusSublabel.textContent = 'PIN Protection Active (Tap Change PIN to update)';
         else appLockStatusSublabel.textContent = 'Protect chats with a 4-digit PIN';
     }
+    updateBiometricSettingsUI();
 }
 
 function renderPasscodeDots(containerEl, length) {
@@ -242,7 +290,7 @@ function shakePasscodeDots(containerEl) {
     }, 460);
 }
 
-function lockApp() {
+function lockApp(autoBiometric = true) {
     if (!isAppLockActive()) return;
     isAppLockedSession = true;
     enteredPasscode = '';
@@ -254,6 +302,13 @@ function lockApp() {
     if (lockIconContainer) lockIconContainer.classList.remove('unlocked');
     if (appLockScreen) {
         appLockScreen.classList.remove('hidden', 'unlocking');
+    }
+
+    // Auto-prompt fingerprint scanner if biometric unlock is enabled
+    if (autoBiometric && isBiometricEnabled()) {
+        setTimeout(() => {
+            verifyBiometrics(true);
+        }, 360);
     }
 }
 
@@ -328,23 +383,144 @@ function checkEnteredPasscode() {
     }
 }
 
-async function verifyNativeBiometrics() {
-    if (isPromptingBiometrics) return;
-    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.NativeBiometric) {
+async function registerWebAuthnBiometric() {
+    if (!window.PublicKeyCredential) {
+        throw new Error('WebAuthn not supported');
+    }
+    const challenge = new Uint8Array(32);
+    crypto.getRandomValues(challenge);
+    const userId = new Uint8Array(16);
+    crypto.getRandomValues(userId);
+
+    const userName = (currentUser && currentUser.name) ? currentUser.name.trim().toLowerCase().replace(/[^a-z0-9]/g, '') : 'chitchat_user';
+
+    const credential = await navigator.credentials.create({
+        publicKey: {
+            challenge: challenge,
+            rp: {
+                name: 'Chit Chat',
+                id: window.location.hostname
+            },
+            user: {
+                id: userId,
+                name: userName || 'chitchat_user',
+                displayName: (currentUser && currentUser.name) || 'Chit Chat User'
+            },
+            pubKeyCredParams: [
+                { alg: -7, type: 'public-key' },  // ES256
+                { alg: -257, type: 'public-key' } // RS256
+            ],
+            authenticatorSelection: {
+                authenticatorAttachment: 'platform', // Built-in fingerprint / Touch ID / Windows Hello
+                userVerification: 'required',
+                residentKey: 'preferred'
+            },
+            timeout: 60000
+        }
+    });
+
+    if (credential && credential.id) {
+        localStorage.setItem('chitchat_bio_cred_id', credential.id);
+        return true;
+    }
+    return false;
+}
+
+async function verifyBiometrics(isAutoPrompt = false) {
+    if (isPromptingBiometrics || isVerifyingLock) return;
+
+    const bioInfo = await checkDeviceBiometricSupport();
+
+    // 1. Capacitor Native Biometric
+    if (bioInfo.type === 'capacitor') {
         isPromptingBiometrics = true;
         try {
             await window.Capacitor.Plugins.NativeBiometric.verifyIdentity({
-                reason: 'Unlock Chit Chat',
-                title: 'Chit Chat Locked'
+                reason: 'Scan your fingerprint to unlock Chit Chat',
+                title: 'Unlock Chit Chat'
             });
             unlockAppSuccess();
+            return;
         } catch(e) {
-            console.warn('Biometric verify error or cancel', e);
+            console.warn('Native biometric error or cancel', e);
+            if (!isAutoPrompt) {
+                showToast('Biometric scan cancelled. Enter your 4-digit PIN 🔢');
+            }
         } finally {
             setTimeout(() => { isPromptingBiometrics = false; }, 800);
         }
-    } else {
-        showToast('Enter your 4-digit passcode on the keypad 🔢');
+        return;
+    }
+
+    // 2. Web Authentication API (Fingerprint / Touch ID / Windows Hello)
+    if (bioInfo.type === 'webauthn') {
+        isPromptingBiometrics = true;
+        try {
+            const challenge = new Uint8Array(32);
+            crypto.getRandomValues(challenge);
+
+            const savedCredId = localStorage.getItem('chitchat_bio_cred_id');
+            const getOptions = {
+                publicKey: {
+                    challenge: challenge,
+                    rpId: window.location.hostname,
+                    userVerification: 'required',
+                    timeout: 60000
+                }
+            };
+
+            if (savedCredId) {
+                try {
+                    const rawId = Uint8Array.from(atob(savedCredId.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+                    getOptions.publicKey.allowCredentials = [{
+                        type: 'public-key',
+                        id: rawId,
+                        transports: ['internal']
+                    }];
+                } catch(e) {}
+            }
+
+            let assertion = null;
+            try {
+                assertion = await navigator.credentials.get(getOptions);
+            } catch (err) {
+                // If never registered on this device, prompt to register first
+                if (!savedCredId && !isAutoPrompt) {
+                    showToast('Touch your fingerprint sensor to register...');
+                    const registered = await registerWebAuthnBiometric();
+                    if (registered) {
+                        localStorage.setItem('chitchat_fingerprint', 'true');
+                        updateBiometricSettingsUI();
+                        showToast('Fingerprint registered! Unlocking... ✨');
+                        unlockAppSuccess();
+                        return;
+                    }
+                }
+                throw err;
+            }
+
+            if (assertion) {
+                unlockAppSuccess();
+                return;
+            }
+        } catch (err) {
+            console.warn('WebAuthn biometric error:', err);
+            if (err.name === 'NotAllowedError') {
+                if (!isAutoPrompt) showToast('Fingerprint cancelled. You can enter your 4-digit PIN 🔢');
+            } else if (err.name === 'SecurityError') {
+                if (!isAutoPrompt) showToast('Biometrics require localhost or HTTPS');
+            } else {
+                if (!isAutoPrompt) showToast('Fingerprint unavailable. Enter your 4-digit PIN 🔢');
+            }
+        } finally {
+            setTimeout(() => { isPromptingBiometrics = false; }, 800);
+        }
+        return;
+    }
+
+    // 3. Fallback when hardware sensor is not available
+    if (!isAutoPrompt) {
+        showToast('No fingerprint sensor detected on this device. Use your 4-digit PIN 🔢');
     }
 }
 
@@ -368,14 +544,21 @@ if (keypadBackspaceBtn) {
 if (keypadBioBtn) {
     keypadBioBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        verifyNativeBiometrics();
+        verifyBiometrics(false);
     });
 }
 
 if (unlockAppBtn) {
     unlockAppBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        verifyNativeBiometrics();
+        verifyBiometrics(false);
+    });
+}
+
+if (lockIconContainer) {
+    lockIconContainer.addEventListener('click', (e) => {
+        e.preventDefault();
+        verifyBiometrics(false);
     });
 }
 
@@ -568,12 +751,78 @@ if (changePasscodeBtn) {
     });
 }
 
+if (toggleFingerprintUnlock) {
+    toggleFingerprintUnlock.addEventListener('change', async (e) => {
+        if (e.target.checked) {
+            const bioInfo = await checkDeviceBiometricSupport();
+            if (!bioInfo.supported) {
+                e.target.checked = false;
+                showToast('No biometric sensor detected on this device');
+                return;
+            }
+
+            // Ensure App Lock is enabled with PIN as fallback
+            if (!isAppLockActive()) {
+                if (!localStorage.getItem('chitchat_passcode')) {
+                    showToast('Set a 4-digit PIN first as security backup 🔒');
+                    e.target.checked = false;
+                    openPasscodeSetup('CREATE');
+                    return;
+                }
+                localStorage.setItem('chitchat_applock', 'true');
+                updateAppLockSettingsUI();
+            }
+
+            if (bioInfo.type === 'webauthn' && !localStorage.getItem('chitchat_bio_cred_id')) {
+                try {
+                    showToast('Touch your fingerprint sensor to confirm...');
+                    const success = await registerWebAuthnBiometric();
+                    if (success) {
+                        localStorage.setItem('chitchat_fingerprint', 'true');
+                        updateBiometricSettingsUI();
+                        showToast('Fingerprint unlock enabled! 👆✨');
+                    } else {
+                        e.target.checked = false;
+                    }
+                } catch(err) {
+                    console.warn('Fingerprint registration failed', err);
+                    e.target.checked = false;
+                    showToast('Fingerprint setup cancelled or unavailable');
+                }
+            } else {
+                localStorage.setItem('chitchat_fingerprint', 'true');
+                updateBiometricSettingsUI();
+                showToast('Fingerprint unlock enabled! 👆✨');
+            }
+        } else {
+            localStorage.setItem('chitchat_fingerprint', 'false');
+            updateBiometricSettingsUI();
+            showToast('Fingerprint unlock disabled');
+        }
+    });
+}
+
+if (setupFingerprintBtn) {
+    setupFingerprintBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        try {
+            showToast('Touch your fingerprint sensor...');
+            const success = await registerWebAuthnBiometric();
+            if (success) {
+                localStorage.setItem('chitchat_fingerprint', 'true');
+                updateBiometricSettingsUI();
+                showToast('Fingerprint registered successfully! 👆✨');
+            }
+        } catch(err) {
+            console.warn('Setup fingerprint error', err);
+            showToast('Fingerprint registration cancelled');
+        }
+    });
+}
+
 function checkAppLockOnLaunch() {
     if (isAppLockActive()) {
-        lockApp();
-        if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.NativeBiometric) {
-            setTimeout(verifyNativeBiometrics, 400);
-        }
+        lockApp(true);
     }
 }
 
