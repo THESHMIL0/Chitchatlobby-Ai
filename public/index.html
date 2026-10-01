@@ -58,7 +58,43 @@
                 <div class="logo-inner-glow"></div>
                 <div class="logo-outer-ring"></div>
                 <div class="logo-bounce-box" id="loading-logo-box">
-                    <img src="/icon.svg" alt="Chit Chat Logo" title="Chit Chat Logo" class="loading-logo-img" width="76" height="76">
+                    <svg class="cute-mascot-svg" viewBox="0 0 512 512" width="84" height="84" aria-label="Chit Chat Mascot">
+                        <defs>
+                            <linearGradient id="bubbleGradCute" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#ffffff" />
+                                <stop offset="100%" stop-color="#ecfdf5" />
+                            </linearGradient>
+                            <linearGradient id="accentBubbleCute" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#34d399" />
+                                <stop offset="100%" stop-color="#10b981" />
+                            </linearGradient>
+                            <filter id="mascotGlow" x="-20%" y="-20%" width="140%" height="140%">
+                                <feDropShadow dx="0" dy="8" stdDeviation="14" flood-color="#10b981" flood-opacity="0.35"/>
+                            </filter>
+                        </defs>
+                        <!-- Outer Glow Aura -->
+                        <circle cx="256" cy="256" r="248" fill="url(#accentBubbleCute)" opacity="0.14" />
+                        <!-- Secondary Back Chat Bubble (Playful Peek & Wiggle) -->
+                        <path class="mascot-back-bubble" d="M 280 170 C 350 170, 400 210, 400 270 C 400 300, 385 325, 360 342 C 365 365, 380 380, 395 390 C 365 390, 338 375, 320 360 C 307 366, 294 370, 280 370 C 210 370, 160 330, 160 270 C 160 210, 210 170, 280 170 Z" fill="url(#accentBubbleCute)" />
+                        <!-- Primary Front Chat Bubble (Cute Bouncy Body) -->
+                        <path class="mascot-front-bubble" d="M 210 120 C 130 120, 80 165, 80 235 C 80 272, 98 303, 128 324 C 120 352, 100 372, 82 385 C 118 385, 152 368, 174 348 C 186 352, 198 355, 210 355 C 290 355, 340 310, 340 235 C 340 165, 290 120, 210 120 Z" fill="url(#bubbleGradCute)" filter="url(#mascotGlow)" />
+                        <!-- Blushing Cheeks -->
+                        <ellipse class="mascot-blush left" cx="140" cy="245" rx="15" ry="8" fill="#ff758f" />
+                        <ellipse class="mascot-blush right" cx="280" cy="245" rx="15" ry="8" fill="#ff758f" />
+                        <!-- Happy Anime Eyes (Blinking / Smiling) -->
+                        <g class="mascot-eyes">
+                            <path class="mascot-eye left" d="M 148 206 Q 162 192 176 206" fill="none" stroke="#064e3b" stroke-width="6.5" stroke-linecap="round" />
+                            <path class="mascot-eye right" d="M 244 206 Q 258 192 272 206" fill="none" stroke="#064e3b" stroke-width="6.5" stroke-linecap="round" />
+                        </g>
+                        <!-- 3 Animated Dancing Dots inside Mouth/Speech area -->
+                        <g class="mascot-dots">
+                            <circle class="mascot-dot dot-1" cx="180" cy="265" r="13" fill="#059669" />
+                            <circle class="mascot-dot dot-2" cx="210" cy="265" r="13" fill="#10b981" />
+                            <circle class="mascot-dot dot-3" cx="240" cy="265" r="13" fill="#34d399" />
+                        </g>
+                        <!-- Floating Pop Heart -->
+                        <path class="mascot-floating-heart" d="M 330 140 C 330 125, 310 115, 295 130 C 280 115, 260 125, 260 140 C 260 160, 295 180, 295 180 C 295 180, 330 160, 330 140 Z" fill="#ff4d6d" />
+                    </svg>
                 </div>
             </div>
 
@@ -93,15 +129,59 @@
         </div>
     </div>
 
-    <!-- App Lock Screen -->
-    <div id="app-lock-screen" class="screen hidden app-lock-screen">
-        <div class="login-card">
-            <div class="lock-icon-badge">
-                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    <!-- App Passcode Lock Screen -->
+    <div id="app-lock-screen" class="app-lock-screen hidden" role="dialog" aria-modal="true" aria-labelledby="app-lock-title">
+        <div class="app-lock-card">
+            <div class="app-lock-badge-wrap">
+                <div class="lock-icon-glow"></div>
+                <div class="lock-icon-badge" id="lock-icon-container">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                </div>
             </div>
-            <h2>App Locked</h2>
-            <p class="app-lock-desc">Biometric or PIN verification required.</p>
-            <button id="unlock-app-btn" class="primary-btn" title="Unlock App" aria-label="Unlock App" type="button">Unlock App</button>
+
+            <h2 id="app-lock-title" class="app-lock-title">Chit Chat Locked</h2>
+            <p id="app-lock-subtitle" class="app-lock-subtitle">Enter your 4-digit passcode</p>
+
+            <!-- 4 Cute Passcode Indicator Dots -->
+            <div class="passcode-dots-container" id="passcode-dots-box" aria-label="Passcode entry">
+                <div class="passcode-dot" data-idx="0"></div>
+                <div class="passcode-dot" data-idx="1"></div>
+                <div class="passcode-dot" data-idx="2"></div>
+                <div class="passcode-dot" data-idx="3"></div>
+            </div>
+
+            <!-- Numeric Keypad -->
+            <div class="lock-keypad-grid" role="group" aria-label="Keypad">
+                <button type="button" class="keypad-key" data-key="1">1</button>
+                <button type="button" class="keypad-key" data-key="2">2</button>
+                <button type="button" class="keypad-key" data-key="3">3</button>
+                <button type="button" class="keypad-key" data-key="4">4</button>
+                <button type="button" class="keypad-key" data-key="5">5</button>
+                <button type="button" class="keypad-key" data-key="6">6</button>
+                <button type="button" class="keypad-key" data-key="7">7</button>
+                <button type="button" class="keypad-key" data-key="8">8</button>
+                <button type="button" class="keypad-key" data-key="9">9</button>
+                <button type="button" class="keypad-key keypad-bio" id="keypad-bio-btn" title="Unlock with Biometrics" aria-label="Unlock with Biometrics">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 11c0 2.5-1.5 4.5-3.5 4.5S5 13.5 5 11a7 7 0 0 1 14 0c0 3-1.5 5.5-4 7"/>
+                        <path d="M12 7c-1.5 0-3 1.2-3 3 0 1.5.8 2.8 2 3.3"/>
+                        <path d="M9 18.5c1 .5 2 .5 3 .5 4 0 7-3 7-8"/>
+                    </svg>
+                </button>
+                <button type="button" class="keypad-key" data-key="0">0</button>
+                <button type="button" class="keypad-key keypad-backspace" id="keypad-backspace-btn" title="Backspace" aria-label="Backspace">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/>
+                        <line x1="18" y1="9" x2="12" y2="15"/>
+                        <line x1="12" y1="9" x2="18" y2="15"/>
+                    </svg>
+                </button>
+            </div>
+
+            <button id="unlock-app-btn" class="app-lock-text-btn" type="button">Use Biometrics</button>
         </div>
     </div>
 
@@ -484,6 +564,51 @@
         </div>
     </div>
 
+    <!-- Passcode Setup Modal -->
+    <div id="passcode-setup-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="passcode-setup-title">
+        <div class="modal-content form-modal passcode-setup-card">
+            <div class="modal-drag-pill"></div>
+            <div class="modal-header-between">
+                <h3 id="passcode-setup-title">Set 4-Digit Passcode</h3>
+                <button id="close-passcode-setup-btn" class="icon-btn" title="Close" aria-label="Close" type="button">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <p id="passcode-setup-desc" class="modal-subtitle">Choose a 4-digit PIN to secure your Chit Chat lobby</p>
+            
+            <div class="passcode-setup-dots-wrap">
+                <div class="passcode-dots-container" id="passcode-setup-dots" aria-label="Passcode setup indicator">
+                    <div class="passcode-dot" data-idx="0"></div>
+                    <div class="passcode-dot" data-idx="1"></div>
+                    <div class="passcode-dot" data-idx="2"></div>
+                    <div class="passcode-dot" data-idx="3"></div>
+                </div>
+            </div>
+
+            <!-- Keypad for setup modal -->
+            <div class="lock-keypad-grid passcode-modal-keypad" role="group" aria-label="Setup Keypad">
+                <button type="button" class="keypad-key setup-keypad-key" data-key="1">1</button>
+                <button type="button" class="keypad-key setup-keypad-key" data-key="2">2</button>
+                <button type="button" class="keypad-key setup-keypad-key" data-key="3">3</button>
+                <button type="button" class="keypad-key setup-keypad-key" data-key="4">4</button>
+                <button type="button" class="keypad-key setup-keypad-key" data-key="5">5</button>
+                <button type="button" class="keypad-key setup-keypad-key" data-key="6">6</button>
+                <button type="button" class="keypad-key setup-keypad-key" data-key="7">7</button>
+                <button type="button" class="keypad-key setup-keypad-key" data-key="8">8</button>
+                <button type="button" class="keypad-key setup-keypad-key" data-key="9">9</button>
+                <button type="button" class="keypad-key setup-keypad-key keypad-clear" id="setup-keypad-cancel-btn" title="Cancel" aria-label="Cancel">✕</button>
+                <button type="button" class="keypad-key setup-keypad-key" data-key="0">0</button>
+                <button type="button" class="keypad-key setup-keypad-key keypad-backspace" id="setup-keypad-backspace-btn" title="Backspace" aria-label="Backspace">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/>
+                        <line x1="18" y1="9" x2="12" y2="15"/>
+                        <line x1="12" y1="9" x2="18" y2="15"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Message Options Modal -->
     <div id="msg-options-modal" class="modal hidden">
         <div class="modal-content">
@@ -774,17 +899,23 @@
             <div class="clean-group">
                 <div class="clean-group-label">PRIVACY & SECURITY</div>
                 <div class="clean-card">
-                    <div class="clean-row">
+                    <div class="clean-row clean-applock-row">
                         <div class="clean-row-lead">
                             <div class="clean-icon-box icon-lock">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                             </div>
-                            <label for="toggle-app-lock" class="clean-label">App Passcode Lock</label>
+                            <div>
+                                <label for="toggle-app-lock" class="clean-label">App Passcode Lock</label>
+                                <span id="app-lock-status-sublabel" class="clean-sublabel">Protect chats with a 4-digit PIN</span>
+                            </div>
                         </div>
-                        <label class="switch" for="toggle-app-lock">
-                            <input type="checkbox" id="toggle-app-lock" title="App Passcode Lock" aria-label="App Passcode Lock">
-                            <span class="slider"></span>
-                        </label>
+                        <div class="clean-row-actions">
+                            <button id="change-passcode-btn" class="clean-subtle-btn hidden" title="Change 4-Digit Passcode" aria-label="Change Passcode" type="button">Change PIN</button>
+                            <label class="switch" for="toggle-app-lock">
+                                <input type="checkbox" id="toggle-app-lock" title="App Passcode Lock" aria-label="App Passcode Lock">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
                     </div>
 
                                         <div class="clean-row">

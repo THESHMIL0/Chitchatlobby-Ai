@@ -167,50 +167,438 @@ let globalAudio = null;
 let globalAudioBtn = null;
 let globalAudioFill = null;
 
-let isPromptingBiometrics = false;
+// ==========================================================================
+// App Passcode Lock & Security System
+// ==========================================================================
+const appLockTitle = document.getElementById('app-lock-title');
+const appLockSubtitle = document.getElementById('app-lock-subtitle');
+const lockIconContainer = document.getElementById('lock-icon-container');
+const passcodeDotsBox = document.getElementById('passcode-dots-box');
+const unlockAppBtn = document.getElementById('unlock-app-btn');
+const keypadBioBtn = document.getElementById('keypad-bio-btn');
+const keypadBackspaceBtn = document.getElementById('keypad-backspace-btn');
+
+// Setup modal elements
+const passcodeSetupModal = document.getElementById('passcode-setup-modal');
+const passcodeSetupTitle = document.getElementById('passcode-setup-title');
+const passcodeSetupDesc = document.getElementById('passcode-setup-desc');
+const passcodeSetupDots = document.getElementById('passcode-setup-dots');
+const closePasscodeSetupBtn = document.getElementById('close-passcode-setup-btn');
+const setupKeypadCancelBtn = document.getElementById('setup-keypad-cancel-btn');
+const setupKeypadBackspaceBtn = document.getElementById('setup-keypad-backspace-btn');
+const changePasscodeBtn = document.getElementById('change-passcode-btn');
+const appLockStatusSublabel = document.getElementById('app-lock-status-sublabel');
 const toggleAppLock = document.getElementById('toggle-app-lock');
-if (toggleAppLock) {
-    toggleAppLock.checked = localStorage.getItem('chitchat_applock') === 'true';
-    toggleAppLock.addEventListener('change', (e) => {
-        localStorage.setItem('chitchat_applock', e.target.checked);
+
+let enteredPasscode = '';
+let isAppLockedSession = false;
+let isPromptingBiometrics = false;
+let isVerifyingLock = false;
+
+// Setup modal states: 'ENTER_OLD', 'ENTER_NEW', 'CONFIRM_NEW', 'VERIFY_DISABLE'
+let setupMode = 'CREATE'; 
+let setupStep = 'ENTER_NEW';
+let setupFirstPin = '';
+let setupCurrentInput = '';
+
+function getStoredPasscode() {
+    return localStorage.getItem('chitchat_passcode') || '1234';
+}
+
+function isAppLockActive() {
+    return localStorage.getItem('chitchat_applock') === 'true';
+}
+
+function updateAppLockSettingsUI() {
+    const active = isAppLockActive();
+    if (toggleAppLock) toggleAppLock.checked = active;
+    if (changePasscodeBtn) {
+        if (active) changePasscodeBtn.classList.remove('hidden');
+        else changePasscodeBtn.classList.add('hidden');
+    }
+    if (appLockStatusSublabel) {
+        if (active) appLockStatusSublabel.textContent = 'PIN Protection Active (Tap Change PIN to update)';
+        else appLockStatusSublabel.textContent = 'Protect chats with a 4-digit PIN';
+    }
+}
+
+function renderPasscodeDots(containerEl, length) {
+    if (!containerEl) return;
+    const dots = containerEl.querySelectorAll('.passcode-dot');
+    dots.forEach((dot, idx) => {
+        if (idx < length) dot.classList.add('filled');
+        else dot.classList.remove('filled');
     });
 }
 
-async function verifyAppLock() {
-    if (localStorage.getItem('chitchat_applock') !== 'true') return;
-    if (isPromptingBiometrics) return; 
+function shakePasscodeDots(containerEl) {
+    if (!containerEl) return;
+    containerEl.classList.remove('shake');
+    void containerEl.offsetWidth;
+    containerEl.classList.add('shake');
+    try { hapticFeedback('heavy'); } catch(e) {}
+    setTimeout(() => {
+        containerEl.classList.remove('shake');
+    }, 460);
+}
 
-    isPromptingBiometrics = true;
-    if (appLockScreen) appLockScreen.classList.remove('hidden');
+function lockApp() {
+    if (!isAppLockActive()) return;
+    isAppLockedSession = true;
+    enteredPasscode = '';
+    renderPasscodeDots(passcodeDotsBox, 0);
+    if (appLockSubtitle) {
+        appLockSubtitle.textContent = 'Enter your 4-digit passcode';
+        appLockSubtitle.classList.remove('error');
+    }
+    if (lockIconContainer) lockIconContainer.classList.remove('unlocked');
+    if (appLockScreen) {
+        appLockScreen.classList.remove('hidden', 'unlocking');
+    }
+}
 
-    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.NativeBiometric) {
-        try {
-            await window.Capacitor.Plugins.NativeBiometric.verifyIdentity({ reason: 'Unlock Chit Chat', title: 'App Locked' });
-            if (appLockScreen) appLockScreen.classList.add('hidden');
-            setTimeout(() => { isPromptingBiometrics = false; }, 1000);
-        } catch (e) { 
-            console.error('Biometric error', e); 
-            isPromptingBiometrics = false; 
+function unlockAppSuccess() {
+    isAppLockedSession = false;
+    try { hapticFeedback('heavy'); } catch(e) {}
+    if (appLockSubtitle) {
+        appLockSubtitle.textContent = 'Unlocked! Welcome back ✨';
+        appLockSubtitle.classList.remove('error');
+    }
+    if (lockIconContainer) lockIconContainer.classList.add('unlocked');
+    if (appLockScreen) appLockScreen.classList.add('unlocking');
+
+    setTimeout(() => {
+        if (appLockScreen) {
+            appLockScreen.classList.add('hidden');
+            appLockScreen.classList.remove('unlocking');
         }
-    } else {
-        const lockHeading = document.querySelector('#app-lock-screen h2');
-        if (lockHeading) lockHeading.innerText = "Web Mode: Click to Unlock";
-        const unlockBtn = document.getElementById('unlock-app-btn');
-        if (unlockBtn) {
-            unlockBtn.onclick = () => {
-                if (appLockScreen) appLockScreen.classList.add('hidden');
-                isPromptingBiometrics = false;
-            };
+        if (lockIconContainer) lockIconContainer.classList.remove('unlocked');
+        if (appLockSubtitle) appLockSubtitle.textContent = 'Enter your 4-digit passcode';
+        enteredPasscode = '';
+        renderPasscodeDots(passcodeDotsBox, 0);
+        isVerifyingLock = false;
+    }, 320);
+}
+
+function handleLockKeypress(key) {
+    if (isVerifyingLock) return;
+    if (key >= '0' && key <= '9') {
+        if (enteredPasscode.length < 4) {
+            enteredPasscode += key;
+            try { hapticFeedback('light'); } catch(e) {}
+            renderPasscodeDots(passcodeDotsBox, enteredPasscode.length);
+            if (enteredPasscode.length === 4) {
+                checkEnteredPasscode();
+            }
         }
     }
 }
 
-const unlockAppBtn = document.getElementById('unlock-app-btn');
-if (unlockAppBtn) unlockAppBtn.onclick = verifyAppLock;
-if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) { 
-    try { window.Capacitor.Plugins.App.addListener('appStateChange', (state) => { if (state.isActive) verifyAppLock(); }); } catch(e){} 
+function handleLockBackspace() {
+    if (isVerifyingLock) return;
+    if (enteredPasscode.length > 0) {
+        enteredPasscode = enteredPasscode.slice(0, -1);
+        try { hapticFeedback('light'); } catch(e) {}
+        renderPasscodeDots(passcodeDotsBox, enteredPasscode.length);
+    }
 }
-verifyAppLock(); 
+
+function checkEnteredPasscode() {
+    isVerifyingLock = true;
+    const correctPin = getStoredPasscode();
+    if (enteredPasscode === correctPin) {
+        unlockAppSuccess();
+    } else {
+        shakePasscodeDots(passcodeDotsBox);
+        if (appLockSubtitle) {
+            appLockSubtitle.textContent = 'Incorrect passcode. Try again';
+            appLockSubtitle.classList.add('error');
+        }
+        setTimeout(() => {
+            enteredPasscode = '';
+            renderPasscodeDots(passcodeDotsBox, 0);
+            isVerifyingLock = false;
+        }, 460);
+        setTimeout(() => {
+            if (appLockSubtitle && !isVerifyingLock && enteredPasscode.length === 0) {
+                appLockSubtitle.textContent = 'Enter your 4-digit passcode';
+                appLockSubtitle.classList.remove('error');
+            }
+        }, 2000);
+    }
+}
+
+async function verifyNativeBiometrics() {
+    if (isPromptingBiometrics) return;
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.NativeBiometric) {
+        isPromptingBiometrics = true;
+        try {
+            await window.Capacitor.Plugins.NativeBiometric.verifyIdentity({
+                reason: 'Unlock Chit Chat',
+                title: 'Chit Chat Locked'
+            });
+            unlockAppSuccess();
+        } catch(e) {
+            console.warn('Biometric verify error or cancel', e);
+        } finally {
+            setTimeout(() => { isPromptingBiometrics = false; }, 800);
+        }
+    } else {
+        showToast('Enter your 4-digit passcode on the keypad 🔢');
+    }
+}
+
+// Bind lock keypad clicks
+const lockKeypadButtons = document.querySelectorAll('.lock-keypad-grid .keypad-key[data-key]');
+lockKeypadButtons.forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const key = btn.getAttribute('data-key');
+        if (key !== null) handleLockKeypress(key);
+    });
+});
+
+if (keypadBackspaceBtn) {
+    keypadBackspaceBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        handleLockBackspace();
+    });
+}
+
+if (keypadBioBtn) {
+    keypadBioBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        verifyNativeBiometrics();
+    });
+}
+
+if (unlockAppBtn) {
+    unlockAppBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        verifyNativeBiometrics();
+    });
+}
+
+// Physical keyboard listener for lock screen
+window.addEventListener('keydown', (e) => {
+    if (appLockScreen && !appLockScreen.classList.contains('hidden')) {
+        if (e.key >= '0' && e.key <= '9') {
+            handleLockKeypress(e.key);
+        } else if (e.key === 'Backspace') {
+            handleLockBackspace();
+        } else if (e.key === 'Escape') {
+            enteredPasscode = '';
+            renderPasscodeDots(passcodeDotsBox, 0);
+        }
+    }
+});
+
+// Setup Modal Logic
+function openPasscodeSetup(mode = 'CREATE') {
+    setupMode = mode;
+    setupCurrentInput = '';
+    setupFirstPin = '';
+    renderPasscodeDots(passcodeSetupDots, 0);
+
+    if (mode === 'CREATE') {
+        setupStep = 'ENTER_NEW';
+        if (passcodeSetupTitle) passcodeSetupTitle.textContent = 'Set 4-Digit Passcode';
+        if (passcodeSetupDesc) passcodeSetupDesc.textContent = 'Choose a 4-digit PIN to secure your Chit Chat lobby';
+    } else if (mode === 'CHANGE') {
+        setupStep = 'ENTER_OLD';
+        if (passcodeSetupTitle) passcodeSetupTitle.textContent = 'Enter Current PIN';
+        if (passcodeSetupDesc) passcodeSetupDesc.textContent = 'Please enter your current 4-digit PIN first';
+    } else if (mode === 'DISABLE') {
+        setupStep = 'VERIFY_DISABLE';
+        if (passcodeSetupTitle) passcodeSetupTitle.textContent = 'Turn Off Passcode';
+        if (passcodeSetupDesc) passcodeSetupDesc.textContent = 'Enter your 4-digit PIN to turn off App Lock';
+    }
+
+    if (passcodeSetupModal) passcodeSetupModal.classList.remove('hidden');
+}
+
+function closePasscodeSetup() {
+    if (passcodeSetupModal) passcodeSetupModal.classList.add('hidden');
+    setupCurrentInput = '';
+    setupFirstPin = '';
+    renderPasscodeDots(passcodeSetupDots, 0);
+    updateAppLockSettingsUI();
+}
+
+function handleSetupKeypress(key) {
+    if (key >= '0' && key <= '9') {
+        if (setupCurrentInput.length < 4) {
+            setupCurrentInput += key;
+            try { hapticFeedback('light'); } catch(e) {}
+            renderPasscodeDots(passcodeSetupDots, setupCurrentInput.length);
+            if (setupCurrentInput.length === 4) {
+                processSetupStep();
+            }
+        }
+    }
+}
+
+function handleSetupBackspace() {
+    if (setupCurrentInput.length > 0) {
+        setupCurrentInput = setupCurrentInput.slice(0, -1);
+        try { hapticFeedback('light'); } catch(e) {}
+        renderPasscodeDots(passcodeSetupDots, setupCurrentInput.length);
+    }
+}
+
+function processSetupStep() {
+    const currentStored = getStoredPasscode();
+
+    if (setupStep === 'ENTER_OLD') {
+        if (setupCurrentInput === currentStored) {
+            try { hapticFeedback('medium'); } catch(e) {}
+            setupStep = 'ENTER_NEW';
+            setupCurrentInput = '';
+            renderPasscodeDots(passcodeSetupDots, 0);
+            if (passcodeSetupTitle) passcodeSetupTitle.textContent = 'Enter New PIN';
+            if (passcodeSetupDesc) passcodeSetupDesc.textContent = 'Choose your new 4-digit passcode';
+        } else {
+            shakePasscodeDots(passcodeSetupDots);
+            if (passcodeSetupDesc) passcodeSetupDesc.textContent = 'Incorrect current PIN. Try again';
+            setTimeout(() => {
+                setupCurrentInput = '';
+                renderPasscodeDots(passcodeSetupDots, 0);
+            }, 450);
+        }
+    } else if (setupStep === 'ENTER_NEW') {
+        try { hapticFeedback('light'); } catch(e) {}
+        setupFirstPin = setupCurrentInput;
+        setupCurrentInput = '';
+        setupStep = 'CONFIRM_NEW';
+        renderPasscodeDots(passcodeSetupDots, 0);
+        if (passcodeSetupTitle) passcodeSetupTitle.textContent = 'Confirm Passcode';
+        if (passcodeSetupDesc) passcodeSetupDesc.textContent = 'Re-enter the 4-digit PIN to confirm';
+    } else if (setupStep === 'CONFIRM_NEW') {
+        if (setupCurrentInput === setupFirstPin) {
+            try { hapticFeedback('heavy'); } catch(e) {}
+            localStorage.setItem('chitchat_passcode', setupFirstPin);
+            localStorage.setItem('chitchat_applock', 'true');
+            updateAppLockSettingsUI();
+            showToast('Passcode saved! App Lock is active 🔒');
+            closePasscodeSetup();
+        } else {
+            shakePasscodeDots(passcodeSetupDots);
+            if (passcodeSetupDesc) passcodeSetupDesc.textContent = 'PINs did not match! Setting restarted';
+            setTimeout(() => {
+                setupCurrentInput = '';
+                setupFirstPin = '';
+                setupStep = 'ENTER_NEW';
+                renderPasscodeDots(passcodeSetupDots, 0);
+                if (passcodeSetupTitle) passcodeSetupTitle.textContent = 'Set 4-Digit Passcode';
+            }, 600);
+        }
+    } else if (setupStep === 'VERIFY_DISABLE') {
+        if (setupCurrentInput === currentStored) {
+            try { hapticFeedback('medium'); } catch(e) {}
+            localStorage.setItem('chitchat_applock', 'false');
+            updateAppLockSettingsUI();
+            showToast('Passcode lock turned off');
+            closePasscodeSetup();
+        } else {
+            shakePasscodeDots(passcodeSetupDots);
+            if (passcodeSetupDesc) passcodeSetupDesc.textContent = 'Incorrect PIN. Lock remains active';
+            setTimeout(() => {
+                setupCurrentInput = '';
+                renderPasscodeDots(passcodeSetupDots, 0);
+            }, 450);
+        }
+    }
+}
+
+// Bind setup keypad buttons
+const setupKeypadButtons = document.querySelectorAll('.passcode-modal-keypad .setup-keypad-key[data-key]');
+setupKeypadButtons.forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const key = btn.getAttribute('data-key');
+        if (key !== null) handleSetupKeypress(key);
+    });
+});
+
+if (setupKeypadBackspaceBtn) {
+    setupKeypadBackspaceBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        handleSetupBackspace();
+    });
+}
+
+if (setupKeypadCancelBtn) {
+    setupKeypadCancelBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        closePasscodeSetup();
+    });
+}
+
+if (closePasscodeSetupBtn) {
+    closePasscodeSetupBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        closePasscodeSetup();
+    });
+}
+
+// Settings Toggle & Change PIN button
+if (toggleAppLock) {
+    updateAppLockSettingsUI();
+    toggleAppLock.addEventListener('change', (e) => {
+        if (e.target.checked) {
+            if (!localStorage.getItem('chitchat_passcode')) {
+                openPasscodeSetup('CREATE');
+            } else {
+                localStorage.setItem('chitchat_applock', 'true');
+                updateAppLockSettingsUI();
+                showToast('Passcode Lock Enabled 🔒');
+            }
+        } else {
+            // Require entering current passcode to disable!
+            e.target.checked = true; // keep checked until confirmed
+            openPasscodeSetup('DISABLE');
+        }
+    });
+}
+
+if (changePasscodeBtn) {
+    changePasscodeBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        openPasscodeSetup('CHANGE');
+    });
+}
+
+function checkAppLockOnLaunch() {
+    if (isAppLockActive()) {
+        lockApp();
+        if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.NativeBiometric) {
+            setTimeout(verifyNativeBiometrics, 400);
+        }
+    }
+}
+
+// Capacitor and web lifecycle listeners
+if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) { 
+    try {
+        window.Capacitor.Plugins.App.addListener('appStateChange', (state) => {
+            if (state.isActive && isAppLockActive() && !isAppLockedSession) {
+                lockApp();
+            }
+        });
+    } catch(e) {} 
+}
+
+let awayTimestamp = 0;
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        awayTimestamp = Date.now();
+    } else {
+        if (isAppLockActive() && awayTimestamp > 0 && (Date.now() - awayTimestamp > 45000)) {
+            lockApp();
+        }
+        awayTimestamp = 0;
+    }
+}); 
 
 function closeLightbox() { 
     if (lightbox) lightbox.classList.add('hidden'); 
@@ -569,6 +957,9 @@ function playAppOpeningAnimation() {
             setTimeout(() => {
                 screen.classList.add('hidden');
                 screen.style.display = 'none';
+                if (typeof checkAppLockOnLaunch === 'function') {
+                    checkAppLockOnLaunch();
+                }
             }, 420);
         }, exitDelay);
     }
@@ -623,6 +1014,10 @@ function initAppView() {
             lScreen.classList.add('hidden');
             lScreen.style.display = 'none';
         }
+    }
+
+    if (isAppLockActive()) {
+        lockApp();
     }
     
     const savedUserStr = localStorage.getItem('chitchat_user');

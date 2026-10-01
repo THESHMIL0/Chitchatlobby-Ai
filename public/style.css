@@ -286,6 +286,152 @@ input { -webkit-user-select: auto; user-select: auto; }
     50% { transform: translateY(-7px); }
 }
 
+/* Cute Mascot Vector Animations */
+.cute-mascot-svg {
+    position: relative;
+    z-index: 2;
+    width: 84px;
+    height: 84px;
+    overflow: visible;
+    transform-origin: center bottom;
+    animation: mascotFloatBreathe 3s ease-in-out infinite;
+}
+
+@keyframes mascotFloatBreathe {
+    0%, 100% {
+        transform: translateY(0) scale(1, 1);
+    }
+    50% {
+        transform: translateY(-8px) scale(1.02, 0.98);
+    }
+}
+
+.mascot-front-bubble {
+    transform-origin: 210px 235px;
+    animation: mascotSquashBounce 2.6s ease-in-out infinite;
+}
+
+@keyframes mascotSquashBounce {
+    0%, 100% {
+        transform: scale(1, 1);
+    }
+    40% {
+        transform: scale(1.04, 0.96) rotate(-1deg);
+    }
+    75% {
+        transform: scale(0.97, 1.03) rotate(1deg);
+    }
+}
+
+.mascot-back-bubble {
+    transform-origin: 280px 270px;
+    animation: mascotPeekWiggle 3.2s ease-in-out infinite;
+}
+
+@keyframes mascotPeekWiggle {
+    0%, 100% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+    30% {
+        transform: translate(6px, -4px) rotate(4deg);
+    }
+    70% {
+        transform: translate(-3px, 2px) rotate(-2deg);
+    }
+}
+
+.mascot-blush {
+    animation: mascotBlushPulse 2s ease-in-out infinite alternate;
+}
+
+@keyframes mascotBlushPulse {
+    0% {
+        opacity: 0.55;
+        transform: scale(0.9);
+    }
+    100% {
+        opacity: 0.95;
+        transform: scale(1.15);
+    }
+}
+
+.mascot-eyes {
+    transform-origin: 210px 206px;
+    animation: mascotEyeBlink 3.8s infinite ease-in-out;
+}
+
+@keyframes mascotEyeBlink {
+    0%, 94%, 100% {
+        transform: scaleY(1);
+    }
+    97% {
+        transform: scaleY(0.1);
+    }
+}
+
+.mascot-dot {
+    animation: mascotDotHop 1.4s ease-in-out infinite;
+    transform-origin: center bottom;
+}
+
+.mascot-dot.dot-1 {
+    animation-delay: 0s;
+}
+
+.mascot-dot.dot-2 {
+    animation-delay: 0.22s;
+}
+
+.mascot-dot.dot-3 {
+    animation-delay: 0.44s;
+}
+
+@keyframes mascotDotHop {
+    0%, 60%, 100% {
+        transform: translateY(0);
+        opacity: 0.7;
+    }
+    30% {
+        transform: translateY(-8px);
+        opacity: 1;
+    }
+}
+
+.mascot-floating-heart {
+    transform-origin: 295px 147px;
+    animation: mascotHeartPulse 2.2s ease-in-out infinite;
+}
+
+@keyframes mascotHeartPulse {
+    0%, 100% {
+        transform: translateY(0) scale(1);
+        opacity: 0.9;
+    }
+    50% {
+        transform: translateY(-6px) scale(1.18);
+        opacity: 1;
+    }
+}
+
+.loading-logo-box.pop-celebrate .cute-mascot-svg {
+    animation: mascotCelebratePop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes mascotCelebratePop {
+    0% {
+        transform: scale(1);
+    }
+    40% {
+        transform: scale(1.22) rotate(-6deg);
+    }
+    70% {
+        transform: scale(0.95) rotate(4deg);
+    }
+    100% {
+        transform: scale(1.1) rotate(0deg);
+    }
+}
+
 .loading-brand-header {
     display: flex;
     flex-direction: column;
@@ -5569,14 +5715,280 @@ li[id^="msg-msg_"] .meta-row {
     flex-shrink: 0;
 }
 
+/* App Passcode Lock Screen & Keypad */
 .app-lock-screen {
-    z-index: 300;
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100dvh;
+    z-index: 99995;
+    background: var(--bg-main);
+    -webkit-backdrop-filter: blur(28px);
+    backdrop-filter: blur(28px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.35s;
+    opacity: 1;
+    transform: scale(1);
+    visibility: visible;
 }
 
-.app-lock-desc {
-    color: var(--text-secondary);
-    margin-bottom: 24px;
+.app-lock-screen.hidden {
+    opacity: 0 !important;
+    transform: scale(0.96) !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+}
+
+.app-lock-screen.unlocking {
+    opacity: 0;
+    transform: scale(1.05);
+    pointer-events: none;
+}
+
+.app-lock-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+    max-width: 360px;
+    padding: 24px 20px;
+    box-sizing: border-box;
+    animation: cardAppear 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.app-lock-badge-wrap {
+    position: relative;
+    width: 68px;
+    height: 68px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lock-icon-glow {
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    background: var(--accent);
+    filter: blur(16px);
+    opacity: 0.35;
+    animation: pulseGlow 2.5s infinite ease-in-out;
+}
+
+.lock-icon-badge {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--card-bg, #1e293b);
+    border: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease, border-color 0.2s ease;
+}
+
+.lock-icon-badge.unlocked {
+    transform: scale(1.1) rotate(5deg);
+    color: #10b981;
+    border-color: #10b981;
+}
+
+.app-lock-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 6px 0;
+    letter-spacing: -0.02em;
+}
+
+.app-lock-subtitle {
     font-size: 14px;
+    color: var(--text-secondary);
+    margin: 0 0 28px 0;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.app-lock-subtitle.error {
+    color: #f43f5e;
+    font-weight: 600;
+    animation: errorPulse 0.4s ease;
+}
+
+@keyframes errorPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.04); }
+}
+
+/* 4 Cute Passcode Indicator Dots */
+.passcode-dots-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    margin-bottom: 30px;
+    height: 24px;
+}
+
+.passcode-dot {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    border: 2px solid var(--border-color);
+    background: transparent;
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.passcode-dot.filled {
+    background: var(--accent);
+    border-color: var(--accent);
+    transform: scale(1.18);
+    box-shadow: 0 0 12px var(--accent);
+}
+
+.passcode-dots-container.shake {
+    animation: passcodeShake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+.passcode-dots-container.shake .passcode-dot {
+    background: #f43f5e;
+    border-color: #f43f5e;
+    box-shadow: 0 0 12px rgba(244, 63, 94, 0.7);
+}
+
+@keyframes passcodeShake {
+    10%, 90% { transform: translate3d(-3px, 0, 0); }
+    20%, 80% { transform: translate3d(5px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+    40%, 60% { transform: translate3d(6px, 0, 0); }
+}
+
+/* Numeric Keypad Grid */
+.lock-keypad-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    width: 100%;
+    max-width: 280px;
+    margin: 0 auto 16px auto;
+}
+
+.keypad-key {
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    margin: 0 auto;
+    border: 1px solid var(--border-color);
+    background: var(--input-bg);
+    color: var(--text-primary);
+    font-size: 24px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+    transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.keypad-key:hover {
+    background: var(--bg-hover, var(--border-color));
+    border-color: var(--accent);
+}
+
+.keypad-key:active {
+    transform: scale(0.92);
+    background: var(--accent);
+    color: #ffffff;
+}
+
+.keypad-key.keypad-bio {
+    color: var(--accent);
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+}
+
+.keypad-key.keypad-bio:hover {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: var(--accent);
+}
+
+.keypad-key.keypad-backspace {
+    color: var(--text-secondary);
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+}
+
+.keypad-key.keypad-backspace:hover {
+    color: var(--text-primary);
+    background: var(--input-bg);
+}
+
+.keypad-key.keypad-clear {
+    color: var(--text-secondary);
+    font-size: 18px;
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+}
+
+.keypad-key.keypad-clear:hover {
+    color: #f43f5e;
+}
+
+.app-lock-text-btn {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 8px 16px;
+    border-radius: 12px;
+    margin-top: 4px;
+    transition: opacity 0.2s ease, background 0.2s ease;
+}
+
+.app-lock-text-btn:hover {
+    opacity: 0.85;
+    background: rgba(16, 185, 129, 0.08);
+}
+
+/* Passcode Setup Modal Styling */
+.passcode-setup-card {
+    max-width: 340px;
+    text-align: center;
+    padding: 24px 20px;
+}
+
+.passcode-setup-dots-wrap {
+    margin: 8px 0 16px 0;
+}
+
+.passcode-modal-keypad {
+    gap: 12px;
+    max-width: 250px;
+}
+
+.passcode-modal-keypad .setup-keypad-key {
+    width: 60px;
+    height: 60px;
+    font-size: 22px;
+}
+
+.clean-applock-row {
+    align-items: center;
 }
 
 .new-room-input,
