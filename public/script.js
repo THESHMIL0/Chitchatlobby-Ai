@@ -134,6 +134,8 @@ const infoRoomLogo = document.getElementById('info-room-logo');
 const infoRoomName = document.getElementById('info-room-name');
 const chatSearchContainer = document.getElementById('chat-search-container');
 const chatSearchInput = document.getElementById('chat-search-input');
+const btnOpenSearch = document.getElementById('btn-open-search');
+const closeSearchBtn = document.getElementById('close-search-btn');
 const wallpaperUpload = document.getElementById('wallpaper-upload');
 const lightbox = document.getElementById('lightbox');
 const lightboxImg = document.getElementById('lightbox-img');
@@ -2921,10 +2923,16 @@ function setSendBtnState(state) {
     if (!sendMicIcon) return;
     
     if (state === 'send') {
+        sendMicBtn.title = 'Send Message';
+        sendMicBtn.setAttribute('aria-label', 'Send Message');
         sendMicIcon.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`;
     } else if (state === 'check') {
+        sendMicBtn.title = 'Save Edit';
+        sendMicBtn.setAttribute('aria-label', 'Save Edit');
         sendMicIcon.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
     } else {
+        sendMicBtn.title = 'Record Voice Note';
+        sendMicBtn.setAttribute('aria-label', 'Record Voice Note');
         sendMicIcon.innerHTML = `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>`;
     }
 }
@@ -2933,7 +2941,7 @@ if (input) {
     const handleInputChange = () => { 
         if (editingMsgId) { 
             setSendBtnState('check'); 
-        } else if ((input.value && input.value.trim()) || activeRoomId === 'ai_lounge') { 
+        } else if ((input.value && input.value.trim().length > 0) || activeRoomId === 'ai_lounge') { 
             setSendBtnState('send'); 
         } else { 
             setSendBtnState('mic'); 
@@ -2953,6 +2961,8 @@ if (input) {
 
     input.addEventListener('input', handleInputChange);
     input.addEventListener('keyup', handleInputChange);
+    input.addEventListener('change', handleInputChange);
+    input.addEventListener('paste', () => setTimeout(handleInputChange, 15));
 
     const handleEnterKey = (e) => { 
         if (e.key === 'Enter' && !e.shiftKey) { 
@@ -2961,7 +2971,6 @@ if (input) {
         } 
     };
 
-    input.addEventListener('keypress', handleEnterKey);
     input.addEventListener('keydown', handleEnterKey);
 }
 
@@ -4855,8 +4864,17 @@ function cleanupPreviewAudio() {
 
 async function startRecording(e) {
     if (e && e.cancelable) e.preventDefault(); 
-    if (input.value.trim() || activeRoomId === 'ai_lounge') return; 
+    if ((input && input.value && input.value.trim().length > 0) || activeRoomId === 'ai_lounge') return; 
     if (isRecording) return;
+
+    if (!navigator || !navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
+        showToast("Microphone is not supported in this browser/connection (requires HTTPS or localhost)!");
+        return;
+    }
+    if (typeof MediaRecorder === 'undefined') {
+        showToast("Voice recording is not supported in this browser.");
+        return;
+    }
 
     hapticFeedback('medium'); 
     isRecordingCancelled = false;
@@ -4875,15 +4893,19 @@ async function startRecording(e) {
         currentAudioStream = stream;
 
         let options = {};
-        if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
-            options.mimeType = 'audio/webm;codecs=opus';
-        } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
-            options.mimeType = 'audio/mp4';
-        } else if (MediaRecorder.isTypeSupported('audio/ogg')) {
-            options.mimeType = 'audio/ogg';
+        if (typeof MediaRecorder.isTypeSupported === 'function') {
+            if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+                options.mimeType = 'audio/webm;codecs=opus';
+            } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+                options.mimeType = 'audio/mp4';
+            } else if (MediaRecorder.isTypeSupported('audio/ogg')) {
+                options.mimeType = 'audio/ogg';
+            } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+                options.mimeType = 'audio/webm';
+            }
         }
 
-        mediaRecorder = new MediaRecorder(stream, options);
+        mediaRecorder = Object.keys(options).length > 0 ? new MediaRecorder(stream, options) : new MediaRecorder(stream);
         audioChunks = [];
 
         mediaRecorder.ondataavailable = event => { 
@@ -4907,27 +4929,32 @@ async function startRecording(e) {
             if (!isRecordingCancelled && audioChunks.length > 0) {
                 const finalMime = mediaRecorder.mimeType || 'audio/webm';
                 const audioBlob = new Blob(audioChunks, { type: finalMime }); 
-                const normalizedWave = normalizeWaveform(liveWaveformSamples, 24);
-                const finalDuration = Math.max(1, recordingSeconds);
+                if (audioBlob.size > 150) {
+                    const normalizedWave = normalizeWaveform(liveWaveformSamples, 24);
+                    const finalDuration = Math.max(1, recordingSeconds);
 
-                const reader = new FileReader();
-                reader.onload = (event) => { 
-                    socket.emit('chat message', { 
-                        userId: currentUser.id,
-                        user: currentUser.name, 
-                        avatar: currentUser.avatar, 
-                        color: currentUser.color, 
-                        text: '', 
-                        uploadedImage: event.target.result, 
-                        isAudio: true, 
-                        duration: finalDuration,
-                        waveform: normalizedWave,
-                        time: formatTo12HourTime(new Date()), 
-                        isGhost: isGhostMode,
-                        roomId: activeRoomId || 'lobby'
-                    }); 
-                };
-                reader.readAsDataURL(audioBlob); 
+                    const reader = new FileReader();
+                    reader.onload = (event) => { 
+                        if (socket) {
+                            socket.emit('chat message', { 
+                                userId: currentUser.id,
+                                user: currentUser.name, 
+                                avatar: currentUser.avatar, 
+                                color: currentUser.color, 
+                                text: '', 
+                                uploadedImage: event.target.result, 
+                                isAudio: true, 
+                                duration: finalDuration,
+                                waveform: normalizedWave,
+                                time: formatTo12HourTime(new Date()), 
+                                isGhost: isGhostMode,
+                                roomId: activeRoomId || 'lobby'
+                            }); 
+                            playUiSound('send');
+                        }
+                    };
+                    reader.readAsDataURL(audioBlob); 
+                }
             }
             audioChunks = []; 
             liveWaveformSamples = [];
@@ -4964,7 +4991,13 @@ async function startRecording(e) {
     } catch(err) { 
         isRecording = false; 
         console.error('Microphone access error:', err);
-        showToast("Please allow Microphone access to send Voice Notes!"); 
+        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+            showToast("Microphone permission was denied. Please allow mic access in your browser settings.");
+        } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+            showToast("No microphone found on this device.");
+        } else {
+            showToast("Microphone error: " + (err.message || "Please check permissions."));
+        }
     }
 }
 
@@ -4973,6 +5006,9 @@ function stopRecording(cancel = false) {
     cleanupPreviewAudio();
     if (isRecording && mediaRecorder && mediaRecorder.state !== 'inactive') {
         try {
+            if (typeof mediaRecorder.requestData === 'function') {
+                try { mediaRecorder.requestData(); } catch(e){}
+            }
             mediaRecorder.stop();
         } catch(err) {
             console.error('Error stopping MediaRecorder:', err);
@@ -5083,27 +5119,30 @@ if (sendRecBtn) {
 // ==========================
 // ✅ THE FLAWLESS SEND & MIC BUTTON HANDLERS
 // ==========================
-sendMicBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    const hasText = input && input.value && input.value.trim().length > 0;
-    if (hasText || sendMicBtn.dataset.state === 'send' || sendMicBtn.dataset.state === 'check') {
-        sendMessage();
-    } else if (sendMicBtn.dataset.state === 'mic') {
-        if (!isRecording) {
-            startRecording(e);
+if (sendMicBtn) {
+    sendMicBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const hasText = input && input.value && input.value.trim().length > 0;
+        const currentState = sendMicBtn.dataset.state || (hasText ? 'send' : 'mic');
+        if (hasText || currentState === 'send' || currentState === 'check') {
+            sendMessage();
+        } else {
+            if (!isRecording) {
+                startRecording(e);
+            }
+        }
+    });
+
+    function handleHoldRelease(e) {
+        if (isRecording && !isRecordingPaused && (Date.now() - recordStartTime > 1200)) {
+            stopRecording(false);
         }
     }
-});
 
-function handleHoldRelease(e) {
-    if (isRecording && !isRecordingPaused && (Date.now() - recordStartTime > 1200)) {
-        stopRecording(false);
-    }
+    sendMicBtn.addEventListener('touchend', handleHoldRelease);
+    sendMicBtn.addEventListener('mouseup', handleHoldRelease);
+    sendMicBtn.addEventListener('contextmenu', e => e.preventDefault());
 }
-
-sendMicBtn.addEventListener('touchend', handleHoldRelease);
-sendMicBtn.addEventListener('mouseup', handleHoldRelease);
-sendMicBtn.addEventListener('contextmenu', e => e.preventDefault());
 
 // Register Service Worker for PWA Installation
 if ('serviceWorker' in navigator) {
