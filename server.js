@@ -338,23 +338,36 @@ app.get('/api/link-preview', async (req, res) => {
         }
 
         // Limit stream read to 256KB
-        const reader = response.body.getReader();
-        const chunks = [];
-        let bytesRead = 0;
-        const maxBytes = 256 * 1024;
+        let html = '';
+        if (response.body && typeof response.body.getReader === 'function') {
+            try {
+                const reader = response.body.getReader();
+                const chunks = [];
+                let bytesRead = 0;
+                const maxBytes = 256 * 1024;
 
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done || !value) break;
-            chunks.push(value);
-            bytesRead += value.length;
-            if (bytesRead >= maxBytes) {
-                reader.cancel();
-                break;
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done || !value) break;
+                    chunks.push(value);
+                    bytesRead += value.length;
+                    if (bytesRead >= maxBytes) {
+                        try { reader.cancel(); } catch (e) {}
+                        break;
+                    }
+                }
+                html = Buffer.concat(chunks).toString('utf-8');
+            } catch (streamErr) {
+                html = '';
+            }
+        } else if (typeof response.text === 'function') {
+            try {
+                const rawText = await response.text();
+                html = rawText.slice(0, 256 * 1024);
+            } catch (textErr) {
+                html = '';
             }
         }
-
-        const html = Buffer.concat(chunks).toString('utf-8');
 
         const getMeta = (propName) => {
             const re1 = new RegExp(`<meta\\s+[^>]*?(?:property|name)=["'](?:og:|twitter:)?${propName}["'][^>]*?content=["']([^"']*)["']`, 'i');
@@ -846,7 +859,10 @@ io.on('connection', (socket) => {
 
         db.run(`INSERT INTO rooms VALUES (?, ?, ?, ?, ?, ?)`, 
             [roomId, cleanName, cleanLogo, isPrivate, hashedPassword, creatorId], 
-            () => broadcastRooms()
+            (err) => {
+                if (err) console.error('Insert room error:', err.message);
+                broadcastRooms();
+            }
         );
     });
 
@@ -889,7 +905,9 @@ io.on('connection', (socket) => {
             };
 
             db.run("INSERT OR REPLACE INTO users (name, avatar, about, isOnline, lastSeen, bubbleColor) VALUES (?, ?, ?, ?, ?, ?)", 
-                [cleanName, safeAvatar, safeAbout, 1, Date.now(), safeColor]);
+                [cleanName, safeAvatar, safeAbout, 1, Date.now(), safeColor],
+                (err) => { if (err) console.error('Upsert user error:', err.message); }
+            );
 
             // Deliver any pending sent messages to this joining recipient
             const newlyDeliveredIds = [];
@@ -955,7 +973,9 @@ io.on('connection', (socket) => {
         }
 
         db.run("INSERT OR REPLACE INTO users (name, avatar, about, isOnline, lastSeen, bubbleColor) VALUES (?, ?, ?, ?, ?, ?)", 
-            [cleanName, cleanAvatar, cleanAbout, 1, Date.now(), cleanColor]);
+            [cleanName, cleanAvatar, cleanAbout, 1, Date.now(), cleanColor],
+            (err) => { if (err) console.error('Update profile db error:', err.message); }
+        );
     });
 
     socket.on('chat message', async (data) => {
@@ -1070,7 +1090,9 @@ io.on('connection', (socket) => {
         }
 
         if (!data.isGhost) {
-            db.run("INSERT INTO history VALUES (?, ?, ?, ?)", [data.id, roomId, Date.now(), JSON.stringify(data)]);
+            db.run("INSERT INTO history VALUES (?, ?, ?, ?)", [data.id, roomId, Date.now(), JSON.stringify(data)], (err) => {
+                if (err) console.error('History insert error:', err.message);
+            });
         }
         
         io.to(roomId).emit('chat message', data);
@@ -1159,7 +1181,9 @@ io.on('connection', (socket) => {
                         replyTo: data.replyTo ? { user: data.user, text: textContent.substring(0, 120) || 'Message', msgId: data.id } : null
                     };
                     io.to(roomId).emit('user typing', { name: '🤖 Bot', isTyping: false });
-                    db.run("INSERT INTO history VALUES (?, ?, ?, ?)", [botMsg.id, roomId, Date.now(), JSON.stringify(botMsg)]);
+                    db.run("INSERT INTO history VALUES (?, ?, ?, ?)", [botMsg.id, roomId, Date.now(), JSON.stringify(botMsg)], (err) => {
+                        if (err) console.error('Bot history insert error:', err.message);
+                    });
                     io.to(roomId).emit('chat message', botMsg);
                     
                     const botSummaryText = reply ? (reply.length > 80 ? reply.substring(0, 80) + '...' : reply) : 'Bot sent a message';
@@ -1261,7 +1285,9 @@ io.on('connection', (socket) => {
                 color: '#00a884',
                 avatar: 'https://api.dicebear.com/7.x/lorelei/svg?seed=ChitChatBot&backgroundColor=b6e3f4'
             };
-            db.run("INSERT INTO history VALUES (?, ?, ?, ?)", [botMsg.id, roomId, Date.now(), JSON.stringify(botMsg)]);
+            db.run("INSERT INTO history VALUES (?, ?, ?, ?)", [botMsg.id, roomId, Date.now(), JSON.stringify(botMsg)], (err) => {
+                if (err) console.error('Game bot history insert error:', err.message);
+            });
             io.to(roomId).emit('chat message', botMsg);
         }, 350);
     }
@@ -1739,7 +1765,9 @@ io.on('connection', (socket) => {
     socket.on('disconnect', () => {
         const userData = activeUsersById[socket.id];
         if (userData) {
-            db.run(`UPDATE users SET isOnline = 0, lastSeen = ? WHERE name = ?`, [Date.now(), userData.name]);
+            db.run(`UPDATE users SET isOnline = 0, lastSeen = ? WHERE name = ?`, [Date.now(), userData.name], (err) => {
+                if (err) console.error('Update offline status error:', err.message);
+            });
             if (userData.roomId) {
                 io.to(userData.roomId).emit('room users', getUsersInRoom(userData.roomId));
                 io.to(userData.roomId).emit('user typing', { name: userData.name, isTyping: false });

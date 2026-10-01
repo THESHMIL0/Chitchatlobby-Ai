@@ -7004,3 +7004,31 @@ li[id^="msg-msg_"] .meta-row {
     transform: scale(1.08);
 }
 
+.view-profile-card {
+    text-align: center;
+    padding: 24px 20px;
+}
+
+.view-profile-avatar-wrap {
+    width: 88px;
+    height: 88px;
+    margin: 8px auto 14px auto;
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--bg-hover);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+    border: 3px solid var(--accent);
+}
+
+.view-profile-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.view-profile-close-btn {
+    margin-top: 18px;
+    width: 100%;
+}
+

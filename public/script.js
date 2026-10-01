@@ -1289,9 +1289,17 @@ function initAppView() {
     
     if (hasName) {
         if (loginScreen) loginScreen.classList.add('hidden');
-        if (roomListScreen) roomListScreen.classList.remove('hidden');
-        renderRoomList();
-        try { history.replaceState({screen: 'lobby'}, '', '#lobby'); } catch(e){}
+        if (location.hash === '#settings') {
+            if (roomListScreen) roomListScreen.classList.add('hidden');
+            if (chatScreen) chatScreen.classList.add('hidden');
+            if (profileScreen) profileScreen.classList.add('hidden');
+            if (settingsScreen) settingsScreen.classList.remove('hidden');
+            updateSettingsModalUI();
+        } else {
+            if (roomListScreen) roomListScreen.classList.remove('hidden');
+            renderRoomList();
+            try { history.replaceState({screen: 'lobby'}, '', '#lobby'); } catch(e){}
+        }
     } else {
         if (loginScreen) loginScreen.classList.remove('hidden');
         if (roomListScreen) roomListScreen.classList.add('hidden');
@@ -1419,8 +1427,13 @@ if (closeSettingsPageBtn) {
         if (e) { e.preventDefault(); e.stopPropagation(); }
         hapticFeedback('light');
         settingsScreen.classList.add('hidden');
-        roomListScreen.classList.remove('hidden');
-        history.pushState({ screen: 'lobby' }, '', '#lobby');
+        if (activeRoomId) {
+            chatScreen.classList.remove('hidden');
+            try { history.pushState({ screen: 'chat', roomId: activeRoomId }, '', '#chat'); } catch(e){}
+        } else {
+            roomListScreen.classList.remove('hidden');
+            try { history.pushState({ screen: 'lobby' }, '', '#lobby'); } catch(e){}
+        }
     };
 }
 
@@ -1683,6 +1696,9 @@ if (backBtn) {
         e.preventDefault(); e.stopPropagation(); hapticFeedback('light'); 
         if (chatScreen) chatScreen.classList.add('hidden'); 
         if (roomListScreen) roomListScreen.classList.remove('hidden'); 
+        if (chatSearchContainer) chatSearchContainer.classList.add('hidden');
+        if (chatSearchInput) chatSearchInput.value = '';
+        clearChatSearchHighlights();
         if (socket) socket.emit('leave room'); 
         activeRoomId = null; isGhostMode = false; 
         if (ghostBtn) ghostBtn.classList.remove('active'); 
@@ -1692,7 +1708,7 @@ if (backBtn) {
 }
 
 window.addEventListener('popstate', (e) => {
-    const state = e.state ? e.state.screen : '';
+    const state = (e.state && e.state.screen) || (location.hash ? location.hash.replace('#', '') : 'lobby');
     if (state === 'settings') {
         if (chatScreen) chatScreen.classList.add('hidden');
         if (profileScreen) profileScreen.classList.add('hidden');
@@ -1705,7 +1721,10 @@ window.addEventListener('popstate', (e) => {
         if (chatScreen) chatScreen.classList.add('hidden');
         if (profileScreen) profileScreen.classList.remove('hidden');
         updateProfileScreenUI();
-    } else if (state === 'lobby') {
+    } else if (state === 'lobby' || state === '') {
+        if (chatSearchContainer) chatSearchContainer.classList.add('hidden');
+        if (chatSearchInput) chatSearchInput.value = '';
+        clearChatSearchHighlights();
         if (activeRoomId) {
             if (chatScreen) chatScreen.classList.add('hidden'); 
             if (roomListScreen) roomListScreen.classList.remove('hidden');
@@ -2224,7 +2243,7 @@ function playUiSound(type = 'send') {
             if (AudioContextClass) audioCtx = new AudioContextClass();
         }
         if (audioCtx && audioCtx.state === 'suspended') {
-            audioCtx.resume();
+            audioCtx.resume().catch(() => {});
         }
         if (!audioCtx) return;
 
@@ -4347,8 +4366,9 @@ function displayMessage(data, isHistory) {
     messages.appendChild(li); messages.scrollTop = messages.scrollHeight;
 
     // Automatic Rich Link Preview for URLs
-    if (data && data.text && !data.linkPreview && !data.uploadedImage && !data.isAudio && !data.isVideo) {
-        attachAutoLinkPreview(li, data.text);
+    const rawMsgText = data.text || data.message;
+    if (rawMsgText && !data.linkPreview && !data.uploadedImage && !data.isAudio && !data.isVideo) {
+        attachAutoLinkPreview(li, rawMsgText);
     }
 
     if (!isMe && !isHistory) {
@@ -4515,13 +4535,30 @@ document.getElementById('messages').addEventListener('click', (e) => {
         return;
     }
 
-    if(e.target.classList.contains('chat-image')) { document.getElementById('lightbox-img').src = e.target.src; document.getElementById('lightbox').classList.remove('hidden'); } 
+    if(e.target.classList.contains('chat-image')) { openLightboxModal(e.target.src); } 
     if(e.target.classList.contains('avatar-small')) { const friendName = e.target.dataset.name; socket.emit('get user info', friendName); }
 });
 
-// Lobby search & Category filters
-const lobbySearchInput = document.getElementById('lobby-search-input');
-const clearLobbySearchBtn = document.getElementById('clear-lobby-search-btn');
+// View User Profile socket response handler
+socket.on('user info result', (info) => {
+    if (!info) return;
+    const modal = document.getElementById('view-profile-modal');
+    const nameEl = document.getElementById('view-profile-name');
+    const aboutEl = document.getElementById('view-profile-about');
+    const avatarEl = document.getElementById('view-profile-avatar');
+    if (nameEl) nameEl.textContent = info.name || 'User Profile';
+    if (aboutEl) aboutEl.textContent = info.about || 'Hey there! I am using Chit Chat.';
+    if (avatarEl) avatarEl.src = info.avatar || generateCuteAvatar(info.name || 'User');
+    if (modal) modal.classList.remove('hidden');
+});
+
+const closeViewProfileBtn = document.getElementById('close-view-profile-btn');
+if (closeViewProfileBtn) {
+    closeViewProfileBtn.onclick = () => {
+        const modal = document.getElementById('view-profile-modal');
+        if (modal) modal.classList.add('hidden');
+    };
+}
 
 // Quick Emoji Drawer
 const emojiBtn = document.getElementById('emoji-btn');
@@ -5351,8 +5388,9 @@ function populateMediaVault() {
         const timeEl = li.querySelector('.message-time');
         const timeStr = timeEl ? timeEl.textContent : '';
 
-        // 1. Photos
+        // 1. Photos & Videos
         const imgEl = li.querySelector('.chat-image');
+        const videoEl = li.querySelector('.chat-video');
         if (imgEl && imgEl.src) {
             mediaCount++;
             const thumb = document.createElement('div');
@@ -5360,6 +5398,15 @@ function populateMediaVault() {
             thumb.innerHTML = `<img src="${escapeHTML(imgEl.src)}" alt="Shared Photo" loading="lazy">`;
             thumb.onclick = () => {
                 openLightboxModal(imgEl.src);
+            };
+            vaultMediaGrid.appendChild(thumb);
+        } else if (videoEl && videoEl.src) {
+            mediaCount++;
+            const thumb = document.createElement('div');
+            thumb.className = 'vault-media-thumb';
+            thumb.innerHTML = `<video src="${escapeHTML(videoEl.src)}" muted playsinline></video>`;
+            thumb.onclick = () => {
+                openLightboxModal(videoEl.src);
             };
             vaultMediaGrid.appendChild(thumb);
         }
@@ -5454,15 +5501,6 @@ if (lightboxCloseBtn) {
         closeLightbox();
     };
 }
-
-// Also wire chat images to open in lightbox
-document.getElementById('messages').addEventListener('click', (e) => {
-    const chatImg = e.target.closest('.chat-image');
-    if (chatImg && chatImg.src) {
-        e.stopPropagation();
-        openLightboxModal(chatImg.src);
-    }
-});
 
 // ==========================================
 // 📞 WebRTC 1-on-1 Voice & Video Calling
@@ -5663,7 +5701,10 @@ socket.on('call-incoming', (data) => {
 socket.on('call-rejected', (data) => {
     stopRingtoneLoop();
     endAndResetCall(true);
-    showToast(data && data.reason === 'busy' ? 'User is busy in another call' : 'Call declined');
+    const msg = data && data.reason === 'busy' 
+        ? 'User is busy in another call' 
+        : (data && data.reason === 'cancelled' ? 'Call cancelled' : 'Call declined');
+    showToast(msg);
 });
 
 // Socket: Call Ended
@@ -5700,10 +5741,14 @@ function setupPeerConnectionEvents(targetSocketId) {
                 if (callRemoteVideo) {
                     callRemoteVideo.srcObject = stream;
                     callRemoteVideo.classList.remove('hidden');
+                    callRemoteVideo.play().catch(() => {});
                 }
                 if (callVoicePlaceholder) callVoicePlaceholder.classList.add('hidden');
             } else {
-                if (callRemoteAudio) callRemoteAudio.srcObject = stream;
+                if (callRemoteAudio) {
+                    callRemoteAudio.srcObject = stream;
+                    callRemoteAudio.play().catch(() => {});
+                }
                 if (callVoicePlaceholder) callVoicePlaceholder.classList.remove('hidden');
                 if (callRemoteVideo) callRemoteVideo.classList.add('hidden');
             }
