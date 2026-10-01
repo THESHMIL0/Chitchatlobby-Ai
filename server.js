@@ -30,7 +30,7 @@ app.use(helmet({
             scriptSrc: ["'self'", "'unsafe-inline'", "/socket.io/socket.io.js"],
             styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
             fontSrc: ["'self'", "https://fonts.gstatic.com"],
-            imgSrc: ["'self'", "data:", "blob:", "https://api.dicebear.com"],
+            imgSrc: ["'self'", "data:", "blob:", "https:", "https://api.dicebear.com"],
             mediaSrc: ["'self'", "data:", "blob:"],
             connectSrc: ["'self'", "ws:", "wss:", "https://api.dicebear.com"],
             objectSrc: ["'none'"],
@@ -244,6 +244,161 @@ app.post('/api/push/send-test', (req, res) => {
                 console.error('Test push error:', err);
                 res.status(500).json({ error: err.message });
             });
+    }
+});
+
+// ==========================================
+// 🔗 Rich Link Preview API with SSRF Defense
+// ==========================================
+const linkPreviewCache = new Map();
+
+function isPrivateIpOrHost(hostname) {
+    if (!hostname) return true;
+    const lower = hostname.toLowerCase();
+    if (lower === 'localhost' || lower.endsWith('.localhost') || lower === '::1') return true;
+    
+    // IPv4 patterns: 127.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 169.254.0.0/16, 0.0.0.0
+    const ipv4Match = lower.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+    if (ipv4Match) {
+        const a = parseInt(ipv4Match[1], 10);
+        const b = parseInt(ipv4Match[2], 10);
+        if (a === 127 || a === 0) return true;
+        if (a === 10) return true;
+        if (a === 172 && b >= 16 && b <= 31) return true;
+        if (a === 192 && b === 168) return true;
+        if (a === 169 && b === 254) return true;
+    }
+    return false;
+}
+
+app.get('/api/link-preview', async (req, res) => {
+    try {
+        const rawUrl = req.query.url;
+        if (!rawUrl || typeof rawUrl !== 'string') {
+            return res.status(400).json({ error: 'URL parameter is required' });
+        }
+
+        let parsed;
+        try {
+            parsed = new URL(rawUrl);
+        } catch (e) {
+            return res.status(400).json({ error: 'Invalid URL format' });
+        }
+
+        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+            return res.status(400).json({ error: 'Only HTTP/HTTPS URLs are supported' });
+        }
+
+        if (isPrivateIpOrHost(parsed.hostname)) {
+            return res.status(403).json({ error: 'Access to local or private networks is blocked' });
+        }
+
+        const cacheKey = parsed.href;
+        if (linkPreviewCache.has(cacheKey)) {
+            return res.json(linkPreviewCache.get(cacheKey));
+        }
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+        let response;
+        try {
+            response = await fetch(parsed.href, {
+                signal: controller.signal,
+                redirect: 'follow',
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) ChitChatPreview/1.0',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+                }
+            });
+        } catch (err) {
+            clearTimeout(timeoutId);
+            return res.json({
+                success: true,
+                url: parsed.href,
+                domain: parsed.hostname.replace(/^www\./, ''),
+                title: parsed.hostname,
+                description: '',
+                image: ''
+            });
+        }
+        clearTimeout(timeoutId);
+
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('text/html') && !contentType.includes('application/xhtml')) {
+            const fallback = {
+                success: true,
+                url: parsed.href,
+                domain: parsed.hostname.replace(/^www\./, ''),
+                title: parsed.hostname,
+                description: '',
+                image: ''
+            };
+            return res.json(fallback);
+        }
+
+        // Limit stream read to 256KB
+        const reader = response.body.getReader();
+        const chunks = [];
+        let bytesRead = 0;
+        const maxBytes = 256 * 1024;
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done || !value) break;
+            chunks.push(value);
+            bytesRead += value.length;
+            if (bytesRead >= maxBytes) {
+                reader.cancel();
+                break;
+            }
+        }
+
+        const html = Buffer.concat(chunks).toString('utf-8');
+
+        const getMeta = (propName) => {
+            const re1 = new RegExp(`<meta\\s+[^>]*?(?:property|name)=["'](?:og:|twitter:)?${propName}["'][^>]*?content=["']([^"']*)["']`, 'i');
+            const m1 = html.match(re1);
+            if (m1 && m1[1]) return m1[1].trim();
+            const re2 = new RegExp(`<meta\\s+[^>]*?content=["']([^"']*)["'][^>]*?(?:property|name)=["'](?:og:|twitter:)?${propName}["']`, 'i');
+            const m2 = html.match(re2);
+            if (m2 && m2[1]) return m2[1].trim();
+            return null;
+        };
+
+        const titleTag = html.match(/<title[^>]*>([^<]*)<\/title>/i);
+        const title = getMeta('title') || (titleTag ? titleTag[1].trim() : parsed.hostname);
+        const description = getMeta('description') || '';
+        let image = getMeta('image') || '';
+        const siteName = getMeta('site_name') || parsed.hostname.replace(/^www\./, '');
+
+        if (image && !image.startsWith('http://') && !image.startsWith('https://')) {
+            try {
+                image = new URL(image, parsed.href).href;
+            } catch (e) {
+                image = '';
+            }
+        }
+
+        const result = {
+            success: true,
+            url: parsed.href,
+            domain: parsed.hostname.replace(/^www\./, ''),
+            siteName: (siteName || '').substring(0, 60),
+            title: (title || parsed.hostname).substring(0, 120),
+            description: (description || '').substring(0, 200),
+            image: image && (image.startsWith('http://') || image.startsWith('https://')) ? image : ''
+        };
+
+        if (linkPreviewCache.size >= 250) {
+            const oldestKey = linkPreviewCache.keys().next().value;
+            linkPreviewCache.delete(oldestKey);
+        }
+        linkPreviewCache.set(cacheKey, result);
+
+        return res.json(result);
+    } catch (err) {
+        return res.status(500).json({ error: 'Failed to inspect URL' });
     }
 });
 
@@ -1521,6 +1676,66 @@ io.on('connection', (socket) => {
         }
     });
 
+    // ==========================================
+    // 📞 WebRTC 1-on-1 Voice & Video Calling Signaling
+    // ==========================================
+    socket.on('call-user', (data) => {
+        if (!data || typeof data !== 'object') return;
+        const callerInfo = activeUsersById[socket.id] || { name: 'Friend', avatar: '/icon.svg' };
+        const roomId = data.roomId || activeUsersById[socket.id]?.roomId;
+        const payload = {
+            callerSocketId: socket.id,
+            callerName: callerInfo.name,
+            callerAvatar: callerInfo.avatar || '/icon.svg',
+            roomId: roomId,
+            isVideo: !!data.isVideo
+        };
+
+        if (data.targetSocketId && data.targetSocketId !== socket.id) {
+            io.to(data.targetSocketId).emit('call-incoming', payload);
+        } else if (roomId) {
+            socket.to(roomId).emit('call-incoming', payload);
+        }
+    });
+
+    socket.on('call-accept', (data) => {
+        if (!data || !data.callerSocketId) return;
+        const responderInfo = activeUsersById[socket.id] || { name: 'Friend', avatar: '/icon.svg' };
+        io.to(data.callerSocketId).emit('call-accepted', {
+            responderSocketId: socket.id,
+            responderName: responderInfo.name,
+            responderAvatar: responderInfo.avatar || '/icon.svg',
+            isVideo: !!data.isVideo
+        });
+    });
+
+    socket.on('call-signal', (data) => {
+        if (data && data.to && data.signal) {
+            io.to(data.to).emit('call-signal', {
+                from: socket.id,
+                signal: data.signal
+            });
+        }
+    });
+
+    socket.on('call-reject', (data) => {
+        const payload = { from: socket.id, reason: data?.reason || 'declined' };
+        if (data && data.to) {
+            io.to(data.to).emit('call-rejected', payload);
+        } else if (data && data.roomId) {
+            socket.to(data.roomId).emit('call-rejected', payload);
+        }
+    });
+
+    socket.on('call-end', (data) => {
+        const payload = { from: socket.id };
+        if (data && data.to) {
+            io.to(data.to).emit('call-ended', payload);
+        } else if (data && data.roomId) {
+            socket.to(data.roomId).emit('call-ended', payload);
+        }
+    });
+
     socket.on('disconnect', () => {
         const userData = activeUsersById[socket.id];
         if (userData) {
@@ -1528,6 +1743,7 @@ io.on('connection', (socket) => {
             if (userData.roomId) {
                 io.to(userData.roomId).emit('room users', getUsersInRoom(userData.roomId));
                 io.to(userData.roomId).emit('user typing', { name: userData.name, isTyping: false });
+                socket.to(userData.roomId).emit('call-ended', { from: socket.id });
             }
         }
         delete activeUsersById[socket.id];

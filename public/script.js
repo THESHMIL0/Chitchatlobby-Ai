@@ -315,6 +315,7 @@ function lockApp(autoBiometric = true) {
 function unlockAppSuccess() {
     isAppLockedSession = false;
     try { hapticFeedback('heavy'); } catch(e) {}
+    try { playUiSound('unlock'); } catch(e) {}
     if (appLockSubtitle) {
         appLockSubtitle.textContent = 'Unlocked! Welcome back ✨';
         appLockSubtitle.classList.remove('error');
@@ -341,6 +342,7 @@ function handleLockKeypress(key) {
         if (enteredPasscode.length < 4) {
             enteredPasscode += key;
             try { hapticFeedback('light'); } catch(e) {}
+            try { playUiSound('tap'); } catch(e) {}
             renderPasscodeDots(passcodeDotsBox, enteredPasscode.length);
             if (enteredPasscode.length === 4) {
                 checkEnteredPasscode();
@@ -353,6 +355,8 @@ function handleLockBackspace() {
     if (isVerifyingLock) return;
     if (enteredPasscode.length > 0) {
         enteredPasscode = enteredPasscode.slice(0, -1);
+        try { hapticFeedback('light'); } catch(e) {}
+        try { playUiSound('tap'); } catch(e) {}
         try { hapticFeedback('light'); } catch(e) {}
         renderPasscodeDots(passcodeDotsBox, enteredPasscode.length);
     }
@@ -2216,58 +2220,143 @@ function playUiSound(type = 'send') {
     if (toggleSoundEffects && !toggleSoundEffects.checked) return;
     try {
         if (!audioCtx) {
-            const AudioContext = window.AudioContext || window.webkitAudioContext;
-            if (AudioContext) audioCtx = new AudioContext();
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            if (AudioContextClass) audioCtx = new AudioContextClass();
         }
         if (audioCtx && audioCtx.state === 'suspended') {
             audioCtx.resume();
         }
         if (!audioCtx) return;
 
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-
         const now = audioCtx.currentTime;
+
         if (type === 'send') {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
             osc.type = 'sine';
-            osc.frequency.setValueAtTime(520, now);
-            osc.frequency.exponentialRampToValueAtTime(880, now + 0.12);
+            osc.frequency.setValueAtTime(480, now);
+            osc.frequency.exponentialRampToValueAtTime(920, now + 0.12);
             gain.gain.setValueAtTime(0.12, now);
-            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
             osc.start(now);
             osc.stop(now + 0.12);
         } else if (type === 'receive') {
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(750, now);
-            osc.frequency.setValueAtTime(1020, now + 0.08);
-            gain.gain.setValueAtTime(0.1, now);
-            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
-            osc.start(now);
-            osc.stop(now + 0.18);
+            const osc1 = audioCtx.createOscillator();
+            const osc2 = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc1.connect(gain);
+            osc2.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc1.type = 'sine';
+            osc2.type = 'sine';
+            osc1.frequency.setValueAtTime(784, now);
+            osc1.frequency.setValueAtTime(1046.5, now + 0.08);
+            osc2.frequency.setValueAtTime(1174.66, now + 0.04);
+            gain.gain.setValueAtTime(0.09, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+            osc1.start(now);
+            osc2.start(now);
+            osc1.stop(now + 0.22);
+            osc2.stop(now + 0.22);
         } else if (type === 'pop') {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
             osc.type = 'triangle';
-            osc.frequency.setValueAtTime(600, now);
-            osc.frequency.exponentialRampToValueAtTime(300, now + 0.06);
-            gain.gain.setValueAtTime(0.1, now);
-            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.06);
+            osc.frequency.setValueAtTime(640, now);
+            osc.frequency.exponentialRampToValueAtTime(320, now + 0.07);
+            gain.gain.setValueAtTime(0.11, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
             osc.start(now);
-            osc.stop(now + 0.06);
+            osc.stop(now + 0.07);
         } else if (type === 'celebrate') {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
             osc.type = 'sine';
             osc.frequency.setValueAtTime(523.25, now);
-            osc.frequency.setValueAtTime(659.25, now + 0.08);
-            osc.frequency.setValueAtTime(783.99, now + 0.16);
-            osc.frequency.setValueAtTime(1046.50, now + 0.24);
+            osc.frequency.setValueAtTime(659.25, now + 0.07);
+            osc.frequency.setValueAtTime(783.99, now + 0.14);
+            osc.frequency.setValueAtTime(1046.50, now + 0.21);
             gain.gain.setValueAtTime(0.12, now);
-            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.36);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
             osc.start(now);
-            osc.stop(now + 0.36);
+            osc.stop(now + 0.35);
+        } else if (type === 'unlock') {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, now);
+            osc.frequency.exponentialRampToValueAtTime(1318.5, now + 0.15);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+            osc.start(now);
+            osc.stop(now + 0.2);
+        } else if (type === 'callRing') {
+            const osc1 = audioCtx.createOscillator();
+            const osc2 = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc1.connect(gain);
+            osc2.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc1.type = 'sine';
+            osc2.type = 'sine';
+            osc1.frequency.setValueAtTime(698.46, now);
+            osc1.frequency.setValueAtTime(880, now + 0.14);
+            osc2.frequency.setValueAtTime(880, now);
+            osc2.frequency.setValueAtTime(1046.5, now + 0.14);
+            gain.gain.setValueAtTime(0.08, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
+            osc1.start(now);
+            osc2.start(now);
+            osc1.stop(now + 0.32);
+            osc2.stop(now + 0.32);
+        } else if (type === 'callEnd') {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, now);
+            osc.frequency.exponentialRampToValueAtTime(440, now + 0.24);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+            osc.start(now);
+            osc.stop(now + 0.25);
+        } else if (type === 'tap') {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(800, now);
+            gain.gain.setValueAtTime(0.03, now);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.015);
+            osc.start(now);
+            osc.stop(now + 0.015);
         }
     } catch (e) {
         // audio fail safe
     }
+}
+
+const btnTestSound = document.getElementById('btn-test-sound');
+if (btnTestSound) {
+    let testSoundIdx = 0;
+    const testSounds = ['receive', 'celebrate', 'pop', 'unlock'];
+    btnTestSound.onclick = () => {
+        const soundType = testSounds[testSoundIdx % testSounds.length];
+        testSoundIdx++;
+        playUiSound(soundType);
+        hapticFeedback('light');
+        showToast(`🎶 Sound effect test: "${soundType}"!`);
+    };
 }
 
 function checkEmptyMessages() {
@@ -2521,41 +2610,154 @@ if (btnResetWallpaper) {
     };
 }
 
-const btnOpenSearch = document.getElementById('btn-open-search');
+let searchMatches = [];
+let currentSearchMatchIndex = -1;
+
+function clearChatSearchHighlights() {
+    document.querySelectorAll('#messages li').forEach(li => {
+        li.classList.remove('search-target-glow');
+        const txtNode = li.querySelector('.message-text');
+        if (txtNode) {
+            const marks = txtNode.querySelectorAll('.search-match');
+            marks.forEach(m => {
+                const parent = m.parentNode;
+                while (m.firstChild) parent.insertBefore(m.firstChild, m);
+                parent.removeChild(m);
+            });
+            if (txtNode.normalize) txtNode.normalize();
+        }
+    });
+    searchMatches = [];
+    currentSearchMatchIndex = -1;
+    const countBadge = document.getElementById('chat-search-count');
+    const prevBtn = document.getElementById('search-prev-btn');
+    const nextBtn = document.getElementById('search-next-btn');
+    if (countBadge) countBadge.classList.add('hidden');
+    if (prevBtn) prevBtn.disabled = true;
+    if (nextBtn) nextBtn.disabled = true;
+}
+
+function updateSearchHighlightIndex(idx) {
+    if (searchMatches.length === 0 || idx < 0 || idx >= searchMatches.length) return;
+    currentSearchMatchIndex = idx;
+
+    document.querySelectorAll('.active-search-match').forEach(el => el.classList.remove('active-search-match'));
+    document.querySelectorAll('.search-target-glow').forEach(el => el.classList.remove('search-target-glow'));
+
+    const activeItem = searchMatches[currentSearchMatchIndex];
+    if (activeItem) {
+        const mark = activeItem.querySelector('.search-match');
+        if (mark) mark.classList.add('active-search-match');
+        activeItem.classList.add('search-target-glow');
+        activeItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    const countBadge = document.getElementById('chat-search-count');
+    if (countBadge) {
+        countBadge.textContent = `${currentSearchMatchIndex + 1} of ${searchMatches.length}`;
+        countBadge.classList.remove('hidden');
+    }
+}
+
+function performChatSearch(query) {
+    const countBadge = document.getElementById('chat-search-count');
+    const prevBtn = document.getElementById('search-prev-btn');
+    const nextBtn = document.getElementById('search-next-btn');
+
+    clearChatSearchHighlights();
+    const cleanQuery = (query || '').trim().toLowerCase();
+    if (!cleanQuery) return;
+
+    const messageList = document.querySelectorAll('#messages li:not(.system-message)');
+    const regex = new RegExp(`(${cleanQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+
+    messageList.forEach(li => {
+        const textNode = li.querySelector('.message-text');
+        if (!textNode) return;
+        const text = textNode.textContent;
+        if (text.toLowerCase().includes(cleanQuery)) {
+            textNode.innerHTML = escapeHTML(text).replace(regex, `<mark class="search-match">$1</mark>`);
+            searchMatches.push(li);
+        }
+    });
+
+    if (searchMatches.length > 0) {
+        if (prevBtn) prevBtn.disabled = false;
+        if (nextBtn) nextBtn.disabled = false;
+        updateSearchHighlightIndex(searchMatches.length - 1);
+    } else {
+        if (countBadge) {
+            countBadge.textContent = '0 of 0';
+            countBadge.classList.remove('hidden');
+        }
+        if (prevBtn) prevBtn.disabled = true;
+        if (nextBtn) nextBtn.disabled = true;
+    }
+}
+
 if (btnOpenSearch) {
     btnOpenSearch.onclick = () => { 
         if (groupInfoModal) groupInfoModal.classList.add('hidden'); 
         if (chatSearchContainer) chatSearchContainer.classList.remove('hidden'); 
-        if (chatSearchInput) chatSearchInput.focus(); 
+        if (chatSearchInput) {
+            chatSearchInput.focus();
+            if (chatSearchInput.value) performChatSearch(chatSearchInput.value);
+        }
     };
 }
 
-const closeSearchBtn = document.getElementById('close-search-btn');
 if (closeSearchBtn) {
     closeSearchBtn.onclick = () => { 
         if (chatSearchContainer) chatSearchContainer.classList.add('hidden'); 
         if (chatSearchInput) chatSearchInput.value = ''; 
-        document.querySelectorAll('#messages li').forEach(li => { 
-            li.style.display = 'flex'; 
-            const txtNode = li.querySelector('.message-text'); 
-            if(txtNode) txtNode.innerHTML = txtNode.innerHTML.replace(/<span class="highlight">(.*?)<\/span>/g, '$1'); 
-        }); 
+        clearChatSearchHighlights();
     };
 }
 
 if (chatSearchInput) {
+    let searchDebounceTimer = null;
     chatSearchInput.addEventListener('input', (e) => {
-        const query = e.target.value.toLowerCase();
-        document.querySelectorAll('#messages li').forEach(li => {
-            if(li.classList.contains('system-message')) { li.style.display = query ? 'none' : 'flex'; return; }
-            const textNode = li.querySelector('.message-text');
-            if(!textNode) return; 
-            let rawText = textNode.textContent.replace('(edited)', '').trim();
-            if (query === '') { li.style.display = 'flex'; textNode.innerHTML = escapeHTML(rawText) + (li.innerHTML.includes('(edited)') ? `<span class="edited-tag">(edited)</span>` : '');
-            } else if (rawText.toLowerCase().includes(query)) { li.style.display = 'flex'; const regex = new RegExp(`(${query})`, "gi"); textNode.innerHTML = escapeHTML(rawText).replace(regex, `<span class="highlight">$1</span>`) + (li.innerHTML.includes('(edited)') ? `<span class="edited-tag">(edited)</span>` : '');
-            } else { li.style.display = 'none'; }
-        });
+        clearTimeout(searchDebounceTimer);
+        searchDebounceTimer = setTimeout(() => {
+            performChatSearch(e.target.value);
+        }, 150);
     });
+
+    chatSearchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            if (searchMatches.length === 0) return;
+            if (e.shiftKey) {
+                const newIdx = (currentSearchMatchIndex - 1 + searchMatches.length) % searchMatches.length;
+                updateSearchHighlightIndex(newIdx);
+            } else {
+                const newIdx = (currentSearchMatchIndex + 1) % searchMatches.length;
+                updateSearchHighlightIndex(newIdx);
+            }
+        } else if (e.key === 'Escape') {
+            if (closeSearchBtn) closeSearchBtn.click();
+        }
+    });
+}
+
+const searchPrevBtn = document.getElementById('search-prev-btn');
+if (searchPrevBtn) {
+    searchPrevBtn.onclick = () => {
+        if (searchMatches.length === 0) return;
+        hapticFeedback('light');
+        const newIdx = (currentSearchMatchIndex - 1 + searchMatches.length) % searchMatches.length;
+        updateSearchHighlightIndex(newIdx);
+    };
+}
+
+const searchNextBtn = document.getElementById('search-next-btn');
+if (searchNextBtn) {
+    searchNextBtn.onclick = () => {
+        if (searchMatches.length === 0) return;
+        hapticFeedback('light');
+        const newIdx = (currentSearchMatchIndex + 1) % searchMatches.length;
+        updateSearchHighlightIndex(newIdx);
+    };
 }
 
 if (ghostBtn) {
@@ -4144,6 +4346,11 @@ function displayMessage(data, isHistory) {
     li.innerHTML = getMessageInnerHTML(data, isMe, isStacked);
     messages.appendChild(li); messages.scrollTop = messages.scrollHeight;
 
+    // Automatic Rich Link Preview for URLs
+    if (data && data.text && !data.linkPreview && !data.uploadedImage && !data.isAudio && !data.isVideo) {
+        attachAutoLinkPreview(li, data.text);
+    }
+
     if (!isMe && !isHistory) {
         playUiSound('receive');
     }
@@ -5026,3 +5233,664 @@ if (toggleReadReceipts) {
         if (readReceiptsEnabled) emitMarkRead();
     });
 }
+
+// ==========================================
+// 🔗 Rich Link Previews Client Engine
+// ==========================================
+const clientLinkPreviewCache = new Map();
+
+function extractUrlFromText(text) {
+    if (!text || typeof text !== 'string') return null;
+    const urlPattern = /(https?:\/\/[^\s<]+)/i;
+    const match = text.match(urlPattern);
+    return match ? match[0] : null;
+}
+
+async function attachAutoLinkPreview(messageLi, text) {
+    const targetUrl = extractUrlFromText(text);
+    if (!targetUrl) return;
+
+    try {
+        let preview = clientLinkPreviewCache.get(targetUrl);
+        if (!preview) {
+            const resp = await fetch(`/api/link-preview?url=${encodeURIComponent(targetUrl)}`);
+            if (!resp.ok) return;
+            preview = await resp.json();
+            if (preview && preview.success) {
+                clientLinkPreviewCache.set(targetUrl, preview);
+            }
+        }
+
+        if (!preview || !preview.success || (!preview.title && !preview.image)) return;
+        if (!messageLi || !messageLi.isConnected || messageLi.querySelector('.link-preview-card')) return;
+
+        const card = document.createElement('a');
+        card.className = 'link-preview-card';
+        card.href = preview.url;
+        card.target = '_blank';
+        card.rel = 'noopener noreferrer';
+
+        let imgHTML = '';
+        if (preview.image) {
+            imgHTML = `
+                <div class="link-preview-img-wrap">
+                    <img src="${escapeHTML(preview.image)}" class="link-preview-img" alt="${escapeHTML(preview.title || 'Preview')}" loading="lazy">
+                </div>
+            `;
+        }
+
+        card.innerHTML = `
+            ${imgHTML}
+            <div class="link-preview-info">
+                <span class="link-preview-domain">${escapeHTML(preview.domain || '')}</span>
+                <h4 class="link-preview-title">${escapeHTML(preview.title || preview.domain || 'Link')}</h4>
+                ${preview.description ? `<p class="link-preview-desc">${escapeHTML(preview.description)}</p>` : ''}
+            </div>
+        `;
+
+        const bubble = messageLi.querySelector('.message-bubble') || messageLi;
+        bubble.appendChild(card);
+    } catch (e) {
+        // fail safe
+    }
+}
+
+// ==========================================
+// 🗄️ Media, Files & Links Vault
+// ==========================================
+const mediaVaultModal = document.getElementById('media-vault-modal');
+const btnOpenMediaVault = document.getElementById('btn-open-media-vault');
+const closeMediaVaultBtn = document.getElementById('close-media-vault-btn');
+const vaultRoomLabel = document.getElementById('vault-room-label');
+
+const tabVaultMedia = document.getElementById('tab-vault-media');
+const tabVaultAudio = document.getElementById('tab-vault-audio');
+const tabVaultLinks = document.getElementById('tab-vault-links');
+
+const vaultPaneMedia = document.getElementById('vault-pane-media');
+const vaultPaneAudio = document.getElementById('vault-pane-audio');
+const vaultPaneLinks = document.getElementById('vault-pane-links');
+
+const vaultMediaGrid = document.getElementById('vault-media-grid');
+const vaultMediaEmpty = document.getElementById('vault-media-empty');
+const vaultAudioList = document.getElementById('vault-audio-list');
+const vaultAudioEmpty = document.getElementById('vault-audio-empty');
+const vaultLinksList = document.getElementById('vault-links-list');
+const vaultLinksEmpty = document.getElementById('vault-links-empty');
+
+function switchVaultTab(tabName) {
+    [tabVaultMedia, tabVaultAudio, tabVaultLinks].forEach(btn => {
+        if (btn) btn.classList.toggle('active', btn.dataset.tab === tabName);
+    });
+    if (vaultPaneMedia) vaultPaneMedia.classList.toggle('hidden', tabName !== 'media');
+    if (vaultPaneAudio) vaultPaneAudio.classList.toggle('hidden', tabName !== 'audio');
+    if (vaultPaneLinks) vaultPaneLinks.classList.toggle('hidden', tabName !== 'links');
+}
+
+if (tabVaultMedia) tabVaultMedia.onclick = () => switchVaultTab('media');
+if (tabVaultAudio) tabVaultAudio.onclick = () => switchVaultTab('audio');
+if (tabVaultLinks) tabVaultLinks.onclick = () => switchVaultTab('links');
+
+function populateMediaVault() {
+    if (vaultRoomLabel) {
+        const roomName = (currentRoomName && currentRoomName.textContent) ? currentRoomName.textContent : 'This Room';
+        vaultRoomLabel.textContent = `Shared in ${roomName}`;
+    }
+
+    if (vaultMediaGrid) vaultMediaGrid.innerHTML = '';
+    if (vaultAudioList) vaultAudioList.innerHTML = '';
+    if (vaultLinksList) vaultLinksList.innerHTML = '';
+
+    const messageEls = document.querySelectorAll('#messages li:not(.system-message)');
+    let mediaCount = 0;
+    let audioCount = 0;
+    let linkCount = 0;
+
+    messageEls.forEach(li => {
+        const sender = li.dataset.sender || 'Friend';
+        const timeEl = li.querySelector('.message-time');
+        const timeStr = timeEl ? timeEl.textContent : '';
+
+        // 1. Photos
+        const imgEl = li.querySelector('.chat-image');
+        if (imgEl && imgEl.src) {
+            mediaCount++;
+            const thumb = document.createElement('div');
+            thumb.className = 'vault-media-thumb';
+            thumb.innerHTML = `<img src="${escapeHTML(imgEl.src)}" alt="Shared Photo" loading="lazy">`;
+            thumb.onclick = () => {
+                openLightboxModal(imgEl.src);
+            };
+            vaultMediaGrid.appendChild(thumb);
+        }
+
+        // 2. Audio / Voice Notes
+        const audioPlayer = li.querySelector('.custom-audio-player');
+        if (audioPlayer) {
+            const audioSrc = audioPlayer.dataset.audioSrc;
+            if (audioSrc) {
+                audioCount++;
+                const row = document.createElement('div');
+                row.className = 'vault-item-row';
+                row.innerHTML = `
+                    <div class="vault-item-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                    </div>
+                    <div class="vault-item-info">
+                        <span class="vault-item-title">${escapeHTML(sender)}</span>
+                        <span class="vault-item-sub">Voice Note • ${escapeHTML(timeStr)}</span>
+                    </div>
+                    <audio controls src="${escapeHTML(audioSrc)}" preload="none"></audio>
+                `;
+                vaultAudioList.appendChild(row);
+            }
+        }
+
+        // 3. Links
+        const textNode = li.querySelector('.message-text');
+        if (textNode) {
+            const rawText = textNode.textContent || '';
+            const foundUrl = extractUrlFromText(rawText);
+            if (foundUrl) {
+                linkCount++;
+                let parsedDomain = foundUrl;
+                try {
+                    parsedDomain = new URL(foundUrl).hostname.replace(/^www\./, '');
+                } catch(e) {}
+
+                const row = document.createElement('div');
+                row.className = 'vault-item-row';
+                row.innerHTML = `
+                    <div class="vault-item-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                    </div>
+                    <div class="vault-item-info">
+                        <span class="vault-item-title">${escapeHTML(parsedDomain)}</span>
+                        <span class="vault-item-sub">${escapeHTML(foundUrl.substring(0, 50))}...</span>
+                    </div>
+                    <a href="${escapeHTML(foundUrl)}" target="_blank" rel="noopener noreferrer" class="icon-btn" title="Open Link" aria-label="Open Link">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+                    </a>
+                `;
+                vaultLinksList.appendChild(row);
+            }
+        }
+    });
+
+    if (vaultMediaEmpty) vaultMediaEmpty.classList.toggle('hidden', mediaCount > 0);
+    if (vaultAudioEmpty) vaultAudioEmpty.classList.toggle('hidden', audioCount > 0);
+    if (vaultLinksEmpty) vaultLinksEmpty.classList.toggle('hidden', linkCount > 0);
+}
+
+if (btnOpenMediaVault) {
+    btnOpenMediaVault.onclick = () => {
+        if (groupInfoModal) groupInfoModal.classList.add('hidden');
+        populateMediaVault();
+        switchVaultTab('media');
+        if (mediaVaultModal) mediaVaultModal.classList.remove('hidden');
+    };
+}
+
+if (closeMediaVaultBtn) {
+    closeMediaVaultBtn.onclick = () => {
+        if (mediaVaultModal) mediaVaultModal.classList.add('hidden');
+    };
+}
+
+// Lightbox Modal
+const lightboxCloseBtn = document.getElementById('lightbox-close-btn');
+const lightboxDownloadBtn = document.getElementById('lightbox-download-btn');
+
+function openLightboxModal(src) {
+    if (!lightbox || !lightboxImg) return;
+    lightboxImg.src = src;
+    if (lightboxDownloadBtn) lightboxDownloadBtn.href = src;
+    lightbox.classList.remove('hidden');
+}
+
+if (lightboxCloseBtn) {
+    lightboxCloseBtn.onclick = (e) => {
+        e.stopPropagation();
+        closeLightbox();
+    };
+}
+
+// Also wire chat images to open in lightbox
+document.getElementById('messages').addEventListener('click', (e) => {
+    const chatImg = e.target.closest('.chat-image');
+    if (chatImg && chatImg.src) {
+        e.stopPropagation();
+        openLightboxModal(chatImg.src);
+    }
+});
+
+// ==========================================
+// 📞 WebRTC 1-on-1 Voice & Video Calling
+// ==========================================
+let rtcPeerConn = null;
+let rtcLocalStream = null;
+let activeCallPeerSocketId = null;
+let isActiveCallVideo = false;
+let callDurationInterval = null;
+let callElapsedSeconds = 0;
+let ringtoneInterval = null;
+
+const rtcConfiguration = {
+    iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' }
+    ]
+};
+
+// UI Elements
+const btnCallVoice = document.getElementById('btn-call-voice');
+const btnCallVideo = document.getElementById('btn-call-video');
+
+const outgoingCallModal = document.getElementById('outgoing-call-modal');
+const outgoingCallerName = document.getElementById('outgoing-caller-name');
+const outgoingCallerAvatar = document.getElementById('outgoing-caller-avatar');
+const outgoingCallStatus = document.getElementById('outgoing-call-status');
+const btnCancelOutgoingCall = document.getElementById('btn-cancel-outgoing-call');
+
+const incomingCallModal = document.getElementById('incoming-call-modal');
+const incomingCallerName = document.getElementById('incoming-caller-name');
+const incomingCallerAvatar = document.getElementById('incoming-caller-avatar');
+const incomingCallType = document.getElementById('incoming-call-type');
+const btnAcceptCall = document.getElementById('btn-accept-call');
+const btnRejectCall = document.getElementById('btn-reject-call');
+
+const activeCallModal = document.getElementById('active-call-modal');
+const callPeerName = document.getElementById('call-peer-name');
+const callPeerAvatar = document.getElementById('call-peer-avatar');
+const callDurationTimer = document.getElementById('call-duration-timer');
+const callConnectionState = document.getElementById('call-connection-state');
+const callRemoteVideo = document.getElementById('call-remote-video');
+const callRemoteAudio = document.getElementById('call-remote-audio');
+const callVoicePlaceholder = document.getElementById('call-voice-placeholder');
+const callLocalPip = document.getElementById('call-local-pip');
+const callLocalVideo = document.getElementById('call-local-video');
+
+const btnCallMuteMic = document.getElementById('btn-call-mute-mic');
+const btnCallToggleCam = document.getElementById('btn-call-toggle-cam');
+const btnCallSwitchCam = document.getElementById('btn-call-switch-cam');
+const btnCallHangup = document.getElementById('btn-call-hangup');
+const btnMinimizeCall = document.getElementById('btn-minimize-call');
+
+let isMicMuted = false;
+let isCamOff = false;
+let currentFacingMode = 'user';
+
+function startRingtoneLoop() {
+    stopRingtoneLoop();
+    playUiSound('callRing');
+    ringtoneInterval = setInterval(() => {
+        playUiSound('callRing');
+    }, 2800);
+}
+
+function stopRingtoneLoop() {
+    if (ringtoneInterval) {
+        clearInterval(ringtoneInterval);
+        ringtoneInterval = null;
+    }
+}
+
+function startCallTimer() {
+    stopCallTimer();
+    callElapsedSeconds = 0;
+    if (callDurationTimer) callDurationTimer.textContent = '00:00';
+    callDurationInterval = setInterval(() => {
+        callElapsedSeconds++;
+        const mins = String(Math.floor(callElapsedSeconds / 60)).padStart(2, '0');
+        const secs = String(callElapsedSeconds % 60).padStart(2, '0');
+        if (callDurationTimer) callDurationTimer.textContent = `${mins}:${secs}`;
+    }, 1000);
+}
+
+function stopCallTimer() {
+    if (callDurationInterval) {
+        clearInterval(callDurationInterval);
+        callDurationInterval = null;
+    }
+}
+
+function endAndResetCall(playedSound = true) {
+    stopRingtoneLoop();
+    stopCallTimer();
+
+    if (rtcPeerConn) {
+        try { rtcPeerConn.close(); } catch(e) {}
+        rtcPeerConn = null;
+    }
+
+    if (rtcLocalStream) {
+        try {
+            rtcLocalStream.getTracks().forEach(t => t.stop());
+        } catch(e) {}
+        rtcLocalStream = null;
+    }
+
+    if (callRemoteVideo) callRemoteVideo.srcObject = null;
+    if (callRemoteAudio) callRemoteAudio.srcObject = null;
+    if (callLocalVideo) callLocalVideo.srcObject = null;
+
+    if (outgoingCallModal) outgoingCallModal.classList.add('hidden');
+    if (incomingCallModal) incomingCallModal.classList.add('hidden');
+    if (activeCallModal) activeCallModal.classList.add('hidden');
+
+    activeCallPeerSocketId = null;
+    isMicMuted = false;
+    isCamOff = false;
+    if (btnCallMuteMic) btnCallMuteMic.classList.remove('active-off');
+    if (btnCallToggleCam) btnCallToggleCam.classList.remove('active-off');
+
+    if (playedSound) {
+        try { playUiSound('callEnd'); } catch(e) {}
+    }
+}
+
+async function initiateWebRtcCall(isVideo = false) {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        showToast('⚠️ Audio/Video calling is not supported in this browser.');
+        return;
+    }
+
+    try {
+        rtcLocalStream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+            video: isVideo ? { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } : false
+        });
+    } catch (err) {
+        showToast('⚠️ Microphone/Camera permission denied or device busy.');
+        return;
+    }
+
+    isActiveCallVideo = isVideo;
+    const roomDisplayName = (currentRoomName && currentRoomName.textContent) ? currentRoomName.textContent : 'Room';
+    if (outgoingCallerName) outgoingCallerName.textContent = roomDisplayName;
+    if (outgoingCallStatus) outgoingCallStatus.textContent = isVideo ? 'Calling... (Video)' : 'Calling... (Voice)';
+    if (outgoingCallModal) outgoingCallModal.classList.remove('hidden');
+
+    startRingtoneLoop();
+
+    socket.emit('call-user', {
+        roomId: activeRoomId,
+        isVideo: isVideo
+    });
+}
+
+if (btnCallVoice) {
+    btnCallVoice.onclick = () => {
+        hapticFeedback('medium');
+        initiateWebRtcCall(false);
+    };
+}
+
+if (btnCallVideo) {
+    btnCallVideo.onclick = () => {
+        hapticFeedback('medium');
+        initiateWebRtcCall(true);
+    };
+}
+
+if (btnCancelOutgoingCall) {
+    btnCancelOutgoingCall.onclick = () => {
+        socket.emit('call-reject', { to: activeCallPeerSocketId, roomId: activeRoomId, reason: 'cancelled' });
+        endAndResetCall(true);
+        showToast('Call cancelled');
+    };
+}
+
+// Socket: Incoming Call received
+socket.on('call-incoming', (data) => {
+    if (rtcPeerConn || (activeCallModal && !activeCallModal.classList.contains('hidden'))) {
+        socket.emit('call-reject', { to: data.callerSocketId, reason: 'busy' });
+        return;
+    }
+
+    activeCallPeerSocketId = data.callerSocketId;
+    isActiveCallVideo = !!data.isVideo;
+
+    if (incomingCallerName) incomingCallerName.textContent = data.callerName || 'Friend';
+    if (incomingCallerAvatar && data.callerAvatar) incomingCallerAvatar.src = data.callerAvatar;
+    if (incomingCallType) incomingCallType.textContent = data.isVideo ? 'Incoming Video Call...' : 'Incoming Voice Call...';
+    if (incomingCallModal) incomingCallModal.classList.remove('hidden');
+
+    startRingtoneLoop();
+});
+
+// Socket: Call Rejected / Busy / Cancelled
+socket.on('call-rejected', (data) => {
+    stopRingtoneLoop();
+    endAndResetCall(true);
+    showToast(data && data.reason === 'busy' ? 'User is busy in another call' : 'Call declined');
+});
+
+// Socket: Call Ended
+socket.on('call-ended', () => {
+    endAndResetCall(true);
+    showToast('Call ended');
+});
+
+if (btnRejectCall) {
+    btnRejectCall.onclick = () => {
+        if (activeCallPeerSocketId) {
+            socket.emit('call-reject', { to: activeCallPeerSocketId, reason: 'declined' });
+        }
+        endAndResetCall(true);
+    };
+}
+
+function setupPeerConnectionEvents(targetSocketId) {
+    rtcPeerConn = new RTCPeerConnection(rtcConfiguration);
+
+    rtcPeerConn.onicecandidate = (event) => {
+        if (event.candidate && activeCallPeerSocketId) {
+            socket.emit('call-signal', {
+                to: activeCallPeerSocketId,
+                signal: { type: 'candidate', candidate: event.candidate }
+            });
+        }
+    };
+
+    rtcPeerConn.ontrack = (event) => {
+        if (event.streams && event.streams[0]) {
+            const stream = event.streams[0];
+            if (isActiveCallVideo) {
+                if (callRemoteVideo) {
+                    callRemoteVideo.srcObject = stream;
+                    callRemoteVideo.classList.remove('hidden');
+                }
+                if (callVoicePlaceholder) callVoicePlaceholder.classList.add('hidden');
+            } else {
+                if (callRemoteAudio) callRemoteAudio.srcObject = stream;
+                if (callVoicePlaceholder) callVoicePlaceholder.classList.remove('hidden');
+                if (callRemoteVideo) callRemoteVideo.classList.add('hidden');
+            }
+            if (callConnectionState) callConnectionState.textContent = 'Connected • High Quality P2P';
+        }
+    };
+
+    rtcPeerConn.onconnectionstatechange = () => {
+        if (!rtcPeerConn) return;
+        if (callConnectionState) {
+            if (rtcPeerConn.connectionState === 'connected') {
+                callConnectionState.textContent = 'Connected • High Quality P2P';
+            } else if (rtcPeerConn.connectionState === 'disconnected' || rtcPeerConn.connectionState === 'failed') {
+                endAndResetCall(true);
+            }
+        }
+    };
+
+    if (rtcLocalStream) {
+        rtcLocalStream.getTracks().forEach(track => {
+            rtcPeerConn.addTrack(track, rtcLocalStream);
+        });
+    }
+}
+
+if (btnAcceptCall) {
+    btnAcceptCall.onclick = async () => {
+        stopRingtoneLoop();
+        if (incomingCallModal) incomingCallModal.classList.add('hidden');
+
+        try {
+            rtcLocalStream = await navigator.mediaDevices.getUserMedia({
+                audio: true,
+                video: isActiveCallVideo ? { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } : false
+            });
+        } catch (e) {
+            showToast('⚠️ Could not open microphone/camera');
+            socket.emit('call-reject', { to: activeCallPeerSocketId, reason: 'device-error' });
+            endAndResetCall(true);
+            return;
+        }
+
+        openActiveCallView();
+        setupPeerConnectionEvents(activeCallPeerSocketId);
+
+        socket.emit('call-accept', {
+            callerSocketId: activeCallPeerSocketId,
+            roomId: activeRoomId,
+            isVideo: isActiveCallVideo
+        });
+    };
+}
+
+socket.on('call-accepted', async (data) => {
+    stopRingtoneLoop();
+    if (outgoingCallModal) outgoingCallModal.classList.add('hidden');
+    activeCallPeerSocketId = data.responderSocketId;
+
+    openActiveCallView();
+    setupPeerConnectionEvents(activeCallPeerSocketId);
+
+    try {
+        const offer = await rtcPeerConn.createOffer();
+        await rtcPeerConn.setLocalDescription(offer);
+        socket.emit('call-signal', {
+            to: activeCallPeerSocketId,
+            signal: { type: 'offer', sdp: offer }
+        });
+    } catch(err) {
+        console.error('WebRTC offer error:', err);
+    }
+});
+
+socket.on('call-signal', async (data) => {
+    if (!rtcPeerConn || !data.signal) return;
+
+    try {
+        if (data.signal.type === 'offer') {
+            await rtcPeerConn.setRemoteDescription(new RTCSessionDescription(data.signal.sdp));
+            const answer = await rtcPeerConn.createAnswer();
+            await rtcPeerConn.setLocalDescription(answer);
+            socket.emit('call-signal', {
+                to: data.from,
+                signal: { type: 'answer', sdp: answer }
+            });
+        } else if (data.signal.type === 'answer') {
+            await rtcPeerConn.setRemoteDescription(new RTCSessionDescription(data.signal.sdp));
+        } else if (data.signal.type === 'candidate') {
+            await rtcPeerConn.addIceCandidate(new RTCIceCandidate(data.signal.candidate));
+        }
+    } catch (e) {
+        console.error('WebRTC signal handler error:', e);
+    }
+});
+
+function openActiveCallView() {
+    if (activeCallModal) activeCallModal.classList.remove('hidden');
+    startCallTimer();
+
+    const roomName = (currentRoomName && currentRoomName.textContent) ? currentRoomName.textContent : 'Friend';
+    if (callPeerName) callPeerName.textContent = roomName;
+    if (callConnectionState) callConnectionState.textContent = 'Connecting WebRTC P2P...';
+
+    if (isActiveCallVideo) {
+        if (callVoicePlaceholder) callVoicePlaceholder.classList.add('hidden');
+        if (callRemoteVideo) callRemoteVideo.classList.remove('hidden');
+        if (callLocalPip) callLocalPip.classList.remove('hidden');
+        if (callLocalVideo && rtcLocalStream) callLocalVideo.srcObject = rtcLocalStream;
+        if (btnCallToggleCam) btnCallToggleCam.classList.remove('hidden');
+        if (btnCallSwitchCam) btnCallSwitchCam.classList.remove('hidden');
+    } else {
+        if (callVoicePlaceholder) callVoicePlaceholder.classList.remove('hidden');
+        if (callRemoteVideo) callRemoteVideo.classList.add('hidden');
+        if (callLocalPip) callLocalPip.classList.add('hidden');
+        if (btnCallToggleCam) btnCallToggleCam.classList.add('hidden');
+        if (btnCallSwitchCam) btnCallSwitchCam.classList.add('hidden');
+    }
+}
+
+if (btnCallHangup) {
+    btnCallHangup.onclick = () => {
+        if (activeCallPeerSocketId) {
+            socket.emit('call-end', { to: activeCallPeerSocketId, roomId: activeRoomId });
+        }
+        endAndResetCall(true);
+    };
+}
+
+if (btnMinimizeCall) {
+    btnMinimizeCall.onclick = () => {
+        if (activeCallModal) activeCallModal.classList.add('hidden');
+        showToast('Call running in background 📞');
+    };
+}
+
+if (btnCallMuteMic) {
+    btnCallMuteMic.onclick = () => {
+        if (!rtcLocalStream) return;
+        isMicMuted = !isMicMuted;
+        rtcLocalStream.getAudioTracks().forEach(track => {
+            track.enabled = !isMicMuted;
+        });
+        btnCallMuteMic.classList.toggle('active-off', isMicMuted);
+        hapticFeedback('light');
+        showToast(isMicMuted ? 'Microphone muted 🔇' : 'Microphone unmuted 🎙️');
+    };
+}
+
+if (btnCallToggleCam) {
+    btnCallToggleCam.onclick = () => {
+        if (!rtcLocalStream) return;
+        isCamOff = !isCamOff;
+        rtcLocalStream.getVideoTracks().forEach(track => {
+            track.enabled = !isCamOff;
+        });
+        btnCallToggleCam.classList.toggle('active-off', isCamOff);
+        hapticFeedback('light');
+        showToast(isCamOff ? 'Camera turned off' : 'Camera turned on');
+    };
+}
+
+if (btnCallSwitchCam) {
+    btnCallSwitchCam.onclick = async () => {
+        if (!rtcLocalStream || !isActiveCallVideo) return;
+        currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+        try {
+            const newStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: currentFacingMode }
+            });
+            const newVideoTrack = newStream.getVideoTracks()[0];
+            const oldVideoTrack = rtcLocalStream.getVideoTracks()[0];
+            if (oldVideoTrack) {
+                rtcLocalStream.removeTrack(oldVideoTrack);
+                oldVideoTrack.stop();
+            }
+            rtcLocalStream.addTrack(newVideoTrack);
+            if (callLocalVideo) callLocalVideo.srcObject = rtcLocalStream;
+
+            if (rtcPeerConn) {
+                const sender = rtcPeerConn.getSenders().find(s => s.track && s.track.kind === 'video');
+                if (sender) sender.replaceTrack(newVideoTrack);
+            }
+            hapticFeedback('light');
+            showToast('Camera flipped');
+        } catch(e) {
+            showToast('Unable to flip camera');
+        }
+    };
+}
+
