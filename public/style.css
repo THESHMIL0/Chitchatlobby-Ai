@@ -1603,6 +1603,23 @@ input { -webkit-user-select: auto; user-select: auto; }
     max-width: 100% !important;
     width: 100% !important;
     box-sizing: border-box !important;
+    transition: padding-bottom 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#messages.has-typing,
+#chat-body-container:has(.floating-typing-bubble:not(.hidden)) #messages {
+    padding-bottom: 64px !important;
+}
+
+.visually-hidden-file-input {
+    position: fixed !important;
+    top: -9999px !important;
+    left: -9999px !important;
+    opacity: 0 !important;
+    width: 1px !important;
+    height: 1px !important;
+    pointer-events: none !important;
+    z-index: -999 !important;
 }
 
 #messages::-webkit-scrollbar {
@@ -4249,26 +4266,27 @@ body[data-theme="dark"] .my-message .wave-bar.played {
 /* Floating Animated Typing Indicator Bubble near Messages */
 .floating-typing-bubble {
     position: absolute;
-    bottom: 14px;
-    left: 16px;
+    bottom: 10px;
+    left: 14px;
     z-index: 45;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     background: var(--header-card-bg);
     -webkit-backdrop-filter: blur(16px);
     backdrop-filter: blur(16px);
     border: 1px solid var(--border-color);
-    padding: 7px 14px 7px 9px;
+    padding: 6px 12px 6px 8px;
     border-radius: 20px;
     border-bottom-left-radius: 4px;
-    box-shadow: 0 8px 24px var(--shadow-color);
-    animation: typingPopIn 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, typingFloatPulse 2.8s ease-in-out infinite alternate;
+    box-shadow: 0 4px 16px var(--shadow-color);
+    animation: typingPopIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
     transition: opacity 0.2s ease, transform 0.2s ease;
     cursor: pointer;
     -webkit-user-select: none;
     user-select: none;
     max-width: 85%;
+    pointer-events: auto;
 }
 
 .floating-typing-bubble.hidden {

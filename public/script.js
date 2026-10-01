@@ -2416,9 +2416,16 @@ function updateHeaderSubtitle() {
 
             if (floatingTypingBubble.classList.contains('hidden')) {
                 floatingTypingBubble.classList.remove('hidden');
-                // Scroll down if user is near bottom
-                if (messages && (messages.scrollHeight - messages.scrollTop - messages.clientHeight < 120)) {
-                    messages.scrollTop = messages.scrollHeight;
+                if (messages) {
+                    messages.classList.add('has-typing');
+                    // Scroll down so the last message is placed cleanly above the typing bubble
+                    if (messages.scrollHeight - messages.scrollTop - messages.clientHeight < 180) {
+                        setTimeout(() => { if (messages) messages.scrollTop = messages.scrollHeight; }, 50);
+                    }
+                }
+            } else {
+                if (messages && !messages.classList.contains('has-typing')) {
+                    messages.classList.add('has-typing');
                 }
             }
         }
@@ -2428,6 +2435,9 @@ function updateHeaderSubtitle() {
 
         if (floatingTypingBubble) {
             floatingTypingBubble.classList.add('hidden');
+        }
+        if (messages) {
+            messages.classList.remove('has-typing');
         }
     }
 }
@@ -2987,41 +2997,127 @@ function sendMessage() {
 // ✅ SAFE FILE UPLOAD CHECK
 // ==========================
 if (attachBtn) {
-    attachBtn.onclick = () => { hapticFeedback('light'); if (imageUpload) imageUpload.click(); };
+    attachBtn.addEventListener('click', (e) => {
+        hapticFeedback('light');
+        if (imageUpload && e.target.tagName !== 'LABEL') {
+            imageUpload.click();
+        }
+    });
 }
 
 if (imageUpload) {
     imageUpload.addEventListener('change', function() {
-        if (this.files && this.files[0]) {
-            const file = this.files[0];
-            const targetRoomId = activeRoomId || 'lobby';
-            
-            if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
-                showToast('Unsupported file type!');
+        if (!this.files || !this.files[0]) return;
+        const file = this.files[0];
+        const targetRoomId = activeRoomId || 'lobby';
+        const fileName = file.name || '';
+        const fileType = file.type || '';
+        
+        const isImage = fileType.startsWith('image/') || /\.(jpe?g|png|gif|webp|bmp|heic|heif|svg|avif)$/i.test(fileName);
+        const isVideo = fileType.startsWith('video/') || /\.(mp4|mov|webm|mkv|avi|m4v)$/i.test(fileName);
+
+        if (!isImage && !isVideo) {
+            showToast('Please select a valid photo or video.');
+            this.value = '';
+            return;
+        }
+
+        if (file.size > 25 * 1024 * 1024) {
+            showToast('File is too large! Maximum limit is 25MB.');
+            this.value = '';
+            return;
+        }
+
+        hapticFeedback('medium');
+        const caption = (input && input.value) ? input.value.trim() : '';
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const fileData = e.target.result;
+            if (!fileData) {
+                showToast('Failed to read file.');
+                imageUpload.value = '';
                 return;
             }
 
-            hapticFeedback('heavy'); const reader = new FileReader(); 
-            reader.onload = (e) => {
-                const fileData = e.target.result;
-                if (file.type.startsWith('video/')) {
-                    if (file.size > 20 * 1024 * 1024) return showToast('Video is too large! Limit is 20MB.');
-                    if (socket) socket.emit('chat message', { userId: currentUser.id, user: currentUser.name, avatar: currentUser.avatar, color: currentUser.color, text: '', uploadedImage: fileData, isVideo: true, time: formatTo12HourTime(new Date()), isGhost: isGhostMode, roomId: targetRoomId });
-                } else if (file.type === 'image/gif') {
-                    if (socket) socket.emit('chat message', { userId: currentUser.id, user: currentUser.name, avatar: currentUser.avatar, color: currentUser.color, text: '', uploadedImage: fileData, time: formatTo12HourTime(new Date()), isGhost: isGhostMode, roomId: targetRoomId });
-                } else {
-                    const img = new Image(); img.src = fileData;
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas'); let w = img.width, h = img.height;
-                        if(w > 600) { h *= 600/w; w = 600; } canvas.width = w; canvas.height = h;
-                        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                        if (socket) socket.emit('chat message', { userId: currentUser.id, user: currentUser.name, avatar: currentUser.avatar, color: currentUser.color, text: '', uploadedImage: canvas.toDataURL('image/jpeg', 0.8), time: formatTo12HourTime(new Date()), isGhost: isGhostMode, roomId: targetRoomId });
-                    };
+            const sendPayload = (payloadImage, isVid = false) => {
+                if (!socket) {
+                    showToast('Connection error, please try again.');
+                    return;
                 }
-                imageUpload.value = '';
-            }; 
-            reader.readAsDataURL(file);
-        }
+                const msgData = {
+                    userId: currentUser.id,
+                    user: currentUser.name,
+                    avatar: currentUser.avatar,
+                    color: currentUser.color,
+                    text: caption,
+                    uploadedImage: payloadImage,
+                    isVideo: isVid,
+                    time: formatTo12HourTime(new Date()),
+                    isGhost: isGhostMode,
+                    roomId: targetRoomId
+                };
+                socket.emit('chat message', msgData);
+                playUiSound('send');
+                if (input && caption) {
+                    input.value = '';
+                    setSendBtnState('mic');
+                }
+                showToast(isVid ? 'Video sent' : 'Photo sent', { icon: isVid ? '🎥' : '📷', duration: 1800 });
+            };
+
+            if (isVideo) {
+                if (file.size > 20 * 1024 * 1024) {
+                    showToast('Video is too large! Limit is 20MB.');
+                    imageUpload.value = '';
+                    return;
+                }
+                sendPayload(fileData, true);
+            } else if (fileType === 'image/gif' || fileType === 'image/svg+xml') {
+                sendPayload(fileData, false);
+            } else {
+                const img = new Image();
+                img.onload = () => {
+                    try {
+                        const canvas = document.createElement('canvas');
+                        let w = img.width || 600;
+                        let h = img.height || 600;
+                        const maxDim = 1200;
+                        if (w > maxDim || h > maxDim) {
+                            if (w > h) {
+                                h = Math.round((h * maxDim) / w);
+                                w = maxDim;
+                            } else {
+                                w = Math.round((w * maxDim) / h);
+                                h = maxDim;
+                            }
+                        }
+                        canvas.width = Math.max(1, w);
+                        canvas.height = Math.max(1, h);
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, w, h);
+                        const compressed = canvas.toDataURL('image/jpeg', 0.82);
+                        sendPayload(compressed, false);
+                    } catch(err) {
+                        console.warn('Canvas resize error, sending original:', err);
+                        sendPayload(fileData, false);
+                    }
+                };
+                img.onerror = () => {
+                    console.warn('Image decode error, sending raw file data:', file.name);
+                    sendPayload(fileData, false);
+                };
+                img.src = fileData;
+            }
+            imageUpload.value = '';
+        };
+
+        reader.onerror = () => {
+            showToast('Failed to open file.');
+            imageUpload.value = '';
+        };
+
+        reader.readAsDataURL(file);
     });
 }
 

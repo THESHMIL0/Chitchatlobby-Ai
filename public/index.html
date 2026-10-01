@@ -437,11 +437,10 @@
                 <button id="emoji-btn" class="footer-action-btn" title="Emojis" aria-label="Emojis" type="button">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>
                 </button>
-                <button id="attach-btn" class="footer-action-btn" title="Send Photo or Video" aria-label="Send Photo or Video" type="button">
+                <label for="image-upload" id="attach-btn" class="footer-action-btn" title="Send Photo or Video" aria-label="Send Photo or Video" role="button" tabindex="0">
                     <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5" ry="5"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                </button>
-                <label for="image-upload" class="sr-only">Attach photo or video</label>
-                <input type="file" id="image-upload" accept="image/*,video/*" class="hidden" title="Attach photo or video" aria-label="Attach photo or video">
+                </label>
+                <input type="file" id="image-upload" accept="image/*,video/*" class="visually-hidden-file-input" title="Attach photo or video" aria-label="Attach photo or video">
                 <label for="the-chat-box" class="sr-only">Type a message</label>
                 <input type="text" id="the-chat-box" placeholder="Message..." title="Type a message" aria-label="Type a message" autocomplete="off">
                 <button id="ghost-btn" class="footer-action-btn" title="Ghost Mode (10s Auto-delete)" aria-label="Ghost Mode (10s Auto-delete)" type="button">
