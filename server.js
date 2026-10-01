@@ -221,8 +221,8 @@ app.post('/api/push/send-test', (req, res) => {
     }
     const safeUserName = typeof userName === 'string' ? userName.trim().substring(0, 30) : 'Friend';
     const payload = JSON.stringify({
-        title: 'ChitChat Push Test 🔔',
-        body: `Hello ${safeUserName}! Web Push is securely configured! 🎉`,
+        title: 'ChitChat Push Test',
+        body: `Hello ${safeUserName}! Web Push is securely configured!`,
         icon: '/icon-192.png',
         badge: '/icon-192.png',
         url: '/',
@@ -671,7 +671,8 @@ Follow these rules strictly:
 1. Provide clear, accurate, and direct responses (1 to 3 sentences).
 2. Use clear, natural, standard English without forced texting slang or abbreviations.
 3. Be helpful, courteous, and polite at all times.
-4. Ensure every response is complete and well-structured.`;
+4. Ensure every response is complete and well-structured.
+5. Do not use emojis in your responses.`;
 
     // 1. Try Gemini API using current flash models
     if (process.env.GEMINI_API_KEY) {
@@ -703,7 +704,10 @@ Follow these rules strictly:
 
                 const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(null), 6000));
                 const result = await Promise.race([fetchPromise, timeoutPromise]);
-                if (result) return result;
+                if (result) {
+                    const cleanResult = result.replace(/[\p{Extended_Pictographic}\p{Emoji_Presentation}\u200d\ufe0f]/gu, '').replace(/\s+/g, ' ').trim();
+                    if (cleanResult) return cleanResult;
+                }
             }
         } catch (e) {
             console.error("Gemini API error:", e);
@@ -956,7 +960,7 @@ io.on('connection', (socket) => {
     socket.on('update profile', (user) => {
         if (!user || typeof user !== 'object') return;
         const cleanName = String(user.name || 'Guest').trim().substring(0, 30);
-        if (!cleanName || cleanName === '🤖 Bot') return;
+        if (!cleanName || cleanName === '🤖 Bot' || cleanName === 'AI Bot') return;
 
         let cleanAvatar = '';
         if (user.avatar && (user.avatar.startsWith('https://') || user.avatar.startsWith('data:image/') || user.avatar.startsWith('/'))) {
@@ -991,7 +995,7 @@ io.on('connection', (socket) => {
         
         // Enforce verified identity and prevent user from impersonating system bot
         let userName = (sessionUser && sessionUser.name) ? sessionUser.name : String(data.user || 'Guest').trim().substring(0, 30);
-        if (userName === '🤖 Bot') userName = 'Guest';
+        if (userName === '🤖 Bot' || userName === 'AI Bot') userName = 'Guest';
         data.user = userName;
 
         let userAvatar = (sessionUser && sessionUser.avatar) ? sessionUser.avatar : String(data.avatar || '');
@@ -1071,7 +1075,7 @@ io.on('connection', (socket) => {
                 turn: data.xox.turn === 'O' ? 'O' : 'X',
                 players: {
                     X: data.xox.players?.X ? String(data.xox.players.X).substring(0, 30) : data.user,
-                    O: isAIRoom ? '🤖 Bot' : (data.xox.players?.O ? String(data.xox.players.O).substring(0, 30) : null)
+                    O: isAIRoom ? 'AI Bot' : (data.xox.players?.O ? String(data.xox.players.O).substring(0, 30) : null)
                 },
                 playerAvatars: {
                     X: data.xox.playerAvatars?.X || data.avatar,
@@ -1102,11 +1106,11 @@ io.on('connection', (socket) => {
             const roomName = roomRow ? roomRow.name : (rooms.get(roomId)?.name || roomId);
             let summaryText = data.text || '';
             if (!summaryText) {
-                if (data.isAudio) summaryText = '🎤 Voice Note';
-                else if (data.isVideo) summaryText = '🎥 Video';
-                else if (data.uploadedImage) summaryText = '📷 Photo';
-                else if (data.poll) summaryText = '📊 Poll: ' + (data.poll.question || '');
-                else if (data.xox) summaryText = '🎮 Tic-Tac-Toe (XOX) Game';
+                if (data.isAudio) summaryText = 'Voice Note';
+                else if (data.isVideo) summaryText = 'Video';
+                else if (data.uploadedImage) summaryText = 'Photo';
+                else if (data.poll) summaryText = 'Poll: ' + (data.poll.question || '');
+                else if (data.xox) summaryText = 'Tic-Tac-Toe Game';
                 else summaryText = 'Sent an attachment';
             }
             const alertData = {
@@ -1125,11 +1129,11 @@ io.on('connection', (socket) => {
         const textContent = data.text || '';
         const isBotMention = textContent.toLowerCase().includes('@bot');
         const isAILounge = roomId === 'ai_lounge';
-        const isUserBot = data.user === '🤖 Bot';
+        const isUserBot = data.user === 'AI Bot' || data.user === '🤖 Bot';
 
         if ((isBotMention || isAILounge) && !isUserBot) {
             if (data.xox) {
-                sendBotGameComment(roomId, "🎮 Challenge accepted! Make your first move as **X**, and I'll play as **O**!");
+                sendBotGameComment(roomId, "Challenge accepted! Make your first move as **X**, and I will play as **O**.");
                 return;
             }
 
@@ -1146,7 +1150,7 @@ io.on('connection', (socket) => {
                         const m = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
                         m.status = 'read';
                         m.readBy = m.readBy || [];
-                        if (!m.readBy.includes('🤖 Bot')) m.readBy.push('🤖 Bot');
+                        if (!m.readBy.includes('AI Bot')) m.readBy.push('AI Bot');
                         item.data = JSON.stringify(m);
                         scheduleDataSave();
                     } catch (e) {}
@@ -1154,12 +1158,12 @@ io.on('connection', (socket) => {
                 io.to(roomId).emit('messages read', {
                     roomId,
                     msgIds: [data.id],
-                    reader: '🤖 Bot',
+                    reader: 'AI Bot',
                     readAt: Date.now()
                 });
             }, 180);
 
-            io.to(roomId).emit('user typing', { name: '🤖 Bot', isTyping: true });
+            io.to(roomId).emit('user typing', { name: 'AI Bot', isTyping: true });
             
             setTimeout(async () => {
                 try {
@@ -1171,7 +1175,7 @@ io.on('connection', (socket) => {
                     const reply = await askSmartBot(botPrompt);
                     const botMsg = { 
                         id: Date.now() + "_bot", 
-                        user: '🤖 Bot', 
+                        user: 'AI Bot', 
                         text: reply, 
                         roomId, 
                         type: 'chat', 
@@ -1181,17 +1185,17 @@ io.on('connection', (socket) => {
                         avatar: 'https://api.dicebear.com/7.x/lorelei/svg?seed=ChitChatBot&backgroundColor=b6e3f4',
                         replyTo: data.replyTo ? { user: data.user, text: textContent.substring(0, 120) || 'Message', msgId: data.id } : null
                     };
-                    io.to(roomId).emit('user typing', { name: '🤖 Bot', isTyping: false });
+                    io.to(roomId).emit('user typing', { name: 'AI Bot', isTyping: false });
                     db.run("INSERT INTO history VALUES (?, ?, ?, ?)", [botMsg.id, roomId, Date.now(), JSON.stringify(botMsg)], (err) => {
                         if (err) console.error('Bot history insert error:', err.message);
                     });
                     io.to(roomId).emit('chat message', botMsg);
                     
                     const botSummaryText = reply ? (reply.length > 80 ? reply.substring(0, 80) + '...' : reply) : 'Bot sent a message';
-                    sendPushToAllExceptSender(null, '🤖 Bot', rooms.get(roomId)?.name || roomId, roomId, botSummaryText, botMsg.avatar);
+                    sendPushToAllExceptSender(null, 'AI Bot', rooms.get(roomId)?.name || roomId, roomId, botSummaryText, botMsg.avatar);
                 } catch (botErr) {
                     console.error("Bot generation error:", botErr);
-                    io.to(roomId).emit('user typing', { name: '🤖 Bot', isTyping: false });
+                    io.to(roomId).emit('user typing', { name: 'AI Bot', isTyping: false });
                 }
             }, 80);
         }
@@ -1277,7 +1281,7 @@ io.on('connection', (socket) => {
         setTimeout(() => {
             const botMsg = {
                 id: Date.now() + "_bot_game",
-                user: '🤖 Bot',
+                user: 'AI Bot',
                 text: text,
                 roomId,
                 type: 'chat',
@@ -1346,12 +1350,12 @@ io.on('connection', (socket) => {
         if (!data || !data.xox || data.xox.status !== 'in_progress' || data.xox.turn !== 'O') return;
 
         // Display typing indicator for realism
-        io.to(roomId).emit('user typing', { name: '🤖 Bot', isTyping: true });
+        io.to(roomId).emit('user typing', { name: 'AI Bot', isTyping: true });
 
         setTimeout(() => {
             const freshItem = historyById.get(msgId) || historyStore.find(h => h.id === msgId);
             if (!freshItem) {
-                io.to(roomId).emit('user typing', { name: '🤖 Bot', isTyping: false });
+                io.to(roomId).emit('user typing', { name: 'AI Bot', isTyping: false });
                 return;
             }
 
@@ -1359,19 +1363,19 @@ io.on('connection', (socket) => {
             try {
                 freshData = typeof freshItem.data === 'string' ? JSON.parse(freshItem.data) : freshItem.data;
             } catch (e) {
-                io.to(roomId).emit('user typing', { name: '🤖 Bot', isTyping: false });
+                io.to(roomId).emit('user typing', { name: 'AI Bot', isTyping: false });
                 return;
             }
 
             if (!freshData || !freshData.xox || freshData.xox.status !== 'in_progress' || freshData.xox.turn !== 'O') {
-                io.to(roomId).emit('user typing', { name: '🤖 Bot', isTyping: false });
+                io.to(roomId).emit('user typing', { name: 'AI Bot', isTyping: false });
                 return;
             }
 
             const moveIdx = getBestXoxMove(freshData.xox.board, 'O', 'X');
             if (moveIdx !== -1) {
                 freshData.xox.board[moveIdx] = 'O';
-                freshData.xox.players.O = '🤖 Bot';
+                freshData.xox.players.O = 'AI Bot';
                 freshData.xox.playerAvatars.O = 'https://api.dicebear.com/7.x/lorelei/svg?seed=ChitChatBot&backgroundColor=b6e3f4';
 
                 const evalRes = evaluateXoxBoard(freshData.xox.board);
@@ -1386,16 +1390,16 @@ io.on('connection', (socket) => {
                 freshItem.data = JSON.stringify(freshData);
                 scheduleDataSave();
 
-                io.to(roomId).emit('user typing', { name: '🤖 Bot', isTyping: false });
+                io.to(roomId).emit('user typing', { name: 'AI Bot', isTyping: false });
                 io.to(roomId).emit('xox updated', freshData);
 
                 if (evalRes.status === 'won' && evalRes.winner === 'O') {
-                    sendBotGameComment(roomId, "🎉 Good game! I got 3 in a row. Tap 'Play Again' for a rematch!");
+                    sendBotGameComment(roomId, "Good game! I got 3 in a row. Tap 'Play Again' for a rematch.");
                 } else if (evalRes.status === 'draw') {
-                    sendBotGameComment(roomId, "🤝 Well played! A perfectly matched tie. Tap 'Play Again' to go again!");
+                    sendBotGameComment(roomId, "Well played! It's a draw. Tap 'Play Again' to go again.");
                 }
             } else {
-                io.to(roomId).emit('user typing', { name: '🤖 Bot', isTyping: false });
+                io.to(roomId).emit('user typing', { name: 'AI Bot', isTyping: false });
             }
         }, 550);
     }
@@ -1406,14 +1410,14 @@ io.on('connection', (socket) => {
             const data = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
             if (data.xox) {
                 if (data.xox.status !== 'in_progress') {
-                    return socket.emit('xox error', { msgId, message: "🎮 This game has ended! Tap 'Play Again' to start a rematch." });
+                    return socket.emit('xox error', { msgId, message: "Game ended. Tap 'Play Again' to start a rematch." });
                 }
 
                 const board = data.xox.board;
                 if (index < 0 || index > 8) return;
 
                 if (board[index] !== '') {
-                    return socket.emit('xox error', { msgId, message: "✨ That square is already taken!" });
+                    return socket.emit('xox error', { msgId, message: "Square already taken." });
                 }
 
                 const currentTurn = data.xox.turn || 'X';
@@ -1424,7 +1428,7 @@ io.on('connection', (socket) => {
 
                 // In AI Lounge, auto-assign AI Bot as Player O if unassigned
                 if ((data.roomId === 'ai_lounge' || String(data.text || '').toLowerCase().includes('@bot')) && !players.O) {
-                    players.O = '🤖 Bot';
+                    players.O = 'AI Bot';
                     data.xox.playerAvatars.O = 'https://api.dicebear.com/7.x/lorelei/svg?seed=ChitChatBot&backgroundColor=b6e3f4';
                 }
 
@@ -1434,17 +1438,17 @@ io.on('connection', (socket) => {
                         players.X = player;
                         data.xox.playerAvatars.X = avatar;
                     } else if (players.X !== player) {
-                        return socket.emit('xox error', { msgId, message: `🌸 It's ${players.X}'s (X) turn! Please wait for them to move.` });
+                        return socket.emit('xox error', { msgId, message: `${players.X}'s turn.` });
                     }
                 } else if (currentTurn === 'O') {
                     if (!players.O) {
                         if (players.X === player) {
-                            return socket.emit('xox error', { msgId, message: "💖 You are Player X! Waiting for your opponent to take O." });
+                            return socket.emit('xox error', { msgId, message: "You are Player X. Waiting for opponent." });
                         }
                         players.O = player;
                         data.xox.playerAvatars.O = avatar;
-                    } else if (players.O !== player && players.O !== '🤖 Bot') {
-                        return socket.emit('xox error', { msgId, message: `🌸 It's ${players.O}'s (O) turn! Please wait for them to move.` });
+                    } else if (players.O !== player && players.O !== 'AI Bot' && players.O !== '🤖 Bot') {
+                        return socket.emit('xox error', { msgId, message: `${players.O}'s turn.` });
                     }
                 }
 
@@ -1466,12 +1470,12 @@ io.on('connection', (socket) => {
                 scheduleDataSave();
                 io.to(data.roomId).emit('xox updated', data);
 
-                const isAIGame = data.roomId === 'ai_lounge' || players.O === '🤖 Bot' || String(data.text || '').toLowerCase().includes('@bot');
+                const isAIGame = data.roomId === 'ai_lounge' || players.O === 'AI Bot' || players.O === '🤖 Bot' || String(data.text || '').toLowerCase().includes('@bot');
                 if (isAIGame) {
                     if (evalRes.status === 'won' && evalRes.winner === 'X') {
-                        sendBotGameComment(data.roomId, "🏆 Brilliant move! You got 3 in a row and won! Rematch?");
+                        sendBotGameComment(data.roomId, "Good move! You got 3 in a row and won. Rematch?");
                     } else if (evalRes.status === 'draw') {
-                        sendBotGameComment(data.roomId, "🤝 Well played! It's a draw! Tap 'Play Again' to go again.");
+                        sendBotGameComment(data.roomId, "Well played! It's a draw. Tap 'Play Again' to go again.");
                     } else if (evalRes.status === 'in_progress' && data.xox.turn === 'O') {
                         scheduleBotXoxMove(msgId, data.roomId);
                     }
@@ -1485,14 +1489,14 @@ io.on('connection', (socket) => {
         if (item) {
             const data = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
             if (data.xox) {
-                const isAIGame = data.roomId === 'ai_lounge' || data.xox.players?.O === '🤖 Bot';
+                const isAIGame = data.roomId === 'ai_lounge' || data.xox.players?.O === 'AI Bot' || data.xox.players?.O === '🤖 Bot';
                 data.xox.board = Array(9).fill('');
                 data.xox.status = 'in_progress';
                 data.xox.winner = null;
                 data.xox.winningLine = null;
                 data.xox.turn = 'X';
                 if (isAIGame) {
-                    data.xox.players.O = '🤖 Bot';
+                    data.xox.players.O = 'AI Bot';
                     data.xox.playerAvatars.O = 'https://api.dicebear.com/7.x/lorelei/svg?seed=ChitChatBot&backgroundColor=b6e3f4';
                 }
                 item.data = JSON.stringify(data);
@@ -1500,7 +1504,7 @@ io.on('connection', (socket) => {
                 io.to(data.roomId).emit('xox updated', data);
 
                 if (isAIGame) {
-                    sendBotGameComment(data.roomId, "✨ Rematch started! Your turn as **X**.");
+                    sendBotGameComment(data.roomId, "Rematch started! Your turn as **X**.");
                 }
             }
         }
@@ -1582,7 +1586,7 @@ io.on('connection', (socket) => {
         if (idx !== -1) historyStore.splice(idx, 1);
         historyById.delete(msgId);
         scheduleDataSave();
-        io.to(data.roomId).emit('message edited', { id: msgId, newText: '🚫 Message deleted' });
+        io.to(data.roomId).emit('message edited', { id: msgId, newText: 'Message deleted' });
     });
 
     socket.on('pin message', ({ msg }) => {

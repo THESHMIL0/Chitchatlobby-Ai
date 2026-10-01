@@ -28,10 +28,9 @@ function sanitizeUrl(url) {
 }
 
 function showToast(msg, options = {}) {
-    let duration = 3200;
-    let icon = '';
+    let duration = 2200;
     let type = 'info';
-    let sound = true;
+    let sound = false;
 
     if (typeof options === 'number') {
         duration = options;
@@ -39,27 +38,14 @@ function showToast(msg, options = {}) {
         type = options;
     } else if (typeof options === 'object' && options !== null) {
         if (options.duration) duration = options.duration;
-        if (options.icon) icon = options.icon;
         if (options.type) type = options.type;
         if (options.sound !== undefined) sound = options.sound;
     }
 
     let text = String(msg || '').trim();
-
-    // Auto-detect emoji if present at beginning of message
-    if (!icon) {
-        const emojiRegex = /^(\p{Extended_Pictographic}|\p{Emoji_Presentation})/u;
-        const match = text.match(emojiRegex);
-        if (match) {
-            icon = match[0];
-            text = text.substring(match[0].length).trim();
-        } else {
-            if (type === 'error') icon = '🌸';
-            else if (type === 'game') icon = '🎮';
-            else if (type === 'success') icon = '✨';
-            else icon = '💖';
-        }
-    }
+    // Strip emojis completely from notification messages
+    text = text.replace(/[\p{Extended_Pictographic}\p{Emoji_Presentation}\u200d\ufe0f]/gu, '').replace(/\s+/g, ' ').trim();
+    if (!text) return;
 
     let toast = document.getElementById('custom-app-toast');
     if (!toast) {
@@ -69,18 +55,13 @@ function showToast(msg, options = {}) {
     }
 
     toast.className = `custom-toast-pill toast-${type}`;
-    toast.innerHTML = `
-        <span class="toast-emoji-icon" aria-hidden="true">${escapeHTML(icon)}</span>
-        <span class="toast-message-text">${escapeHTML(text)}</span>
-    `;
+    toast.innerHTML = `<span class="toast-message-text">${escapeHTML(text)}</span>`;
 
-    // Sensory feedback: Playful pop audio and gentle haptic vibration
     if (sound) {
         try { playUiSound('pop'); } catch (e) {}
     }
     try { hapticFeedback('light'); } catch (e) {}
 
-    // Retrigger bouncy entrance animation
     toast.classList.remove('show');
     void toast.offsetWidth;
     toast.classList.add('show');
@@ -319,7 +300,7 @@ function unlockAppSuccess() {
     try { hapticFeedback('heavy'); } catch(e) {}
     try { playUiSound('unlock'); } catch(e) {}
     if (appLockSubtitle) {
-        appLockSubtitle.textContent = 'Unlocked! Welcome back ✨';
+        appLockSubtitle.textContent = 'Unlocked! Welcome back';
         appLockSubtitle.classList.remove('error');
     }
     if (lockIconContainer) lockIconContainer.classList.add('unlocked');
@@ -450,7 +431,7 @@ async function verifyBiometrics(isAutoPrompt = false) {
         } catch(e) {
             console.warn('Native biometric error or cancel', e);
             if (!isAutoPrompt) {
-                showToast('Biometric scan cancelled. Enter your 4-digit PIN 🔢');
+                showToast('Biometric scan cancelled. Enter your 4-digit PIN');
             }
         } finally {
             setTimeout(() => { isPromptingBiometrics = false; }, 800);
@@ -497,7 +478,7 @@ async function verifyBiometrics(isAutoPrompt = false) {
                     if (registered) {
                         localStorage.setItem('chitchat_fingerprint', 'true');
                         updateBiometricSettingsUI();
-                        showToast('Fingerprint registered! Unlocking... ✨');
+                        showToast('Fingerprint registered. Unlocking...');
                         unlockAppSuccess();
                         return;
                     }
@@ -512,11 +493,11 @@ async function verifyBiometrics(isAutoPrompt = false) {
         } catch (err) {
             console.warn('WebAuthn biometric error:', err);
             if (err.name === 'NotAllowedError') {
-                if (!isAutoPrompt) showToast('Fingerprint cancelled. You can enter your 4-digit PIN 🔢');
+                if (!isAutoPrompt) showToast('Fingerprint cancelled. Enter your 4-digit PIN');
             } else if (err.name === 'SecurityError') {
                 if (!isAutoPrompt) showToast('Biometrics require localhost or HTTPS');
             } else {
-                if (!isAutoPrompt) showToast('Fingerprint unavailable. Enter your 4-digit PIN 🔢');
+                if (!isAutoPrompt) showToast('Fingerprint unavailable. Enter your 4-digit PIN');
             }
         } finally {
             setTimeout(() => { isPromptingBiometrics = false; }, 800);
@@ -526,7 +507,7 @@ async function verifyBiometrics(isAutoPrompt = false) {
 
     // 3. Fallback when hardware sensor is not available
     if (!isAutoPrompt) {
-        showToast('No fingerprint sensor detected on this device. Use your 4-digit PIN 🔢');
+        showToast('No fingerprint sensor detected on this device. Use your 4-digit PIN');
     }
 }
 
@@ -668,7 +649,7 @@ function processSetupStep() {
             localStorage.setItem('chitchat_passcode', setupFirstPin);
             localStorage.setItem('chitchat_applock', 'true');
             updateAppLockSettingsUI();
-            showToast('Passcode saved! App Lock is active 🔒');
+            showToast('Passcode saved');
             closePasscodeSetup();
         } else {
             shakePasscodeDots(passcodeSetupDots);
@@ -740,7 +721,7 @@ if (toggleAppLock) {
             } else {
                 localStorage.setItem('chitchat_applock', 'true');
                 updateAppLockSettingsUI();
-                showToast('Passcode Lock Enabled 🔒');
+                showToast('Passcode lock enabled');
             }
         } else {
             // Require entering current passcode to disable!
@@ -770,7 +751,7 @@ if (toggleFingerprintUnlock) {
             // Ensure App Lock is enabled with PIN as fallback
             if (!isAppLockActive()) {
                 if (!localStorage.getItem('chitchat_passcode')) {
-                    showToast('Set a 4-digit PIN first as security backup 🔒');
+                    showToast('Set a 4-digit PIN first');
                     e.target.checked = false;
                     openPasscodeSetup('CREATE');
                     return;
@@ -786,7 +767,7 @@ if (toggleFingerprintUnlock) {
                     if (success) {
                         localStorage.setItem('chitchat_fingerprint', 'true');
                         updateBiometricSettingsUI();
-                        showToast('Fingerprint unlock enabled! 👆✨');
+                        showToast('Fingerprint unlock enabled');
                     } else {
                         e.target.checked = false;
                     }
@@ -798,7 +779,7 @@ if (toggleFingerprintUnlock) {
             } else {
                 localStorage.setItem('chitchat_fingerprint', 'true');
                 updateBiometricSettingsUI();
-                showToast('Fingerprint unlock enabled! 👆✨');
+                showToast('Fingerprint unlock enabled');
             }
         } else {
             localStorage.setItem('chitchat_fingerprint', 'false');
@@ -817,7 +798,7 @@ if (setupFingerprintBtn) {
             if (success) {
                 localStorage.setItem('chitchat_fingerprint', 'true');
                 updateBiometricSettingsUI();
-                showToast('Fingerprint registered successfully! 👆✨');
+                showToast('Fingerprint registered');
             }
         } catch(err) {
             console.warn('Setup fingerprint error', err);
@@ -1196,7 +1177,7 @@ function playAppOpeningAnimation() {
 
         if (fillEl) fillEl.style.width = '100%';
         if (percentEl) percentEl.textContent = '100%';
-        if (textEl) textEl.textContent = 'Ready to chit-chat! 💖';
+        if (textEl) textEl.textContent = 'Ready';
 
         if (logoBox && !prefersReducedMotion) {
             logoBox.classList.add('pop-celebrate');
@@ -1239,7 +1220,7 @@ function playAppOpeningAnimation() {
         if (isDismissed) return;
         if (fillEl) fillEl.style.width = '55%';
         if (percentEl) percentEl.textContent = '55%';
-        if (textEl) textEl.textContent = 'Sprinkling fairy dust ✨';
+        if (textEl) textEl.textContent = 'Connecting...';
     }, 240);
 
     // Step 3: Almost there (540ms)
@@ -1247,7 +1228,7 @@ function playAppOpeningAnimation() {
         if (isDismissed) return;
         if (fillEl) fillEl.style.width = '90%';
         if (percentEl) percentEl.textContent = '90%';
-        if (textEl) textEl.textContent = 'Connecting cozy lobby... 💬';
+        if (textEl) textEl.textContent = 'Loading chats...';
     }, 540);
 
     // Step 4: Standard finish (780ms)
@@ -1468,7 +1449,7 @@ if (clearCacheBtn) {
             }
         }
         keysToRemove.forEach(k => localStorage.removeItem(k));
-        showToast('✨ Cache & temporary wallpapers cleared!');
+        showToast('Cache & temporary wallpapers cleared');
         updateSettingsModalUI();
     };
 }
@@ -1755,7 +1736,7 @@ if (saveProfileBtn) {
         syncUserAvatarUI();
         if (socket) socket.emit('update profile', currentUser);
         saveUserLocally(); 
-        showToast('✨ Profile updated successfully!');
+        showToast('Profile updated successfully');
         if (profileScreen) profileScreen.classList.add('hidden'); 
         if (settingsScreen) settingsScreen.classList.remove('hidden');
         updateSettingsModalUI();
@@ -1911,9 +1892,9 @@ socket.on('connect', () => {
     if (currentUser.name && activeRoomId) joinRoom(activeRoomId, currentRoomPassword, true); 
 });
 
-socket.on('join error', (msg) => showToast('⚠️ ' + msg, 3500));
+socket.on('join error', (msg) => showToast(msg, 3500));
 socket.on('action error', (msg) => showToast(msg, 3500));
-socket.on('rate limit', (msg) => showToast('⏳ ' + msg, 3500));
+socket.on('rate limit', (msg) => showToast(msg, 3500));
 socket.on('chat history', (data) => {
     if (activeRoomId !== data.room.id) {
         history.pushState({screen: 'chat', roomId: data.room.id}, '', '#chat');
@@ -2008,7 +1989,7 @@ function urlBase64ToUint8Array(base64String) {
     return outputArray;
 }
 
-async function registerWebPushSubscription() {
+async function registerWebPushSubscription(showToastFeedback = false) {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
         console.log('Web Push API not supported on this browser');
         return;
@@ -2058,7 +2039,9 @@ async function registerWebPushSubscription() {
         });
 
         console.log('Web Push subscription registered successfully!');
-        showToast('Web Push Notifications Enabled!');
+        if (showToastFeedback) {
+            showToast('Push notifications enabled');
+        }
         updateNotifStatusText();
     } catch (err) {
         console.error('Failed to register Web Push subscription:', err);
@@ -2073,7 +2056,7 @@ if (togglePushNotifications) {
     togglePushNotifications.addEventListener('change', (e) => {
         localStorage.setItem('chitchat_push_notif', e.target.checked);
         if (e.target.checked) {
-            registerWebPushSubscription();
+            registerWebPushSubscription(true);
         } else {
             updateNotifStatusText();
         }
@@ -2101,11 +2084,11 @@ if (btnRequestPushPermission) {
                     if (resData.success) {
                         showToast('Test push scheduled! Minimize/lock screen within 4 seconds!');
                     } else {
-                        showToast('⚠️ Test push: ' + (resData.error || 'Re-subscribing...'));
+                        showToast('Test push: ' + (resData.error || 'Re-subscribing...'));
                         registerWebPushSubscription();
                     }
                 } catch (e) {
-                    showToast('⚠️ Error testing push notification');
+                    showToast('Error testing push notification');
                 }
             } else {
                 triggerSystemNotification('ChitChat Test', 'Lobby', 'Test Web Push Notification working!', currentUser ? currentUser.avatar : null, 'lobby');
@@ -2122,7 +2105,7 @@ const btnDismissPushPrompt = document.getElementById('btn-dismiss-push-prompt');
 
 if (btnEnablePushPrompt) {
     btnEnablePushPrompt.addEventListener('click', () => {
-        registerWebPushSubscription();
+        registerWebPushSubscription(true);
         const promptCard = document.getElementById('push-permission-prompt-card');
         if (promptCard) promptCard.classList.add('hidden');
     });
@@ -2140,10 +2123,10 @@ function requestNotificationPermission() {
     if ('Notification' in window && Notification.permission === 'default') {
         Notification.requestPermission().then(() => {
             updateNotifStatusText();
-            registerWebPushSubscription();
+            registerWebPushSubscription(true);
         });
     } else if (Notification.permission === 'granted') {
-        registerWebPushSubscription();
+        registerWebPushSubscription(true);
     }
 }
 
@@ -2345,7 +2328,7 @@ if (btnTestSound) {
         testSoundIdx++;
         playUiSound(soundType);
         hapticFeedback('light');
-        showToast(`🎶 Sound effect test: "${soundType}"!`);
+        showToast(`Sound effect test: "${soundType}"`);
     };
 }
 
@@ -2824,7 +2807,7 @@ document.querySelectorAll('.poll-preset-chip').forEach(chip => {
             `).join('');
             updatePollOptionNumbers();
         }
-        showToast('⚡ Preset loaded!');
+        showToast('Preset loaded');
     });
 });
 
@@ -3063,7 +3046,7 @@ if (imageUpload) {
                     input.value = '';
                     setSendBtnState('mic');
                 }
-                showToast(isVid ? 'Video sent' : 'Photo sent', { icon: isVid ? '🎥' : '📷', duration: 1800 });
+                showToast(isVid ? 'Video sent' : 'Photo sent', { duration: 1800 });
             };
 
             if (isVideo) {
@@ -3168,10 +3151,10 @@ function triggerReplyForMessage(li) {
     const textNode = li.querySelector('.message-text');
     let msgText = textNode ? textNode.innerText.replace('(edited)', '').trim() : '';
     if (!msgText) {
-        if (li.querySelector('.poll-question')) msgText = '📊 Poll: ' + li.querySelector('.poll-question').innerText;
-        else if (li.querySelector('.chat-image')) msgText = '📷 Photo';
-        else if (li.querySelector('.chat-video')) msgText = '🎥 Video';
-        else if (li.querySelector('.custom-audio-player')) msgText = '🎤 Voice Note';
+        if (li.querySelector('.poll-question')) msgText = 'Poll: ' + li.querySelector('.poll-question').innerText;
+        else if (li.querySelector('.chat-image')) msgText = 'Photo';
+        else if (li.querySelector('.chat-video')) msgText = 'Video';
+        else if (li.querySelector('.custom-audio-player')) msgText = 'Voice Note';
         else msgText = 'Attachment';
     }
     replyingTo = {
@@ -3245,7 +3228,7 @@ if (optStar) optStar.onclick = () => {
         if (metaRow && !metaRow.querySelector('.starred-badge')) {
             const badge = document.createElement('span');
             badge.className = 'starred-badge';
-            badge.textContent = '⭐';
+            badge.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
             metaRow.appendChild(badge);
         }
     }
@@ -3260,7 +3243,7 @@ if (btnViewStarred) btnViewStarred.onclick = () => {
     let starred = JSON.parse(localStorage.getItem('starred_messages_' + activeRoomId) || '[]');
     if (listEl) {
         if (starred.length === 0) {
-            listEl.innerHTML = `<p style="text-align: center; color: var(--text-secondary); font-size: 13.5px; padding: 20px 0;">No starred messages yet. Long-press any message to star it! ⭐</p>`;
+            listEl.innerHTML = `<p style="text-align: center; color: var(--text-secondary); font-size: 13.5px; padding: 20px 0;">No starred messages yet. Long-press any message to star it.</p>`;
         } else {
             listEl.innerHTML = starred.map(m => `
                 <div class="starred-item-card" data-target-id="msg-${escapeHTML(m.id)}" style="background: var(--input-bg); padding: 10px 14px; border-radius: 12px; cursor: pointer; display: flex; flex-direction: column; gap: 4px;">
@@ -3382,7 +3365,7 @@ socket.on('chat message', (data) => {
         if (document.hidden) {
             const roomObj = globalRoomList.find(r => r.id === activeRoomId);
             const rName = roomObj ? roomObj.name : (currentRoomName ? currentRoomName.textContent : 'Room');
-            let summaryText = data.text || (data.isAudio ? '🎤 Voice Note' : (data.uploadedImage ? '📷 Photo' : 'Attachment'));
+            let summaryText = data.text || (data.isAudio ? 'Voice Note' : (data.uploadedImage ? 'Photo' : 'Attachment'));
             triggerSystemNotification(data.user, rName, summaryText, data.avatar, activeRoomId);
         }
         
@@ -3628,15 +3611,15 @@ function getMessageInnerHTML(data, isMe, isStacked) {
         let statusText = '';
         if (status === 'won') {
             const winnerName = winner === 'X' ? playerXName : (playerOName || 'Opponent');
-            statusText = `🎉 <strong class="winner-highlight">${escapeHTML(winnerName)}</strong> won! 🏆`;
+            statusText = `<span class="winner-highlight">${escapeHTML(winnerName)}</span> won`;
         } else if (status === 'draw') {
-            statusText = `🤝 It's a draw! Well played!`;
+            statusText = `Draw`;
         } else {
             if (currentTurn === 'O' && !playerOName) {
-                statusText = `⏳ Waiting for opponent to join...`;
+                statusText = `Waiting for opponent...`;
             } else {
-                const activePlayerName = currentTurn === 'X' ? playerXName : (playerOName || '(waiting...)');
-                statusText = `🌸 It's <strong>${escapeHTML(activePlayerName)}</strong>'s (${currentTurn}) turn`;
+                const activePlayerName = currentTurn === 'X' ? playerXName : (playerOName || 'Opponent');
+                statusText = `Turn: <strong>${escapeHTML(activePlayerName)}</strong> (${currentTurn})`;
             }
         }
 
@@ -3894,9 +3877,10 @@ function getMessageInnerHTML(data, isMe, isStacked) {
                 </div>
             </div>`;
     }
-    let reactionsHTML = ''; if (data.reactions && Object.keys(data.reactions).length > 0) reactionsHTML = `<div class="reaction-badge" id="reaction-count-${data.id}">${Object.entries(data.reactions).map(([e, c]) => `${escapeHTML(e)} ${escapeHTML(String(c))}`).join(' ')}</div>`;
+    let reactionsHTML = '';
     const displayTimeStr = formatTo12HourTime(data.time);
     const tickHTML = isMe ? getTickHTML(data.status, data.id) : '';
+    const ghostBadge = data.isGhost ? '<span class="ghost-clock-tag" title="Ghost message">⏱</span> ' : '';
     
     const hasMedia = !!(data.uploadedImage || data.image);
     const hasTextContent = !!((data.text && String(data.text).trim().length > 0) || (data.message && String(data.message).trim().length > 0));
@@ -3908,8 +3892,7 @@ function getMessageInnerHTML(data, isMe, isStacked) {
                 ${topHeaderHTML ? `<div class="msg-top-header">${topHeaderHTML}</div>` : ''}
                 <div class="msg-bubble ${data.xox ? 'msg-bubble-xox' : ''} ${isMediaOnly ? 'msg-bubble-media-only' : ''}">
                     ${replyHTML}${content}
-                    <div class="meta-row"><span>${data.isGhost ? '⏱️ ' : ''}${displayTimeStr}</span>${tickHTML}</div>
-                    ${reactionsHTML}
+                    <div class="meta-row"><span>${ghostBadge}${displayTimeStr}</span>${tickHTML}</div>
                 </div>
             </div>`;
     } else {
@@ -3922,8 +3905,7 @@ function getMessageInnerHTML(data, isMe, isStacked) {
                 ${topHeaderHTML ? `<div class="msg-top-header">${topHeaderHTML}</div>` : ''}
                 <div class="msg-bubble ${data.xox ? 'msg-bubble-xox' : ''} ${isMediaOnly ? 'msg-bubble-media-only' : ''}">
                     ${replyHTML}${content}
-                    <div class="meta-row"><span>${data.isGhost ? '⏱️ ' : ''}${displayTimeStr}</span></div>
-                    ${reactionsHTML}
+                    <div class="meta-row"><span>${ghostBadge}${displayTimeStr}</span></div>
                 </div>
             </div>`;
     }
@@ -4050,12 +4032,14 @@ if (socket) {
 
             if (data.xox.status === 'won') {
                 const winnerName = data.xox.winner === 'X' ? data.xox.players?.X : data.xox.players?.O;
-                triggerReactionParticles(window.innerWidth / 2, window.innerHeight / 2, '🎉');
-                try { playUiSound('celebrate'); } catch (e) {}
-                showToast(`🎉 ${winnerName || 'Winner'} won Tic-Tac-Toe! 🏆`, { icon: '🏆', type: 'success', duration: 4000 });
+                const isMe = currentUser && currentUser.name && (winnerName === currentUser.name);
+                const isParticipant = currentUser && currentUser.name && (currentUser.name === data.xox.players?.X || currentUser.name === data.xox.players?.O);
+                const displayText = isMe ? 'You won' : (isParticipant ? 'You lost' : (winnerName ? `${winnerName} won` : 'Game won'));
+                try { playUiSound(isMe ? 'celebrate' : 'pop'); } catch (e) {}
+                showToast(displayText, { type: isMe ? 'success' : (isParticipant ? 'error' : 'game'), duration: 2000 });
             } else if (data.xox.status === 'draw') {
                 try { playUiSound('pop'); } catch (e) {}
-                showToast("🤝 It's a draw! Well played both!", { icon: '🤝', type: 'game' });
+                showToast('Draw', { type: 'game', duration: 2000 });
             } else {
                 try { playUiSound('pop'); } catch (e) {}
             }
@@ -4064,7 +4048,7 @@ if (socket) {
 
     socket.on('xox error', (payload) => {
         const message = typeof payload === 'string' ? payload : (payload.message || 'Action error');
-        showToast(message, { icon: '🌸', type: 'game' });
+        showToast(message, { type: 'game' });
     });
 }
 
@@ -4125,15 +4109,15 @@ function updateXoxGameCard(card, data) {
         let statusText = '';
         if (status === 'won') {
             const winnerName = winner === 'X' ? (players.X || 'Player X') : (players.O || 'Opponent');
-            statusText = `🎉 <strong class="winner-highlight">${escapeHTML(winnerName)}</strong> won! 🏆`;
+            statusText = `<span class="winner-highlight">${escapeHTML(winnerName)}</span> won`;
         } else if (status === 'draw') {
-            statusText = `🤝 It's a draw! Well played!`;
+            statusText = `Draw`;
         } else {
             if (currentTurn === 'O' && !players.O) {
-                statusText = `⏳ Waiting for opponent to join...`;
+                statusText = `Waiting for opponent...`;
             } else {
-                const activePlayerName = currentTurn === 'X' ? (players.X || 'Player X') : (players.O || '(waiting...)');
-                statusText = `🌸 It's <strong>${escapeHTML(activePlayerName)}</strong>'s (${currentTurn}) turn`;
+                const activePlayerName = currentTurn === 'X' ? (players.X || 'Player X') : (players.O || 'Opponent');
+                statusText = `Turn: <strong>${escapeHTML(activePlayerName)}</strong> (${currentTurn})`;
             }
         }
         statusRow.innerHTML = statusText;
@@ -4207,7 +4191,7 @@ function updateXoxGameCard(card, data) {
 
 function sendXoxGame() {
     if (!currentUser || !currentUser.name) {
-        showToast('Please set your username first!', { icon: '🌸', type: 'error' });
+        showToast('Please set your username first', { type: 'error' });
         return;
     }
     if (!activeRoomId) return;
@@ -4225,13 +4209,13 @@ function sendXoxGame() {
         userId: currentUser.id || currentUser.userId || currentUser.name,
         time: formatTo12HourTime(new Date()),
         status: 'sent',
-        text: isAILounge ? '🎮 Tic-Tac-Toe match vs 🤖 Bot started! Tap squares to play.' : '🎮 Tic-Tac-Toe match started! Tap squares to play.',
+        text: isAILounge ? 'Tic-Tac-Toe match vs AI Bot started. Tap squares to play.' : 'Tic-Tac-Toe match started. Tap squares to play.',
         xox: {
             board: Array(9).fill(''),
             turn: 'X',
             players: { 
                 X: currentUser.name, 
-                O: isAILounge ? '🤖 Bot' : null 
+                O: isAILounge ? 'AI Bot' : null 
             },
             playerAvatars: { 
                 X: currentUser.avatar || `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(currentUser.name || 'Alex')}`, 
@@ -4245,7 +4229,7 @@ function sendXoxGame() {
 
     if (socket) {
         socket.emit('chat message', gameMsg);
-        showToast(isAILounge ? '🎮 Challenge vs AI started!' : '🎮 Tic-Tac-Toe challenge sent!', { icon: isAILounge ? '🤖' : '🎮', type: 'game' });
+        showToast('Challenge sent', { type: 'game' });
     }
 }
 
@@ -4256,12 +4240,12 @@ function handleXoxCellClick(msgId, index) {
     if (item && item.xox) {
         const xox = item.xox;
         if (xox.status !== 'in_progress') {
-            showToast("🎮 Game over! Tap 'Play Again' to start a rematch.", { icon: '🎮', type: 'game' });
+            showToast("Game ended", { type: 'game' });
             return;
         }
 
         if (xox.board && xox.board[index] !== '') {
-            showToast("✨ That square is already taken!", { icon: '✨', type: 'game' });
+            showToast("Square taken", { type: 'game' });
             return;
         }
 
@@ -4271,20 +4255,20 @@ function handleXoxCellClick(msgId, index) {
 
         if (currentTurn === 'X') {
             if (players.X && players.X !== myName) {
-                showToast(`🌸 It's ${players.X}'s (X) turn! Please wait for them to move.`, { icon: '🌸', type: 'game' });
+                showToast(`${players.X}'s turn`, { type: 'game' });
                 return;
             }
         } else if (currentTurn === 'O') {
             if (!players.O) {
                 if (players.X === myName) {
-                    showToast("💖 You are Player X! Waiting for your opponent to take O.", { icon: '💖', type: 'game' });
+                    showToast("Waiting for opponent", { type: 'game' });
                     return;
                 }
             } else if (players.O !== myName) {
-                if (players.O === '🤖 Bot') {
-                    showToast("🤖 AI Bot is thinking...", { icon: '🤖', type: 'game' });
+                if (players.O === 'AI Bot' || players.O === '🤖 Bot') {
+                    showToast("AI is thinking...", { type: 'game' });
                 } else {
-                    showToast(`🌸 It's ${players.O}'s (O) turn! Please wait for them to move.`, { icon: '🌸', type: 'game' });
+                    showToast(`${players.O}'s turn`, { type: 'game' });
                 }
                 return;
             }
@@ -4319,68 +4303,9 @@ function handleXoxCellClick(msgId, index) {
 
 // ==========================
 // 💋 INSTAGRAM-STYLE FLOATING KISS EMOJI ANIMATION
-// ==========================
 function triggerKissAnimation() {
-    try {
-        hapticFeedback('heavy');
-        playUiSound('pop');
-    } catch(e){}
-
-    const existing = document.getElementById('kiss-animation-container');
-    if (existing) existing.remove();
-
-    const container = document.createElement('div');
-    container.id = 'kiss-animation-container';
-    container.className = 'kiss-animation-container';
-
-    // Ambient pink backdrop glow
-    const backdrop = document.createElement('div');
-    backdrop.className = 'kiss-overlay-backdrop';
-    container.appendChild(backdrop);
-
-    // Cute emoji selection for a sweet aesthetic shower
-    const cuteEmojis = ['💋', '💋', '💋', '💖', '💕', '🌸', '✨', '💗', '🎀'];
-    
-    // Generate 16 floating emojis driven 100% by CSS keyframe GPU acceleration
-    const kissCount = 16;
-    for (let i = 0; i < kissCount; i++) {
-        const el = document.createElement('div');
-        el.className = 'floating-kiss-emoji';
-        el.textContent = cuteEmojis[Math.floor(Math.random() * cuteEmojis.length)];
-        
-        // Random horizontal spawn position (5% to 92%)
-        const left = (Math.random() * 87 + 5).toFixed(2);
-        const fontSize = Math.floor(Math.random() * 16 + 26); // 26px to 42px
-        
-        // Constant linear floating speed (3.0s to 3.8s) and delay
-        const duration = (Math.random() * 0.8 + 3.0).toFixed(2);
-        const delay = (Math.random() * 0.8).toFixed(2);
-        
-        // Rotation & sway variables for CSS transform
-        const initRot = (Math.random() * 30 - 15).toFixed(1); // -15deg to +15deg
-        const midRot = (Math.random() * 20 - 10).toFixed(1);
-        const endRot = (Math.random() * 40 - 20).toFixed(1); // -20deg to +20deg
-        const sway = (Math.random() * 60 - 30).toFixed(1); // -30px to +30px sway
-
-        el.style.left = `${left}%`;
-        el.style.fontSize = `${fontSize}px`;
-        el.style.animationDuration = `${duration}s`;
-        el.style.animationDelay = `${delay}s`;
-        el.style.setProperty('--sway', `${sway}px`);
-        el.style.setProperty('--init-rot', `${initRot}deg`);
-        el.style.setProperty('--mid-rot', `${midRot}deg`);
-        el.style.setProperty('--end-rot', `${endRot}deg`);
-
-        container.appendChild(el);
-    }
-
-    document.body.appendChild(container);
-
-    setTimeout(() => {
-        if (container && container.parentNode) {
-            container.remove();
-        }
-    }, 5200);
+    // Emojis disabled in chat
+    return;
 }
 
 function formatTo12HourTime(timeInput) {
@@ -4444,13 +4369,6 @@ function displayMessage(data, isHistory) {
     }
     if (data && data.xox) {
         xoxGamesMap.set(data.id, data);
-    }
-
-    // 💋 Trigger Instagram-style kiss animation when "Theshmil" or "Galliya" is sent/received
-    if (!isHistory && data && data.text && typeof data.text === 'string') {
-        if (/theshmil|galliya/i.test(data.text)) {
-            triggerKissAnimation();
-        }
     }
 
     const li = document.createElement('li'); li.id = `msg-${data.id}`; li.dataset.sender = data.user;
@@ -4663,6 +4581,7 @@ document.getElementById('messages').addEventListener('click', (e) => {
             hapticFeedback('medium');
             playUiSound('pop');
             socket.emit('reset xox game', { msgId });
+            showToast('Rematch started', { type: 'game' });
         }
         return;
     }
@@ -5443,7 +5362,7 @@ document.querySelectorAll('.wp-card').forEach(card => {
         const val = (wpType === 'default') ? null : `pattern:${wpType}`;
         setAndSaveWallpaper(val);
         const name = WALLPAPER_PATTERNS[wpType] ? WALLPAPER_PATTERNS[wpType].name : 'Pattern';
-        showToast(`✨ ${name} design applied!`);
+        showToast(`${name} design applied`);
     };
 });
 
@@ -5499,32 +5418,8 @@ if (savedFontSize) {
 }
 
 // Floating Particle Effect on Reaction
-function triggerReactionParticles(x, y, emoji = '✨') {
-    const toggle = document.getElementById('toggle-reaction-fx');
-    if (toggle && !toggle.checked) return;
-
-    for (let i = 0; i < 6; i++) {
-        const p = document.createElement('span');
-        p.className = 'reaction-particle';
-        p.textContent = emoji;
-        p.style.left = x + 'px';
-        p.style.top = y + 'px';
-        const dx = (Math.random() - 0.5) * 100 + 'px';
-        const dy = (Math.random() * -80 - 20) + 'px';
-        p.style.setProperty('--dx', dx);
-        p.style.setProperty('--dy', dy);
-        document.body.appendChild(p);
-        setTimeout(() => p.remove(), 800);
-    }
-}
-
-// Hook double click on messages to particle burst
-const messagesListEl = document.getElementById('messages');
-if (messagesListEl) {
-    messagesListEl.addEventListener('dblclick', (e) => {
-        triggerReactionParticles(e.clientX, e.clientY, '❤️');
-        showToast('❤️ Reacted!');
-    });
+function triggerReactionParticles() {
+    // Reaction particles disabled to keep chat clean and emoji-free
 }
 
 // Service Worker Registration & Web Push Init
@@ -5533,7 +5428,7 @@ if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/sw.js').then((reg) => {
             console.log('Service Worker registered with scope:', reg.scope);
             if (Notification.permission === 'granted') {
-                registerWebPushSubscription();
+                registerWebPushSubscription(false);
             }
         }).catch(err => {
             console.error('Service Worker registration failed:', err);

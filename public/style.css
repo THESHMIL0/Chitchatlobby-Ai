@@ -5359,36 +5359,37 @@ body[data-theme="dark"] .my-message .wave-bar.played {
 }
 
 /* ====================================
-   🌸 CUTE FLOATING THEME TOAST COMPONENT
+   CLEAN, THIN NOTIFICATION TOAST
 ==================================== */
 .custom-toast-pill {
     position: fixed;
-    bottom: 84px;
+    top: 14px;
     left: 50%;
-    transform: translateX(-50%) translateY(28px) scale(0.92);
+    transform: translateX(-50%) translateY(-14px);
     opacity: 0;
     pointer-events: none;
     z-index: 999999;
     background: var(--header-card-bg, rgba(255, 255, 255, 0.95));
     color: var(--text-primary, #0f172a);
-    border: 1.5px solid var(--border-color, rgba(0, 0, 0, 0.12));
-    border-radius: 9999px;
-    padding: 10px 20px;
-    font-size: 13.5px;
-    font-weight: 600;
+    border: 1px solid var(--border-color, rgba(0, 0, 0, 0.1));
+    border-radius: 999px;
+    padding: 5px 14px;
+    font-size: 12px;
+    font-weight: 500;
     line-height: 1.35;
+    letter-spacing: 0.15px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    box-shadow: 0 14px 40px var(--shadow-color, rgba(0, 0, 0, 0.18)), 0 4px 12px rgba(0, 0, 0, 0.08);
-    -webkit-backdrop-filter: blur(20px);
-    backdrop-filter: blur(20px);
-    max-width: min(calc(100vw - 32px), 440px);
-    text-align: left;
-    white-space: normal;
-    word-break: break-word;
-    transition: opacity 0.2s ease, transform 0.25s ease;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    max-width: min(calc(100vw - 32px), 320px);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     -webkit-user-select: none;
     user-select: none;
 }
@@ -5396,59 +5397,34 @@ body[data-theme="dark"] .my-message .wave-bar.played {
 .custom-toast-pill.show {
     opacity: 1;
     pointer-events: auto;
-    animation: cuteToastBounceIn 0.38s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-}
-
-@keyframes cuteToastBounceIn {
-    0% {
-        opacity: 0;
-        transform: translateX(-50%) translateY(32px) scale(0.88);
-    }
-    65% {
-        opacity: 1;
-        transform: translateX(-50%) translateY(-4px) scale(1.02);
-    }
-    100% {
-        opacity: 1;
-        transform: translateX(-50%) translateY(0) scale(1);
-    }
-}
-
-.custom-toast-pill .toast-emoji-icon {
-    font-size: 20px;
-    line-height: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    animation: cuteToastIconWiggle 0.6s ease-in-out;
-}
-
-@keyframes cuteToastIconWiggle {
-    0%, 100% { transform: scale(1) rotate(0deg); }
-    30% { transform: scale(1.25) rotate(-10deg); }
-    60% { transform: scale(1.15) rotate(10deg); }
+    transform: translateX(-50%) translateY(0);
 }
 
 .custom-toast-pill .toast-message-text {
-    font-size: 13.5px;
-    font-weight: 600;
+    font-size: 12px;
+    font-weight: 500;
     color: var(--text-primary);
 }
 
 .custom-toast-pill.toast-error {
-    border-color: rgba(244, 63, 94, 0.45);
-    box-shadow: 0 14px 40px rgba(244, 63, 94, 0.18), 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-color: rgba(239, 68, 68, 0.3);
 }
 
 .custom-toast-pill.toast-game {
-    border-color: rgba(16, 185, 129, 0.45);
-    box-shadow: 0 14px 40px rgba(16, 185, 129, 0.18), 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-color: rgba(16, 185, 129, 0.3);
 }
 
 .custom-toast-pill.toast-success {
-    border-color: rgba(16, 185, 129, 0.45);
-    box-shadow: 0 14px 40px rgba(16, 185, 129, 0.2), 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+/* Remove emojis and unwanted emoji reactions from chat */
+.reaction-bar,
+.reaction-badge,
+.floating-kiss-emoji,
+.kiss-animation-container,
+.cute-charms-layer {
+    display: none !important;
 }
 
 /* ====================================
@@ -5650,10 +5626,8 @@ li[id^="msg-msg_"] .meta-row {
 }
 
 .xox-player-box.active-turn .xox-pname::after {
-    content: ' ✏️';
-    display: inline-block;
-    font-size: 11px;
-    animation: pencilBob 1.2s infinite alternate ease-in-out;
+    content: '';
+    display: none;
 }
 
 @keyframes pencilBob {
