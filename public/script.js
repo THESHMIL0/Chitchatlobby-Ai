@@ -2962,6 +2962,7 @@ if (input) {
     input.addEventListener('input', handleInputChange);
     input.addEventListener('keyup', handleInputChange);
     input.addEventListener('change', handleInputChange);
+    input.addEventListener('compositionend', handleInputChange);
     input.addEventListener('paste', () => setTimeout(handleInputChange, 15));
 
     const handleEnterKey = (e) => { 
@@ -2979,9 +2980,9 @@ function sendMessage() {
     const text = input.value ? input.value.trim() : '';
     if (!text && !editingMsgId && activeRoomId !== 'ai_lounge') return;
 
-
-
     if (socket) socket.emit('typing', false); 
+    clearTimeout(typingTimeout);
+    typingSent = false;
 
     const targetRoomId = activeRoomId || 'lobby';
 
@@ -3005,6 +3006,9 @@ function sendMessage() {
     }
 
     input.value = ''; 
+    try {
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+    } catch (e) {}
     setSendBtnState(activeRoomId === 'ai_lounge' ? 'send' : 'mic'); 
     replyingTo = null; 
     if (replyPreviewContainer) replyPreviewContainer.classList.add('hidden');
@@ -5121,64 +5125,71 @@ if (sendRecBtn) {
 }
 
 // ==========================
-// ✅ THE FLAWLESS SEND & MIC BUTTON HANDLERS
+// ✅ FLAWLESS SEND & MIC BUTTON (CONSECUTIVE SENDS & VOICE NOTES)
 // ==========================
 if (sendMicBtn) {
-    let lastSendTriggerTime = 0;
+    let lastSendTime = 0;
 
-    function handleSendOrMicAction(e) {
+    // Prevent desktop input blur when clicking the button with mouse
+    sendMicBtn.addEventListener('mousedown', (e) => {
+        const hasText = input && input.value && input.value.trim().length > 0;
+        const currentState = sendMicBtn.dataset.state || (hasText ? 'send' : 'mic');
+        if (hasText || currentState === 'send' || currentState === 'check') {
+            e.preventDefault();
+        }
+    });
+
+    function doSendMessage(e) {
         if (e && e.cancelable) {
             e.preventDefault();
         }
         const now = Date.now();
-        if (now - lastSendTriggerTime < 300) return;
-        lastSendTriggerTime = now;
+        if (now - lastSendTime < 350) return;
+        lastSendTime = now;
 
-        const hasText = input && input.value && input.value.trim().length > 0;
-        const currentState = sendMicBtn.dataset.state || (hasText ? 'send' : 'mic');
-        if (hasText || currentState === 'send' || currentState === 'check') {
-            sendMessage();
-            if (input) {
-                try { input.focus({ preventScroll: true }); } catch (err) {}
-            }
-        } else {
-            if (!isRecording) {
-                startRecording(e);
-            }
+        sendMessage();
+    }
+
+    function doMicAction(e) {
+        if (e && e.cancelable) {
+            e.preventDefault();
+        }
+        const now = Date.now();
+        if (now - lastSendTime < 350) return;
+        lastSendTime = now;
+
+        if (!isRecording) {
+            startRecording(e);
         }
     }
 
-    // Prevent input blur on pointerdown, mousedown, and touchstart
-    // This stops mobile virtual keyboards from collapsing on the first tap!
-    const preventSendBlur = (e) => {
-        const hasText = input && input.value && input.value.trim().length > 0;
-        const currentState = sendMicBtn.dataset.state || (hasText ? 'send' : 'mic');
-        if (hasText || currentState === 'send' || currentState === 'check') {
-            if (e && e.cancelable) e.preventDefault();
-        }
-    };
-
-    sendMicBtn.addEventListener('pointerdown', preventSendBlur);
-    sendMicBtn.addEventListener('mousedown', preventSendBlur);
-    sendMicBtn.addEventListener('touchstart', preventSendBlur, { passive: false });
-
-    // Handle touchend immediately so touch users send on the very first tap with zero latency
+    // Immediate touch-up execution for mobile:
+    // Prevents the 300ms click delay and eliminates any chance that keyboard dismissal cancels the click
     sendMicBtn.addEventListener('touchend', (e) => {
         const hasText = input && input.value && input.value.trim().length > 0;
         const currentState = sendMicBtn.dataset.state || (hasText ? 'send' : 'mic');
+
         if (hasText || currentState === 'send' || currentState === 'check') {
-            handleSendOrMicAction(e);
+            doSendMessage(e);
         } else {
             handleHoldRelease(e);
         }
     });
 
+    // Standard click event for desktop mouse and non-touch devices
     sendMicBtn.addEventListener('click', (e) => {
-        handleSendOrMicAction(e);
+        const hasText = input && input.value && input.value.trim().length > 0;
+        const currentState = sendMicBtn.dataset.state || (hasText ? 'send' : 'mic');
+
+        if (hasText || currentState === 'send' || currentState === 'check') {
+            doSendMessage(e);
+        } else {
+            doMicAction(e);
+        }
     });
 
     function handleHoldRelease(e) {
-        if (isRecording && !isRecordingPaused && (Date.now() - recordStartTime > 1200)) {
+        if (isRecording && !isRecordingPaused && (Date.now() - recordStartTime > 1000)) {
             stopRecording(false);
         }
     }
