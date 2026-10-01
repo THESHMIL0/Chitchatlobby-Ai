@@ -964,7 +964,7 @@ io.on('connection', (socket) => {
 
         let cleanAvatar = '';
         if (user.avatar && (user.avatar.startsWith('https://') || user.avatar.startsWith('data:image/') || user.avatar.startsWith('/'))) {
-            cleanAvatar = user.avatar.substring(0, 500);
+            cleanAvatar = user.avatar.length <= 1500000 ? user.avatar : user.avatar.substring(0, 1500000);
         }
 
         const cleanAbout = String(user.about || 'Using Chit Chat').substring(0, 100);
@@ -975,6 +975,11 @@ io.on('connection', (socket) => {
             activeUsersById[socket.id].avatar = cleanAvatar; 
             activeUsersById[socket.id].about = cleanAbout; 
             activeUsersById[socket.id].color = cleanColor;
+        }
+
+        const currentRoomId = activeUsersById[socket.id]?.roomId;
+        if (currentRoomId) {
+            io.to(currentRoomId).emit('room users', getUsersInRoom(currentRoomId));
         }
 
         db.run("INSERT OR REPLACE INTO users (name, avatar, about, isOnline, lastSeen, bubbleColor) VALUES (?, ?, ?, ?, ?, ?)", 
@@ -1002,14 +1007,14 @@ io.on('connection', (socket) => {
         if (userAvatar && !userAvatar.startsWith('https://') && !userAvatar.startsWith('data:image/') && !userAvatar.startsWith('/')) {
             userAvatar = '';
         }
-        data.avatar = userAvatar;
+        data.avatar = userAvatar.substring(0, 1500000);
         data.userId = (sessionUser && sessionUser.userId) ? sessionUser.userId : (data.userId || ('usr_' + socket.id));
 
         const roomId = (typeof data.roomId === 'string' && rooms.has(data.roomId))
             ? data.roomId 
             : (sessionUser?.roomId || 'lobby');
 
-                data.id = data.id || (Date.now() + "_" + Math.floor(Math.random() * 1000));
+        data.id = data.id || (Date.now() + "_" + Math.floor(Math.random() * 1000));
         data.roomId = roomId; 
         data.type = data.type || 'chat'; 
         
@@ -1027,10 +1032,10 @@ io.on('connection', (socket) => {
             data.text = '';
         }
 
-        // Validate attached media payload (max 8MB base64)
+        // Validate attached media payload (max 16MB base64)
         if (data.uploadedImage && typeof data.uploadedImage === 'string') {
-            if (data.uploadedImage.length > 8 * 1024 * 1024) {
-                return socket.emit('action error', 'Attached media is too large (maximum 8MB).');
+            if (data.uploadedImage.length > 16 * 1024 * 1024) {
+                return socket.emit('action error', 'Attached media is too large (maximum 16MB).');
             }
         }
 
