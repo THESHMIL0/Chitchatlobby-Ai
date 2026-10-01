@@ -600,7 +600,7 @@ const db = {
 const activeUsersById = {}; 
 
 function getUsersInRoom(roomId) { 
-    return Object.values(activeUsersById).filter(u => u.roomId === roomId).map(u => u.name); 
+    return Object.values(activeUsersById).filter(u => u.roomId === roomId && !u.hideOnline).map(u => u.name); 
 }
 
 function broadcastRooms(targetSocket = io) { 
@@ -901,7 +901,8 @@ io.on('connection', (socket) => {
                 color: safeColor,
                 userId: userId,
                 id: userId,
-                roomId: room.id 
+                roomId: room.id,
+                hideOnline: !!userObj.hideOnline
             };
 
             db.run("INSERT OR REPLACE INTO users (name, avatar, about, isOnline, lastSeen, bubbleColor) VALUES (?, ?, ?, ?, ?, ?)", 
@@ -1702,66 +1703,6 @@ io.on('connection', (socket) => {
         }
     });
 
-    // ==========================================
-    // 📞 WebRTC 1-on-1 Voice & Video Calling Signaling
-    // ==========================================
-    socket.on('call-user', (data) => {
-        if (!data || typeof data !== 'object') return;
-        const callerInfo = activeUsersById[socket.id] || { name: 'Friend', avatar: '/icon.svg' };
-        const roomId = data.roomId || activeUsersById[socket.id]?.roomId;
-        const payload = {
-            callerSocketId: socket.id,
-            callerName: callerInfo.name,
-            callerAvatar: callerInfo.avatar || '/icon.svg',
-            roomId: roomId,
-            isVideo: !!data.isVideo
-        };
-
-        if (data.targetSocketId && data.targetSocketId !== socket.id) {
-            io.to(data.targetSocketId).emit('call-incoming', payload);
-        } else if (roomId) {
-            socket.to(roomId).emit('call-incoming', payload);
-        }
-    });
-
-    socket.on('call-accept', (data) => {
-        if (!data || !data.callerSocketId) return;
-        const responderInfo = activeUsersById[socket.id] || { name: 'Friend', avatar: '/icon.svg' };
-        io.to(data.callerSocketId).emit('call-accepted', {
-            responderSocketId: socket.id,
-            responderName: responderInfo.name,
-            responderAvatar: responderInfo.avatar || '/icon.svg',
-            isVideo: !!data.isVideo
-        });
-    });
-
-    socket.on('call-signal', (data) => {
-        if (data && data.to && data.signal) {
-            io.to(data.to).emit('call-signal', {
-                from: socket.id,
-                signal: data.signal
-            });
-        }
-    });
-
-    socket.on('call-reject', (data) => {
-        const payload = { from: socket.id, reason: data?.reason || 'declined' };
-        if (data && data.to) {
-            io.to(data.to).emit('call-rejected', payload);
-        } else if (data && data.roomId) {
-            socket.to(data.roomId).emit('call-rejected', payload);
-        }
-    });
-
-    socket.on('call-end', (data) => {
-        const payload = { from: socket.id };
-        if (data && data.to) {
-            io.to(data.to).emit('call-ended', payload);
-        } else if (data && data.roomId) {
-            socket.to(data.roomId).emit('call-ended', payload);
-        }
-    });
-
     socket.on('disconnect', () => {
         const userData = activeUsersById[socket.id];
         if (userData) {
@@ -1771,7 +1712,6 @@ io.on('connection', (socket) => {
             if (userData.roomId) {
                 io.to(userData.roomId).emit('room users', getUsersInRoom(userData.roomId));
                 io.to(userData.roomId).emit('user typing', { name: userData.name, isTyping: false });
-                socket.to(userData.roomId).emit('call-ended', { from: socket.id });
             }
         }
         delete activeUsersById[socket.id];
