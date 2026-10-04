@@ -27,6 +27,58 @@ function sanitizeUrl(url) {
     return '';
 }
 
+function escapeJsParam(str) {
+    if (!str) return 'User';
+    return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+
+function getInlineSvgAvatar(name) {
+    const clean = String(name || 'U').trim() || 'U';
+    const initial = (clean.charAt(0) || 'U').toUpperCase();
+    let hash = 0;
+    for (let i = 0; i < clean.length; i++) {
+        hash = clean.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const hue1 = Math.abs(hash % 360);
+    const hue2 = (hue1 + 45) % 360;
+    const c1 = `hsl(${hue1}, 75%, 65%)`;
+    const c2 = `hsl(${hue2}, 85%, 45%)`;
+
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">` +
+        `<defs>` +
+        `<linearGradient id="g_${Math.abs(hash)}" x1="0%" y1="0%" x2="100%" y2="100%">` +
+        `<stop offset="0%" stop-color="${c1}" />` +
+        `<stop offset="100%" stop-color="${c2}" />` +
+        `</linearGradient>` +
+        `</defs>` +
+        `<rect width="100" height="100" rx="50" fill="url(#g_${Math.abs(hash)})" />` +
+        `<text x="50" y="52" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="44" font-weight="700" fill="#ffffff" text-anchor="middle" dominant-baseline="central">${escapeHTML(initial)}</text>` +
+        `</svg>`;
+    return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+}
+
+function getSafeAvatarUrl(avatar, name) {
+    const cleanName = String(name || 'Alex').trim() || 'Alex';
+    if (avatar && typeof avatar === 'string') {
+        const trimmed = avatar.trim();
+        if (trimmed.startsWith('data:image/') || trimmed.startsWith('https://') || trimmed.startsWith('http://') || trimmed.startsWith('blob:') || trimmed.startsWith('/')) {
+            if (trimmed !== 'undefined' && trimmed !== 'null' && trimmed.length > 5) {
+                return trimmed;
+            }
+        }
+    }
+    if (cleanName === '🤖 Bot' || cleanName.toLowerCase().includes('bot')) {
+        return 'https://api.dicebear.com/7.x/lorelei/svg?seed=ChitChatBot&backgroundColor=b6e3f4';
+    }
+    return `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(cleanName)}`;
+}
+
+window.handleAvatarError = function(img, name) {
+    if (!img) return;
+    img.onerror = null;
+    img.src = getInlineSvgAvatar(name || 'User');
+};
+
 function showToast(msg, options = {}) {
     let duration = 3200;
     let icon = '';
@@ -886,7 +938,7 @@ function saveUserLocally() {
 
 function syncUserAvatarUI() {
     if (!currentUser) return;
-    const url = currentUser.avatar || `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(currentUser.name || 'Alex')}`;
+    const url = getSafeAvatarUrl(currentUser.avatar, currentUser.name || 'Alex');
 
     const elements = [
         document.getElementById('avatar-preview'),
@@ -899,8 +951,7 @@ function syncUserAvatarUI() {
         if (img) {
             img.src = url;
             img.onerror = function () {
-                this.onerror = null;
-                this.src = `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(currentUser.name || 'Alex')}`;
+                window.handleAvatarError(this, currentUser.name || 'Alex');
             };
         }
     });
@@ -2324,7 +2375,10 @@ function showInAppNotificationBanner(alertData) {
     const roomEl = document.getElementById('notif-banner-room');
     const textEl = document.getElementById('notif-banner-text');
 
-    if (avatarImg) avatarImg.src = alertData.avatar || 'https://api.dicebear.com/7.x/lorelei/svg?seed=Guest';
+    if (avatarImg) {
+        avatarImg.src = getSafeAvatarUrl(alertData.avatar, alertData.sender || 'Friend');
+        avatarImg.onerror = function() { window.handleAvatarError(this, alertData.sender || 'Friend'); };
+    }
     if (senderEl) senderEl.textContent = alertData.sender || 'Friend';
     if (roomEl) roomEl.textContent = alertData.roomName || alertData.roomId || 'Room';
     if (textEl) textEl.textContent = alertData.text || 'Sent a message';
@@ -2521,8 +2575,8 @@ function updateHeaderSubtitle() {
 
         // Update Floating Animated Typing Bubble
         if (floatingTypingBubble && floatingTypingAvatar && floatingTypingName) {
-            const firstUser = users[users.length - 1]; // most recent typing user
-            floatingTypingAvatar.src = firstUser.avatar || `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(firstUser.name)}`;
+            floatingTypingAvatar.src = getSafeAvatarUrl(firstUser.avatar, firstUser.name);
+            floatingTypingAvatar.onerror = function() { window.handleAvatarError(this, firstUser.name); };
 
             const statusLabel = floatingTypingBubble.querySelector('.typing-status-label');
 
@@ -2557,12 +2611,13 @@ function updateHeaderSubtitle() {
 
 socket.on('room users', (usersList) => {
     currentRoomMembersCache = usersList || [];
+    const names = (usersList || []).map(u => typeof u === 'string' ? u : u.name);
     if (activeRoomId === 'ai_lounge') {
         baseOnlineText = "🤖 Bot • AI Assistant";
-    } else if (usersList.length <= 1) { 
+    } else if (names.length <= 1) { 
         baseOnlineText = "Only you are here"; 
     } else { 
-        baseOnlineText = "Online: You, " + usersList.filter(u => u !== currentUser.name).join(', '); 
+        baseOnlineText = "Online: You, " + names.filter(n => n !== currentUser.name).join(', '); 
     }
     updateHeaderSubtitle();
     if (roomSettingsScreen && !roomSettingsScreen.classList.contains('hidden')) {
@@ -2570,11 +2625,37 @@ socket.on('room users', (usersList) => {
     }
 });
 
+socket.on('user profile updated', (updatedUser) => {
+    if (!updatedUser || !updatedUser.name) return;
+    const safeAvatar = getSafeAvatarUrl(updatedUser.avatar, updatedUser.name);
+    try {
+        const selector = `.avatar-small[data-name="${CSS.escape(updatedUser.name)}"]`;
+        document.querySelectorAll(selector).forEach(img => {
+            img.src = safeAvatar;
+        });
+    } catch (e) {
+        document.querySelectorAll('.avatar-small').forEach(img => {
+            if (img.dataset.name === updatedUser.name) img.src = safeAvatar;
+        });
+    }
+    if (Array.isArray(currentRoomMembersCache)) {
+        currentRoomMembersCache.forEach(m => {
+            if (typeof m === 'object' && m !== null && m.name === updatedUser.name) {
+                m.avatar = safeAvatar;
+                m.about = updatedUser.about || m.about;
+            }
+        });
+        if (roomSettingsScreen && !roomSettingsScreen.classList.contains('hidden')) {
+            renderRoomSettingsMembers(currentRoomMembersCache);
+        }
+    }
+});
+
 socket.on('user typing', (data) => {
     if (data.isTyping) {
         currentlyTyping.set(data.name, {
             name: data.name,
-            avatar: data.avatar || `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(data.name)}`
+            avatar: getSafeAvatarUrl(data.avatar, data.name)
         });
     } else {
         currentlyTyping.delete(data.name);
@@ -2625,18 +2706,20 @@ function renderRoomSettingsMembers(usersList) {
         return;
     }
 
-    roomSettingsMembersList.innerHTML = users.map(userName => {
+    roomSettingsMembersList.innerHTML = users.map(userItem => {
+        const userName = (typeof userItem === 'object' && userItem !== null) ? userItem.name : String(userItem || '');
         const isMe = (currentUser && currentUser.name === userName);
         const isBot = (userName === 'ChitChat AI' || (activeRoomId === 'ai_lounge' && userName.toLowerCase().includes('bot')));
+        const rawAvatar = (typeof userItem === 'object' && userItem !== null) ? userItem.avatar : (isMe ? currentUser.avatar : '');
         const avatarUrl = isBot 
             ? '/ai-icon.svg' 
-            : `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(userName)}`;
+            : getSafeAvatarUrl(rawAvatar, userName);
 
         return `
-            <div class="room-member-row">
+            <div class="room-member-row" data-name="${escapeHTML(userName)}" style="cursor: pointer;" title="Tap to view ${escapeHTML(userName)}'s profile">
                 <div class="room-member-lead">
                     <img class="room-member-avatar" src="${escapeHTML(avatarUrl)}" alt="${escapeHTML(userName)}"
-                        onerror="this.onerror=null;this.src='https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(userName)}';">
+                        onerror="window.handleAvatarError(this, '${escapeJsParam(userName)}');">
                     <div class="room-member-info">
                         <span class="room-member-name">${escapeHTML(userName)}${isMe ? ' (You)' : ''}</span>
                         <span class="room-member-tag">${isBot ? 'Official AI Assistant' : (isMe ? 'Active now' : 'Online')}</span>
@@ -2646,6 +2729,18 @@ function renderRoomSettingsMembers(usersList) {
             </div>
         `;
     }).join('');
+}
+
+if (roomSettingsMembersList) {
+    roomSettingsMembersList.addEventListener('click', (e) => {
+        const row = e.target.closest('.room-member-row');
+        if (row && row.dataset.name) {
+            const memberName = row.dataset.name;
+            if (memberName && socket) {
+                socket.emit('get user info', memberName);
+            }
+        }
+    });
 }
 
 function openRoomSettingsScreen() {
@@ -3818,11 +3913,11 @@ function getMessageInnerHTML(data, isMe, isStacked) {
         const winningLine = xox.winningLine || [];
 
         const playerXName = players.X || 'Player X';
-        const playerXAvatar = avatars.X || `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(playerXName)}`;
+        const playerXAvatar = getSafeAvatarUrl(avatars.X, playerXName);
 
         const playerOName = players.O;
         const playerOAvatar = playerOName
-            ? (avatars.O || `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(playerOName)}`)
+            ? getSafeAvatarUrl(avatars.O, playerOName)
             : null;
 
         const isMePlayerX = currentUser && currentUser.name && currentUser.name === players.X;
@@ -3875,7 +3970,7 @@ function getMessageInnerHTML(data, isMe, isStacked) {
                 <div class="xox-players-bar">
                     <div class="xox-player-box player-x-box ${isXTurn ? 'active-turn' : ''}">
                         <div class="xox-avatar-ring">
-                            <img src="${escapeHTML(playerXAvatar)}" class="xox-player-avatar" alt="${escapeHTML(playerXName)}" title="${escapeHTML(playerXName)}">
+                            <img src="${escapeHTML(playerXAvatar)}" class="xox-player-avatar" alt="${escapeHTML(playerXName)}" title="${escapeHTML(playerXName)}" onerror="window.handleAvatarError(this, '${escapeJsParam(playerXName)}');">
                             <span class="xox-badge badge-x">X</span>
                             <div class="xox-ring-glow"></div>
                         </div>
@@ -3891,7 +3986,7 @@ function getMessageInnerHTML(data, isMe, isStacked) {
                     <div class="xox-player-box player-o-box ${isOTurn ? 'active-turn' : ''} ${!playerOName ? 'waiting-slot' : ''}">
                         <div class="xox-avatar-ring">
                             ${playerOAvatar
-                ? `<img src="${escapeHTML(playerOAvatar)}" class="xox-player-avatar" alt="${escapeHTML(playerOName)}" title="${escapeHTML(playerOName)}">`
+                ? `<img src="${escapeHTML(playerOAvatar)}" class="xox-player-avatar" alt="${escapeHTML(playerOName)}" title="${escapeHTML(playerOName)}" onerror="window.handleAvatarError(this, '${escapeJsParam(playerOName)}');">`
                 : `<div class="xox-player-avatar xox-empty-avatar" title="Waiting for opponent"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></div>`}
                             <span class="xox-badge badge-o">O</span>
                             <div class="xox-ring-glow"></div>
@@ -4111,9 +4206,9 @@ function getMessageInnerHTML(data, isMe, isStacked) {
                     ${reactionsHTML}
                 </div>
             </div>`;
-    } else {
+        const safeAvatar = getSafeAvatarUrl(data.avatar, data.user);
         const avatarHTML = !isStacked
-            ? `<img src="${escapeHTML(data.avatar)}" class="avatar-small" data-name="${escapeHTML(data.user)}" title="${escapeHTML(data.user)}">`
+            ? `<img src="${escapeHTML(safeAvatar)}" class="avatar-small" data-name="${escapeHTML(data.user)}" title="${escapeHTML(data.user)}" onerror="window.handleAvatarError(this, '${escapeJsParam(data.user)}');">`
             : `<div class="avatar-placeholder"></div>`;
         return `
             ${avatarHTML}
@@ -4199,7 +4294,7 @@ function renderPollVotersList(poll) {
                     <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px;">
                         ${votes.map(vName => `
                             <div style="display: flex; align-items: center; gap: 6px; background: var(--bg-screen); border: 1px solid var(--border-color); padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; color: var(--text-primary);">
-                                <img src="https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(vName)}" style="width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--border-color);">
+                                <img src="https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(vName)}" onerror="window.handleAvatarError(this, '${escapeJsParam(vName)}');" style="width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--border-color); object-fit: cover;">
                                 <span>${escapeHTML(vName)}</span>
                             </div>
                         `).join('')}
@@ -4292,28 +4387,45 @@ function updateXoxGameCard(card, data) {
     const playerOBox = card.querySelector('.player-o-box');
     const isXTurn = status === 'in_progress' && currentTurn === 'X';
     const isOTurn = status === 'in_progress' && currentTurn === 'O';
-    if (playerXBox) playerXBox.classList.toggle('active-turn', isXTurn);
+    if (playerXBox) {
+        playerXBox.classList.toggle('active-turn', isXTurn);
+        const playerXName = players.X || 'Player X';
+        const playerXAvatar = getSafeAvatarUrl(avatars.X, playerXName);
+        const xImg = playerXBox.querySelector('img.xox-player-avatar');
+        if (xImg) {
+            if (xImg.src !== playerXAvatar) xImg.src = playerXAvatar;
+            xImg.onerror = function() { window.handleAvatarError(this, playerXName); };
+        }
+    }
     if (playerOBox) {
         playerOBox.classList.toggle('active-turn', isOTurn);
         playerOBox.classList.toggle('waiting-slot', !players.O);
 
-        // Update player O name & avatar if changed
+        // Update player O name & avatar
         const oAvatarContainer = playerOBox.querySelector('.xox-avatar-ring');
         const oNameSpan = playerOBox.querySelector('.xox-pname');
-        if (players.O && oNameSpan && oNameSpan.classList.contains('xox-pname-waiting')) {
+        if (players.O) {
             const isMePlayerO = currentUser && currentUser.name && currentUser.name === players.O;
             const playerODisplayName = escapeHTML(players.O) + (isMePlayerO ? ' (You)' : '');
-            oNameSpan.className = 'xox-pname';
-            oNameSpan.title = escapeHTML(players.O);
-            oNameSpan.innerHTML = playerODisplayName;
+            if (oNameSpan) {
+                oNameSpan.className = 'xox-pname';
+                oNameSpan.title = escapeHTML(players.O);
+                oNameSpan.innerHTML = playerODisplayName;
+            }
 
-            const playerOAvatar = avatars.O || `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(players.O)}`;
+            const playerOAvatar = getSafeAvatarUrl(avatars.O, players.O);
             if (oAvatarContainer) {
-                oAvatarContainer.innerHTML = `
-                    <img src="${escapeHTML(playerOAvatar)}" class="xox-player-avatar" alt="${escapeHTML(players.O)}" title="${escapeHTML(players.O)}">
-                    <span class="xox-badge badge-o">O</span>
-                    <div class="xox-ring-glow"></div>
-                `;
+                const existingOImg = oAvatarContainer.querySelector('img.xox-player-avatar');
+                if (existingOImg) {
+                    if (existingOImg.src !== playerOAvatar) existingOImg.src = playerOAvatar;
+                    existingOImg.onerror = function() { window.handleAvatarError(this, players.O); };
+                } else {
+                    oAvatarContainer.innerHTML = `
+                        <img src="${escapeHTML(playerOAvatar)}" class="xox-player-avatar" alt="${escapeHTML(players.O)}" title="${escapeHTML(players.O)}" onerror="window.handleAvatarError(this, '${escapeJsParam(players.O)}');">
+                        <span class="xox-badge badge-o">O</span>
+                        <div class="xox-ring-glow"></div>
+                    `;
+                }
             }
         }
     }
@@ -4859,9 +4971,15 @@ socket.on('user info result', (info) => {
     const nameEl = document.getElementById('view-profile-name');
     const aboutEl = document.getElementById('view-profile-about');
     const avatarEl = document.getElementById('view-profile-avatar');
-    if (nameEl) nameEl.textContent = info.name || 'User Profile';
+    const safeName = info.name || 'User Profile';
+    if (nameEl) nameEl.textContent = safeName;
     if (aboutEl) aboutEl.textContent = info.about || 'Hey there! I am using Chit Chat.';
-    if (avatarEl) avatarEl.src = info.avatar || generateCuteAvatar(info.name || 'User');
+    if (avatarEl) {
+        avatarEl.src = getSafeAvatarUrl(info.avatar, safeName);
+        avatarEl.onerror = function () {
+            window.handleAvatarError(this, safeName);
+        };
+    }
     if (modal) modal.classList.remove('hidden');
 });
 

@@ -235,7 +235,7 @@
             <div class="avatar-setup-section">
                 <div id="avatar-preview-container" class="avatar-preview-wrap">
                     <img id="avatar-preview" src="https://api.dicebear.com/7.x/lorelei/svg?seed=Felix" alt="Avatar"
-                        title="Avatar">
+                        title="Avatar" onerror="window.handleAvatarError(this, 'User');">
                     <button type="button" id="btn-trigger-upload" class="edit-avatar-btn" title="Upload Photo"
                         aria-label="Upload Photo">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -303,7 +303,7 @@
             <div class="lobby-title-wrap">
                 <div class="lobby-user-profile-trigger" id="lobby-profile-btn" title="View Profile">
                     <img id="lobby-user-avatar" src="https://api.dicebear.com/7.x/lorelei/svg?seed=Felix"
-                        alt="User Avatar" class="lobby-user-avatar-img" title="User Avatar">
+                        alt="User Avatar" class="lobby-user-avatar-img" title="User Avatar" onerror="window.handleAvatarError(this, 'User');">
                     <span class="lobby-user-online-pulse"></span>
                 </div>
                 <div class="lobby-brand-meta">
@@ -496,7 +496,7 @@
             <div id="floating-typing-bubble" class="floating-typing-bubble hidden">
                 <div class="typing-bubble-avatar-wrap">
                     <img id="floating-typing-avatar" src="https://api.dicebear.com/7.x/lorelei/svg?seed=ChitChat"
-                        alt="User Avatar" title="User Avatar">
+                        alt="User Avatar" title="User Avatar" onerror="window.handleAvatarError(this, 'ChitChat');">
                 </div>
                 <div class="typing-bubble-content">
                     <div class="typing-bubble-meta">
@@ -699,7 +699,7 @@
                         title="Click to upload custom photo">
                         <div class="avatar-ring-glow"></div>
                         <img id="settings-avatar-preview" src="https://api.dicebear.com/7.x/lorelei/svg?seed=Felix"
-                            alt="User Avatar" title="User Avatar">
+                            alt="User Avatar" title="User Avatar" onerror="window.handleAvatarError(this, 'User');">
                         <div class="edit-icon-badge">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2.5">
@@ -940,7 +940,7 @@
             <div class="modal-drag-pill"></div>
             <div class="view-profile-avatar-wrap">
                 <img id="view-profile-avatar" src="https://api.dicebear.com/7.x/lorelei/svg?seed=User" alt="User Avatar"
-                    class="view-profile-avatar-img">
+                    class="view-profile-avatar-img" onerror="window.handleAvatarError(this, 'User');">
             </div>
             <h3 id="view-profile-name">User Profile</h3>
             <p id="view-profile-about" class="modal-subtitle">Hey there! I am using Chit Chat.</p>
@@ -1280,7 +1280,7 @@
             <div id="settings-profile-card" class="clean-profile-tile" role="button" tabindex="0">
                 <div class="clean-avatar-wrap">
                     <img id="settings-card-avatar" src="https://api.dicebear.com/7.x/lorelei/svg?seed=Felix"
-                        alt="User Avatar" title="User Avatar">
+                        alt="User Avatar" title="User Avatar" onerror="window.handleAvatarError(this, 'User');">
                     <span class="clean-online-dot"></span>
                 </div>
                 <div class="clean-profile-meta">
@@ -1774,7 +1774,7 @@
     <div id="in-app-notification-banner" class="in-app-notif-banner hidden">
         <div class="notif-banner-avatar-wrap">
             <img id="notif-banner-avatar" src="https://api.dicebear.com/7.x/lorelei/svg?seed=ChitChat"
-                alt="Notification Avatar" title="Notification Avatar">
+                alt="Notification Avatar" title="Notification Avatar" onerror="window.handleAvatarError(this, 'ChitChat');">
         </div>
         <div class="notif-banner-content">
             <div class="notif-banner-title">

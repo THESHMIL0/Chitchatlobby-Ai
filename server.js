@@ -614,11 +614,33 @@ function emitToUserSockets(userId, event, payload, fallbackSocket = null) {
     }
 }
 
+function getSafeServerAvatar(avatar, name) {
+    const cleanName = String(name || 'Alex').trim() || 'Alex';
+    if (avatar && typeof avatar === 'string') {
+        const trimmed = avatar.trim();
+        if (trimmed.startsWith('data:image/') || trimmed.startsWith('https://') || trimmed.startsWith('http://') || trimmed.startsWith('/')) {
+            if (trimmed !== 'undefined' && trimmed !== 'null' && trimmed.length > 5) {
+                return trimmed.length <= 1500000 ? trimmed : `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(cleanName)}`;
+            }
+        }
+    }
+    return `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(cleanName)}`;
+}
+
 function getUsersInRoom(roomId) {
     if (roomId === 'ai_lounge') {
-        return ['🤖 Bot'];
+        return [{
+            name: '🤖 Bot',
+            avatar: 'https://api.dicebear.com/7.x/lorelei/svg?seed=ChitChatBot&backgroundColor=b6e3f4',
+            about: 'Official AI Assistant'
+        }];
     }
-    return Object.values(activeUsersById).filter(u => u.roomId === roomId).map(u => u.name);
+    return Object.values(activeUsersById).filter(u => u.roomId === roomId).map(u => ({
+        name: u.name,
+        avatar: getSafeServerAvatar(u.avatar, u.name),
+        about: u.about || 'Hey there! I am using Chit Chat.',
+        color: u.color || '#dcf8c6'
+    }));
 }
 
 function broadcastRooms(targetSocket = io) {
@@ -869,7 +891,7 @@ io.on('connection', (socket) => {
         let cleanLogo = '';
         if (data.logo && typeof data.logo === 'string') {
             if (data.logo.startsWith('https://') || data.logo.startsWith('data:image/') || data.logo.startsWith('/')) {
-                cleanLogo = data.logo.substring(0, 500);
+                cleanLogo = data.logo.length <= 1500000 ? data.logo : '';
             }
         }
 
@@ -909,9 +931,9 @@ io.on('connection', (socket) => {
 
             const userObj = data.user || {};
             const cleanName = String(userObj.name || 'Guest').trim().substring(0, 30);
-            const safeAvatar = (userObj.avatar && (userObj.avatar.startsWith('https://') || userObj.avatar.startsWith('data:image/') || userObj.avatar.startsWith('/')))
-                ? userObj.avatar.substring(0, 500)
-                : '';
+            const safeAvatar = (userObj.avatar && typeof userObj.avatar === 'string' && (userObj.avatar.startsWith('https://') || userObj.avatar.startsWith('data:image/') || userObj.avatar.startsWith('/')))
+                ? (userObj.avatar.length <= 1500000 ? userObj.avatar : `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(cleanName)}`)
+                : `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(cleanName)}`;
             const safeAbout = String(userObj.about || 'Using Chit Chat').substring(0, 100);
             const safeColor = /^#[0-9a-fA-F]{3,8}$/.test(userObj.color) ? userObj.color : '#dcf8c6';
             const userId = String(userObj.id || ('usr_' + socket.id));
@@ -990,25 +1012,51 @@ io.on('connection', (socket) => {
         const cleanName = String(user.name || 'Guest').trim().substring(0, 30);
         if (!cleanName || cleanName === '🤖 Bot') return;
 
-        let cleanAvatar = '';
-        if (user.avatar && (user.avatar.startsWith('https://') || user.avatar.startsWith('data:image/') || user.avatar.startsWith('/'))) {
-            cleanAvatar = user.avatar.substring(0, 500);
-        }
-
+        const cleanAvatar = getSafeServerAvatar(user.avatar, cleanName);
         const cleanAbout = String(user.about || 'Using Chit Chat').substring(0, 100);
         const cleanColor = /^#[0-9a-fA-F]{3,8}$/.test(user.color) ? user.color : '#dcf8c6';
+        const userId = String(user.id || (activeUsersById[socket.id]?.userId || ('usr_' + socket.id)));
 
         if (activeUsersById[socket.id]) {
             activeUsersById[socket.id].name = cleanName;
             activeUsersById[socket.id].avatar = cleanAvatar;
             activeUsersById[socket.id].about = cleanAbout;
             activeUsersById[socket.id].color = cleanColor;
+        } else {
+            activeUsersById[socket.id] = {
+                name: cleanName,
+                avatar: cleanAvatar,
+                about: cleanAbout,
+                color: cleanColor,
+                userId: userId,
+                id: userId
+            };
         }
+
+        usersStore.set(cleanName, { name: cleanName, avatar: cleanAvatar, about: cleanAbout, isOnline: 1, lastSeen: Date.now(), bubbleColor: cleanColor });
+        scheduleDataSave();
 
         db.run("INSERT OR REPLACE INTO users (name, avatar, about, isOnline, lastSeen, bubbleColor) VALUES (?, ?, ?, ?, ?, ?)",
             [cleanName, cleanAvatar, cleanAbout, 1, Date.now(), cleanColor],
             (err) => { if (err) console.error('Update profile db error:', err.message); }
         );
+
+        const roomId = activeUsersById[socket.id]?.roomId;
+        if (roomId) {
+            io.to(roomId).emit('room users', getUsersInRoom(roomId));
+            io.to(roomId).emit('user profile updated', {
+                name: cleanName,
+                avatar: cleanAvatar,
+                about: cleanAbout,
+                color: cleanColor
+            });
+        }
+        socket.emit('profile updated', {
+            name: cleanName,
+            avatar: cleanAvatar,
+            about: cleanAbout,
+            color: cleanColor
+        });
     });
 
     socket.on('chat message', async (data) => {
@@ -1026,11 +1074,14 @@ io.on('connection', (socket) => {
         if (userName === '🤖 Bot') userName = 'Guest';
         data.user = userName;
 
-        let userAvatar = (sessionUser && sessionUser.avatar) ? sessionUser.avatar : String(data.avatar || '');
-        if (userAvatar && !userAvatar.startsWith('https://') && !userAvatar.startsWith('data:image/') && !userAvatar.startsWith('/')) {
-            userAvatar = '';
-        }
+        let userAvatar = getSafeServerAvatar(data.avatar || (sessionUser && sessionUser.avatar), userName);
         data.avatar = userAvatar;
+        if (sessionUser) {
+            sessionUser.avatar = userAvatar;
+        }
+        if (usersStore.has(userName)) {
+            usersStore.get(userName).avatar = userAvatar;
+        }
         data.userId = (sessionUser && sessionUser.userId) ? sessionUser.userId : (data.userId || ('usr_' + socket.id));
 
         const roomId = (typeof data.roomId === 'string' && rooms.has(data.roomId))
@@ -1522,7 +1573,7 @@ io.on('connection', (socket) => {
                 const players = data.xox.players || { X: null, O: null };
                 data.xox.playerAvatars = data.xox.playerAvatars || { X: null, O: null };
                 const player = userName || activeUsersById[socket.id]?.name || 'Guest';
-                const avatar = userAvatar || activeUsersById[socket.id]?.avatar || `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(player)}`;
+                const avatar = getSafeServerAvatar(userAvatar || activeUsersById[socket.id]?.avatar || usersStore.get(player)?.avatar, player);
 
                 // In AI Lounge, auto-assign AI Bot as Player O if unassigned
                 if ((data.roomId === 'ai_lounge' || String(data.text || '').toLowerCase().includes('@bot')) && !players.O) {
@@ -1743,7 +1794,7 @@ io.on('connection', (socket) => {
         }
         if (logo && typeof logo === 'string') {
             if (logo.startsWith('https://') || logo.startsWith('data:image/') || logo.startsWith('/')) {
-                targetRoom.logo = logo.substring(0, 500);
+                targetRoom.logo = logo.length <= 1500000 ? logo : '';
             }
         }
         scheduleDataSave();
@@ -1805,18 +1856,49 @@ io.on('connection', (socket) => {
     });
 
     socket.on('get user info', (name) => {
-        const safeName = String(name || '').substring(0, 30);
-        const user = usersStore.get(safeName);
-        socket.emit('user info result', user || { name: safeName, about: 'Using Chit Chat' });
+        const safeName = String(name || '').trim().substring(0, 30);
+        if (!safeName) return;
+
+        // 1. Look up in active connected users (case-insensitive)
+        let matched = Object.values(activeUsersById).find(u => u && u.name && u.name.toLowerCase() === safeName.toLowerCase());
+
+        // 2. Look up in persistent usersStore (case-insensitive)
+        if (!matched) {
+            for (const [storeName, storeData] of usersStore.entries()) {
+                if (storeName && storeName.toLowerCase() === safeName.toLowerCase()) {
+                    matched = storeData;
+                    break;
+                }
+            }
+        }
+
+        const isBot = safeName === '🤖 Bot' || safeName.toLowerCase().includes('bot');
+        const defaultAvatar = isBot 
+            ? 'https://api.dicebear.com/7.x/lorelei/svg?seed=ChitChatBot&backgroundColor=b6e3f4' 
+            : `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(safeName)}`;
+
+        const finalAvatar = getSafeServerAvatar(matched?.avatar, safeName) || defaultAvatar;
+        const finalAbout = (matched && matched.about) ? matched.about : (isBot ? 'Official AI Assistant' : 'Hey there! I am using Chit Chat.');
+        const finalColor = (matched && (matched.color || matched.bubbleColor)) ? (matched.color || matched.bubbleColor) : '#dcf8c6';
+        const isOnline = isBot ? true : !!(matched && (matched.isOnline === 1 || Object.values(activeUsersById).some(u => u.name && u.name.toLowerCase() === safeName.toLowerCase())));
+
+        socket.emit('user info result', {
+            name: matched?.name || safeName,
+            avatar: finalAvatar,
+            about: finalAbout,
+            color: finalColor,
+            isOnline
+        });
     });
 
     socket.on('typing', (isTyping) => {
         const roomId = activeUsersById[socket.id]?.roomId;
         if (roomId && roomId !== 'ai_lounge') {
             const userData = activeUsersById[socket.id];
+            const userName = userData?.name || 'Someone';
             socket.to(roomId).emit('user typing', {
-                name: userData?.name || 'Someone',
-                avatar: userData?.avatar || '',
+                name: userName,
+                avatar: getSafeServerAvatar(userData?.avatar, userName),
                 isTyping: !!isTyping
             });
         }
