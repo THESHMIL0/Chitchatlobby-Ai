@@ -1414,6 +1414,11 @@ function updateSettingsModalUI() {
         if (btn.dataset.themeVal === currentTheme) btn.classList.add('active');
         else btn.classList.remove('active');
     });
+
+    const savedFontSize = localStorage.getItem('chitchat_font_size') || '15px';
+    if (typeof applyChatFontSize === 'function') {
+        applyChatFontSize(savedFontSize);
+    }
 }
 
 // Restore saved theme on initial load
@@ -3077,6 +3082,8 @@ if (imageUpload) {
             reader.readAsDataURL(file);
         }
     });
+}
+
 function openMsgOptionsModal() {
     if (!msgOptionsModal) return;
     msgOptionsModal.classList.remove('hidden');
@@ -5332,24 +5339,39 @@ if (savedBubbleStyle) {
     });
 }
 
-// Font Size Slider
-const fontSizeSlider = document.getElementById('font-size-slider');
-const fontSizeValue = document.getElementById('font-size-value');
-if (fontSizeSlider && fontSizeValue) {
-    fontSizeSlider.oninput = (e) => {
-        const size = e.target.value + 'px';
-        fontSizeValue.textContent = size;
-        document.documentElement.style.setProperty('--chat-font-size', size);
-        localStorage.setItem('chitchat_font_size', size);
-    };
+// Chat Font Size Controller (Settings & Customization Studio)
+function applyChatFontSize(sizeVal) {
+    if (!sizeVal) return;
+    const numSize = parseInt(sizeVal, 10);
+    if (isNaN(numSize) || numSize < 12 || numSize > 24) return;
+
+    const formatted = `${numSize}px`;
+    document.documentElement.style.setProperty('--chat-font-size', formatted);
+    localStorage.setItem('chitchat_font_size', formatted);
+
+    const custSlider = document.getElementById('font-size-slider');
+    const custVal = document.getElementById('font-size-value');
+    if (custSlider) custSlider.value = numSize;
+    if (custVal) custVal.textContent = formatted;
+
+    const setSlider = document.getElementById('settings-font-size-slider');
+    const setVal = document.getElementById('settings-font-size-value');
+    if (setSlider) setSlider.value = numSize;
+    if (setVal) setVal.textContent = formatted;
 }
 
-const savedFontSize = localStorage.getItem('chitchat_font_size');
-if (savedFontSize) {
-    document.documentElement.style.setProperty('--chat-font-size', savedFontSize);
-    if (fontSizeSlider) fontSizeSlider.value = parseInt(savedFontSize);
-    if (fontSizeValue) fontSizeValue.textContent = savedFontSize;
+const fontSizeSlider = document.getElementById('font-size-slider');
+if (fontSizeSlider) {
+    fontSizeSlider.addEventListener('input', (e) => applyChatFontSize(e.target.value));
 }
+
+const settingsFontSizeSlider = document.getElementById('settings-font-size-slider');
+if (settingsFontSizeSlider) {
+    settingsFontSizeSlider.addEventListener('input', (e) => applyChatFontSize(e.target.value));
+}
+
+const initialSavedFontSize = localStorage.getItem('chitchat_font_size') || '15px';
+applyChatFontSize(initialSavedFontSize);
 
 // Floating Particle Effect on Reaction
 function triggerReactionParticles(x, y, emoji = '✨') {
