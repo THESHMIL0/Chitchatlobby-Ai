@@ -148,7 +148,7 @@ function sendPushToAllExceptSender(senderEndpoint, senderName, roomName, roomId,
 }
 
 // Socket.IO Server with strict buffer limits (12MB) to prevent memory-exhaustion DoS
-const io = new Server(server, { 
+const io = new Server(server, {
     maxHttpBufferSize: 12 * 1024 * 1024,
     cors: {
         // In production set ALLOWED_ORIGIN env var (e.g. https://yourapp.com)
@@ -156,7 +156,7 @@ const io = new Server(server, {
         origin: process.env.ALLOWED_ORIGIN || (process.env.NODE_ENV === 'production' ? false : '*'),
         methods: ["GET", "POST"]
     }
-}); 
+});
 
 // Express Middleware
 app.use(express.static(path.join(__dirname, 'public')));
@@ -256,7 +256,7 @@ function isPrivateIpOrHost(hostname) {
     if (!hostname) return true;
     const lower = hostname.toLowerCase();
     if (lower === 'localhost' || lower.endsWith('.localhost') || lower === '::1') return true;
-    
+
     // IPv4 patterns: 127.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 169.254.0.0/16, 0.0.0.0
     const ipv4Match = lower.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
     if (ipv4Match) {
@@ -352,7 +352,7 @@ app.get('/api/link-preview', async (req, res) => {
                     chunks.push(value);
                     bytesRead += value.length;
                     if (bytesRead >= maxBytes) {
-                        try { reader.cancel(); } catch (e) {}
+                        try { reader.cancel(); } catch (e) { }
                         break;
                     }
                 }
@@ -433,7 +433,7 @@ function verifyPassword(password, storedPassword) {
             const a = Buffer.alloc(64); const b = Buffer.alloc(64);
             Buffer.from(password || '').copy(a); Buffer.from(storedPassword).copy(b);
             return a.length === b.length && crypto.timingSafeEqual(a, b);
-        } catch(e) { return false; }
+        } catch (e) { return false; }
     }
     try {
         const [salt, key] = storedPassword.split(':');
@@ -519,12 +519,12 @@ const db = {
         try {
             if (sql.includes('INSERT INTO rooms') || sql.includes('INSERT OR REPLACE INTO rooms')) {
                 const [id, name, logo, isPrivate, password, createdBy] = params;
-                rooms.set(id, { 
-                    id, 
-                    name: String(name || '').substring(0, 40), 
-                    logo: logo || '', 
-                    isPrivate: isPrivate ? 1 : 0, 
-                    password: password || '', 
+                rooms.set(id, {
+                    id,
+                    name: String(name || '').substring(0, 40),
+                    logo: logo || '',
+                    isPrivate: isPrivate ? 1 : 0,
+                    password: password || '',
                     pinnedMessage: null,
                     createdBy: createdBy || 'user'
                 });
@@ -597,14 +597,14 @@ const db = {
     }
 };
 
-const activeUsersById = {}; 
+const activeUsersById = {};
 
-function getUsersInRoom(roomId) { 
-    return Object.values(activeUsersById).filter(u => u.roomId === roomId).map(u => u.name); 
+function getUsersInRoom(roomId) {
+    return Object.values(activeUsersById).filter(u => u.roomId === roomId).map(u => u.name);
 }
 
-function broadcastRooms(targetSocket = io) { 
-    db.all(`SELECT id, name, logo, isPrivate FROM rooms`, (err, rows) => { 
+function broadcastRooms(targetSocket = io) {
+    db.all(`SELECT id, name, logo, isPrivate FROM rooms`, (err, rows) => {
         if (rows) {
             // Strictly exclude room passwords from client broadcasts
             const safeRooms = rows.map(r => ({
@@ -615,7 +615,7 @@ function broadcastRooms(targetSocket = io) {
             }));
             targetSocket.emit('room list', safeRooms);
         }
-    }); 
+    });
 }
 
 // ==========================================
@@ -665,7 +665,7 @@ function getAIClient() {
 
 async function askSmartBot(prompt) {
     const textPrompt = (prompt || "hello").trim().substring(0, 1000);
-    
+
     const systemInstructionText = `You are a helpful, clear, and friendly AI assistant.
 Follow these rules strictly:
 1. Provide clear, accurate, and direct responses (1 to 3 sentences).
@@ -857,8 +857,8 @@ io.on('connection', (socket) => {
 
         const creatorId = activeUsersById[socket.id]?.userId || socket.id;
 
-        db.run(`INSERT INTO rooms VALUES (?, ?, ?, ?, ?, ?)`, 
-            [roomId, cleanName, cleanLogo, isPrivate, hashedPassword, creatorId], 
+        db.run(`INSERT INTO rooms VALUES (?, ?, ?, ?, ?, ?)`,
+            [roomId, cleanName, cleanLogo, isPrivate, hashedPassword, creatorId],
             (err) => {
                 if (err) console.error('Insert room error:', err.message);
                 broadcastRooms();
@@ -894,17 +894,17 @@ io.on('connection', (socket) => {
             const safeColor = /^#[0-9a-fA-F]{3,8}$/.test(userObj.color) ? userObj.color : '#dcf8c6';
             const userId = String(userObj.id || ('usr_' + socket.id));
 
-            activeUsersById[socket.id] = { 
-                name: cleanName, 
-                avatar: safeAvatar, 
-                about: safeAbout, 
+            activeUsersById[socket.id] = {
+                name: cleanName,
+                avatar: safeAvatar,
+                about: safeAbout,
                 color: safeColor,
                 userId: userId,
                 id: userId,
-                roomId: room.id 
+                roomId: room.id
             };
 
-            db.run("INSERT OR REPLACE INTO users (name, avatar, about, isOnline, lastSeen, bubbleColor) VALUES (?, ?, ?, ?, ?, ?)", 
+            db.run("INSERT OR REPLACE INTO users (name, avatar, about, isOnline, lastSeen, bubbleColor) VALUES (?, ?, ?, ?, ?, ?)",
                 [cleanName, safeAvatar, safeAbout, 1, Date.now(), safeColor],
                 (err) => { if (err) console.error('Upsert user error:', err.message); }
             );
@@ -920,7 +920,7 @@ io.on('connection', (socket) => {
                             h.data = JSON.stringify(m);
                             newlyDeliveredIds.push(m.id);
                         }
-                    } catch (e) {}
+                    } catch (e) { }
                 }
             });
             if (newlyDeliveredIds.length > 0) {
@@ -930,9 +930,9 @@ io.on('connection', (socket) => {
 
             db.all("SELECT data FROM history WHERE roomId = ?", [room.id], (err, rows) => {
                 const history = rows?.map(r => typeof r.data === 'string' ? JSON.parse(r.data) : r.data) || [];
-                socket.emit('chat history', { 
-                    room: { id: room.id, name: room.name, logo: room.logo, isPrivate: room.isPrivate === 1 }, 
-                    history 
+                socket.emit('chat history', {
+                    room: { id: room.id, name: room.name, logo: room.logo, isPrivate: room.isPrivate === 1 },
+                    history
                 });
             });
 
@@ -946,7 +946,7 @@ io.on('connection', (socket) => {
     socket.on('leave room', () => {
         const roomId = activeUsersById[socket.id]?.roomId;
         if (roomId) {
-            socket.leave(roomId); 
+            socket.leave(roomId);
             if (activeUsersById[socket.id]) delete activeUsersById[socket.id].roomId;
             io.to(roomId).emit('room users', getUsersInRoom(roomId));
         }
@@ -965,14 +965,14 @@ io.on('connection', (socket) => {
         const cleanAbout = String(user.about || 'Using Chit Chat').substring(0, 100);
         const cleanColor = /^#[0-9a-fA-F]{3,8}$/.test(user.color) ? user.color : '#dcf8c6';
 
-        if (activeUsersById[socket.id]) { 
-            activeUsersById[socket.id].name = cleanName; 
-            activeUsersById[socket.id].avatar = cleanAvatar; 
-            activeUsersById[socket.id].about = cleanAbout; 
+        if (activeUsersById[socket.id]) {
+            activeUsersById[socket.id].name = cleanName;
+            activeUsersById[socket.id].avatar = cleanAvatar;
+            activeUsersById[socket.id].about = cleanAbout;
             activeUsersById[socket.id].color = cleanColor;
         }
 
-        db.run("INSERT OR REPLACE INTO users (name, avatar, about, isOnline, lastSeen, bubbleColor) VALUES (?, ?, ?, ?, ?, ?)", 
+        db.run("INSERT OR REPLACE INTO users (name, avatar, about, isOnline, lastSeen, bubbleColor) VALUES (?, ?, ?, ?, ?, ?)",
             [cleanName, cleanAvatar, cleanAbout, 1, Date.now(), cleanColor],
             (err) => { if (err) console.error('Update profile db error:', err.message); }
         );
@@ -987,7 +987,7 @@ io.on('connection', (socket) => {
         }
 
         const sessionUser = activeUsersById[socket.id];
-        
+
         // Enforce verified identity and prevent user from impersonating system bot
         let userName = (sessionUser && sessionUser.name) ? sessionUser.name : String(data.user || 'Guest').trim().substring(0, 30);
         if (userName === '🤖 Bot') userName = 'Guest';
@@ -1001,15 +1001,15 @@ io.on('connection', (socket) => {
         data.userId = (sessionUser && sessionUser.userId) ? sessionUser.userId : (data.userId || ('usr_' + socket.id));
 
         const roomId = (typeof data.roomId === 'string' && rooms.has(data.roomId))
-            ? data.roomId 
+            ? data.roomId
             : (sessionUser?.roomId || 'lobby');
 
-                data.id = data.id || (Date.now() + "_" + Math.floor(Math.random() * 1000));
-        data.roomId = roomId; 
-        data.type = data.type || 'chat'; 
-        
+        data.id = data.id || (Date.now() + "_" + Math.floor(Math.random() * 1000));
+        data.roomId = roomId;
+        data.type = data.type || 'chat';
+
         // WhatsApp-style status: 'delivered' if recipients online in room, else 'sent'
-        const roomRecipients = Object.entries(activeUsersById).filter(([sId, u]) => 
+        const roomRecipients = Object.entries(activeUsersById).filter(([sId, u]) =>
             sId !== socket.id && u.roomId === roomId && u.name !== data.user
         );
         data.status = roomRecipients.length > 0 ? 'delivered' : 'sent';
@@ -1094,9 +1094,9 @@ io.on('connection', (socket) => {
                 if (err) console.error('History insert error:', err.message);
             });
         }
-        
+
         io.to(roomId).emit('chat message', data);
-        
+
         db.get(`SELECT name FROM rooms WHERE id = ?`, [roomId], (err, roomRow) => {
             const roomName = roomRow ? roomRow.name : (rooms.get(roomId)?.name || roomId);
             let summaryText = data.text || '';
@@ -1148,7 +1148,7 @@ io.on('connection', (socket) => {
                         if (!m.readBy.includes('🤖 Bot')) m.readBy.push('🤖 Bot');
                         item.data = JSON.stringify(m);
                         scheduleDataSave();
-                    } catch (e) {}
+                    } catch (e) { }
                 }
                 io.to(roomId).emit('messages read', {
                     roomId,
@@ -1159,7 +1159,7 @@ io.on('connection', (socket) => {
             }, 180);
 
             io.to(roomId).emit('user typing', { name: '🤖 Bot', isTyping: true });
-            
+
             setTimeout(async () => {
                 try {
                     let botPrompt = textContent;
@@ -1168,15 +1168,15 @@ io.on('connection', (socket) => {
                     }
 
                     const reply = await askSmartBot(botPrompt);
-                    const botMsg = { 
-                        id: Date.now() + "_bot", 
-                        user: '🤖 Bot', 
-                        text: reply, 
-                        roomId, 
-                        type: 'chat', 
-                        status: 'delivered', 
-                        time: new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }), 
-                        color: '#00a884', 
+                    const botMsg = {
+                        id: Date.now() + "_bot",
+                        user: '🤖 Bot',
+                        text: reply,
+                        roomId,
+                        type: 'chat',
+                        status: 'delivered',
+                        time: new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }),
+                        color: '#00a884',
                         avatar: 'https://api.dicebear.com/7.x/lorelei/svg?seed=ChitChatBot&backgroundColor=b6e3f4',
                         replyTo: data.replyTo ? { user: data.user, text: textContent.substring(0, 120) || 'Message', msgId: data.id } : null
                     };
@@ -1185,7 +1185,7 @@ io.on('connection', (socket) => {
                         if (err) console.error('Bot history insert error:', err.message);
                     });
                     io.to(roomId).emit('chat message', botMsg);
-                    
+
                     const botSummaryText = reply ? (reply.length > 80 ? reply.substring(0, 80) + '...' : reply) : 'Bot sent a message';
                     sendPushToAllExceptSender(null, '🤖 Bot', rooms.get(roomId)?.name || roomId, roomId, botSummaryText, botMsg.avatar);
                 } catch (botErr) {
@@ -1539,10 +1539,10 @@ io.on('connection', (socket) => {
 
         const data = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
         const currentUser = activeUsersById[socket.id];
-        
+
         const isAuthor = (data.senderSocketId && data.senderSocketId === socket.id) ||
-                         (data.userId && currentUser && data.userId === currentUser.userId) ||
-                         (data.user && currentUser && data.user === currentUser.name);
+            (data.userId && currentUser && data.userId === currentUser.userId) ||
+            (data.user && currentUser && data.user === currentUser.name);
 
         if (!isAuthor) {
             return socket.emit('action error', 'Permission denied: You can only edit your own messages.');
@@ -1571,8 +1571,8 @@ io.on('connection', (socket) => {
         const room = rooms.get(data.roomId);
         const isRoomCreator = room && currentUser && (room.createdBy === currentUser.userId || room.createdBy === socket.id);
         const isAuthor = (data.senderSocketId && data.senderSocketId === socket.id) ||
-                         (data.userId && currentUser && data.userId === currentUser.userId) ||
-                         (data.user && currentUser && data.user === currentUser.name);
+            (data.userId && currentUser && data.userId === currentUser.userId) ||
+            (data.user && currentUser && data.user === currentUser.name);
 
         if (!isAuthor && !isRoomCreator) {
             return socket.emit('action error', 'Permission denied: You can only delete your own messages.');
@@ -1655,7 +1655,7 @@ io.on('connection', (socket) => {
                 try {
                     const m = typeof h.data === 'string' ? JSON.parse(h.data) : h.data;
                     const isOtherUserMsg = (m.userId && m.userId !== sessionUser.userId) || (m.user && m.user !== sessionUser.name);
-                    
+
                     if (isOtherUserMsg) {
                         if (!targetMsgId || m.id === targetMsgId) {
                             if (m.status !== 'read') {
@@ -1669,17 +1669,17 @@ io.on('connection', (socket) => {
                             if (targetMsgId && m.id === targetMsgId) break;
                         }
                     }
-                } catch (e) {}
+                } catch (e) { }
             }
         }
 
         if (readMsgIds.length > 0) {
             scheduleDataSave();
-            io.to(targetRoomId).emit('messages read', { 
-                roomId: targetRoomId, 
-                msgIds: readMsgIds, 
-                reader: sessionUser.name, 
-                readAt: Date.now() 
+            io.to(targetRoomId).emit('messages read', {
+                roomId: targetRoomId,
+                msgIds: readMsgIds,
+                reader: sessionUser.name,
+                readAt: Date.now()
             });
         }
     });
@@ -1690,15 +1690,15 @@ io.on('connection', (socket) => {
         socket.emit('user info result', user || { name: safeName, about: 'Using Chit Chat' });
     });
 
-    socket.on('typing', (isTyping) => { 
-        const roomId = activeUsersById[socket.id]?.roomId; 
+    socket.on('typing', (isTyping) => {
+        const roomId = activeUsersById[socket.id]?.roomId;
         if (roomId) {
             const userData = activeUsersById[socket.id];
-            socket.to(roomId).emit('user typing', { 
-                name: userData?.name || 'Someone', 
+            socket.to(roomId).emit('user typing', {
+                name: userData?.name || 'Someone',
                 avatar: userData?.avatar || '',
-                isTyping: !!isTyping 
-            }); 
+                isTyping: !!isTyping
+            });
         }
     });
 

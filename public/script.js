@@ -3,9 +3,9 @@ const socket = io();
 
 function hapticFeedback(type = 'light') {
     if (!navigator.vibrate) return;
-    if (type === 'light') navigator.vibrate(30); 
-    else if (type === 'medium') navigator.vibrate(50); 
-    else if (type === 'heavy') navigator.vibrate([40, 60, 40]); 
+    if (type === 'light') navigator.vibrate(30);
+    else if (type === 'medium') navigator.vibrate(50);
+    else if (type === 'heavy') navigator.vibrate([40, 60, 40]);
 }
 
 function escapeHTML(str) {
@@ -76,9 +76,9 @@ function showToast(msg, options = {}) {
 
     // Sensory feedback: Playful pop audio and gentle haptic vibration
     if (sound) {
-        try { playUiSound('pop'); } catch (e) {}
+        try { playUiSound('pop'); } catch (e) { }
     }
-    try { hapticFeedback('light'); } catch (e) {}
+    try { hapticFeedback('light'); } catch (e) { }
 
     // Retrigger bouncy entrance animation
     toast.classList.remove('show');
@@ -92,7 +92,7 @@ function showToast(msg, options = {}) {
 }
 
 const loadingScreen = document.getElementById('loading-screen');
-const appLockScreen = document.getElementById('app-lock-screen'); 
+const appLockScreen = document.getElementById('app-lock-screen');
 const loginScreen = document.getElementById('login-screen');
 const roomListScreen = document.getElementById('room-list-screen');
 const chatScreen = document.getElementById('chat-screen');
@@ -119,7 +119,7 @@ const sendMicBtn = document.getElementById('send-mic-btn');
 const attachBtn = document.getElementById('attach-btn');
 const imageUpload = document.getElementById('image-upload');
 const replyPreviewContainer = document.getElementById('reply-preview-container');
-const ghostBtn = document.getElementById('ghost-btn'); 
+const ghostBtn = document.getElementById('ghost-btn');
 
 const pollBtn = document.getElementById('poll-btn');
 const createPollModal = document.getElementById('create-poll-modal');
@@ -128,7 +128,7 @@ const sendPollBtn = document.getElementById('send-poll-btn');
 const pollQuestion = document.getElementById('poll-question');
 const pollOptionsContainer = document.getElementById('poll-options-container');
 
-const appSettingsModal = document.getElementById('app-settings-modal'); 
+const appSettingsModal = document.getElementById('app-settings-modal');
 const headerClickArea = document.getElementById('header-click-area');
 const infoRoomLogo = document.getElementById('info-room-logo');
 const infoRoomName = document.getElementById('info-room-name');
@@ -146,15 +146,15 @@ if (!savedUserId) {
     localStorage.setItem('chitchat_user_id', savedUserId);
 }
 
-let currentUser = { id: savedUserId, name: '', avatar: '', about: 'Hey there! I am using Chit Chat.', color: '#dcf8c6' }; 
+let currentUser = { id: savedUserId, name: '', avatar: '', about: 'Hey there! I am using Chit Chat.', color: '#dcf8c6' };
 let activeRoomId = null;
-let currentRoomPassword = ''; 
+let currentRoomPassword = '';
 let replyingTo = null;
-let selectedMsgId = null; 
+let selectedMsgId = null;
 
 let editingMsgId = null;
 let isGhostMode = false;
-let unreadCounts = {}; 
+let unreadCounts = {};
 const defaultRooms = [
     { id: 'lobby', name: 'Lobby', logo: '/icon.svg', isPrivate: 0 },
     { id: 'ai_lounge', name: 'AI Lounge', logo: '/ai-icon.svg', isPrivate: 0 }
@@ -202,7 +202,7 @@ let isPromptingBiometrics = false;
 let isVerifyingLock = false;
 
 // Setup modal states: 'ENTER_OLD', 'ENTER_NEW', 'CONFIRM_NEW', 'VERIFY_DISABLE'
-let setupMode = 'CREATE'; 
+let setupMode = 'CREATE';
 let setupStep = 'ENTER_NEW';
 let setupFirstPin = '';
 let setupCurrentInput = '';
@@ -229,7 +229,7 @@ async function checkDeviceBiometricSupport() {
             if (available) {
                 return { supported: true, type: 'webauthn' };
             }
-        } catch(e) {
+        } catch (e) {
             console.warn('WebAuthn check error:', e);
         }
     }
@@ -286,7 +286,7 @@ function shakePasscodeDots(containerEl) {
     containerEl.classList.remove('shake');
     void containerEl.offsetWidth;
     containerEl.classList.add('shake');
-    try { hapticFeedback('heavy'); } catch(e) {}
+    try { hapticFeedback('heavy'); } catch (e) { }
     setTimeout(() => {
         containerEl.classList.remove('shake');
     }, 460);
@@ -316,8 +316,8 @@ function lockApp(autoBiometric = true) {
 
 function unlockAppSuccess() {
     isAppLockedSession = false;
-    try { hapticFeedback('heavy'); } catch(e) {}
-    try { playUiSound('unlock'); } catch(e) {}
+    try { hapticFeedback('heavy'); } catch (e) { }
+    try { playUiSound('unlock'); } catch (e) { }
     if (appLockSubtitle) {
         appLockSubtitle.textContent = 'Unlocked! Welcome back ✨';
         appLockSubtitle.classList.remove('error');
@@ -343,8 +343,8 @@ function handleLockKeypress(key) {
     if (key >= '0' && key <= '9') {
         if (enteredPasscode.length < 4) {
             enteredPasscode += key;
-            try { hapticFeedback('light'); } catch(e) {}
-            try { playUiSound('tap'); } catch(e) {}
+            try { hapticFeedback('light'); } catch (e) { }
+            try { playUiSound('tap'); } catch (e) { }
             renderPasscodeDots(passcodeDotsBox, enteredPasscode.length);
             if (enteredPasscode.length === 4) {
                 checkEnteredPasscode();
@@ -357,9 +357,9 @@ function handleLockBackspace() {
     if (isVerifyingLock) return;
     if (enteredPasscode.length > 0) {
         enteredPasscode = enteredPasscode.slice(0, -1);
-        try { hapticFeedback('light'); } catch(e) {}
-        try { playUiSound('tap'); } catch(e) {}
-        try { hapticFeedback('light'); } catch(e) {}
+        try { hapticFeedback('light'); } catch (e) { }
+        try { playUiSound('tap'); } catch (e) { }
+        try { hapticFeedback('light'); } catch (e) { }
         renderPasscodeDots(passcodeDotsBox, enteredPasscode.length);
     }
 }
@@ -447,7 +447,7 @@ async function verifyBiometrics(isAutoPrompt = false) {
             });
             unlockAppSuccess();
             return;
-        } catch(e) {
+        } catch (e) {
             console.warn('Native biometric error or cancel', e);
             if (!isAutoPrompt) {
                 showToast('Biometric scan cancelled. Enter your 4-digit PIN 🔢');
@@ -483,7 +483,7 @@ async function verifyBiometrics(isAutoPrompt = false) {
                         id: rawId,
                         transports: ['internal']
                     }];
-                } catch(e) {}
+                } catch (e) { }
             }
 
             let assertion = null;
@@ -618,7 +618,7 @@ function handleSetupKeypress(key) {
     if (key >= '0' && key <= '9') {
         if (setupCurrentInput.length < 4) {
             setupCurrentInput += key;
-            try { hapticFeedback('light'); } catch(e) {}
+            try { hapticFeedback('light'); } catch (e) { }
             renderPasscodeDots(passcodeSetupDots, setupCurrentInput.length);
             if (setupCurrentInput.length === 4) {
                 processSetupStep();
@@ -630,7 +630,7 @@ function handleSetupKeypress(key) {
 function handleSetupBackspace() {
     if (setupCurrentInput.length > 0) {
         setupCurrentInput = setupCurrentInput.slice(0, -1);
-        try { hapticFeedback('light'); } catch(e) {}
+        try { hapticFeedback('light'); } catch (e) { }
         renderPasscodeDots(passcodeSetupDots, setupCurrentInput.length);
     }
 }
@@ -640,7 +640,7 @@ function processSetupStep() {
 
     if (setupStep === 'ENTER_OLD') {
         if (setupCurrentInput === currentStored) {
-            try { hapticFeedback('medium'); } catch(e) {}
+            try { hapticFeedback('medium'); } catch (e) { }
             setupStep = 'ENTER_NEW';
             setupCurrentInput = '';
             renderPasscodeDots(passcodeSetupDots, 0);
@@ -655,7 +655,7 @@ function processSetupStep() {
             }, 450);
         }
     } else if (setupStep === 'ENTER_NEW') {
-        try { hapticFeedback('light'); } catch(e) {}
+        try { hapticFeedback('light'); } catch (e) { }
         setupFirstPin = setupCurrentInput;
         setupCurrentInput = '';
         setupStep = 'CONFIRM_NEW';
@@ -664,7 +664,7 @@ function processSetupStep() {
         if (passcodeSetupDesc) passcodeSetupDesc.textContent = 'Re-enter the 4-digit PIN to confirm';
     } else if (setupStep === 'CONFIRM_NEW') {
         if (setupCurrentInput === setupFirstPin) {
-            try { hapticFeedback('heavy'); } catch(e) {}
+            try { hapticFeedback('heavy'); } catch (e) { }
             localStorage.setItem('chitchat_passcode', setupFirstPin);
             localStorage.setItem('chitchat_applock', 'true');
             updateAppLockSettingsUI();
@@ -683,7 +683,7 @@ function processSetupStep() {
         }
     } else if (setupStep === 'VERIFY_DISABLE') {
         if (setupCurrentInput === currentStored) {
-            try { hapticFeedback('medium'); } catch(e) {}
+            try { hapticFeedback('medium'); } catch (e) { }
             localStorage.setItem('chitchat_applock', 'false');
             updateAppLockSettingsUI();
             showToast('Passcode lock turned off');
@@ -790,7 +790,7 @@ if (toggleFingerprintUnlock) {
                     } else {
                         e.target.checked = false;
                     }
-                } catch(err) {
+                } catch (err) {
                     console.warn('Fingerprint registration failed', err);
                     e.target.checked = false;
                     showToast('Fingerprint setup cancelled or unavailable');
@@ -819,7 +819,7 @@ if (setupFingerprintBtn) {
                 updateBiometricSettingsUI();
                 showToast('Fingerprint registered successfully! 👆✨');
             }
-        } catch(err) {
+        } catch (err) {
             console.warn('Setup fingerprint error', err);
             showToast('Fingerprint registration cancelled');
         }
@@ -833,14 +833,14 @@ function checkAppLockOnLaunch() {
 }
 
 // Capacitor and web lifecycle listeners
-if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) { 
+if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
     try {
         window.Capacitor.Plugins.App.addListener('appStateChange', (state) => {
             if (state.isActive && isAppLockActive() && !isAppLockedSession) {
                 lockApp();
             }
         });
-    } catch(e) {} 
+    } catch (e) { }
 }
 
 let awayTimestamp = 0;
@@ -853,14 +853,14 @@ document.addEventListener('visibilitychange', () => {
         }
         awayTimestamp = 0;
     }
-}); 
+});
 
-function closeLightbox() { 
-    if (lightbox) lightbox.classList.add('hidden'); 
-    if (lightboxImg) lightboxImg.src = ''; 
+function closeLightbox() {
+    if (lightbox) lightbox.classList.add('hidden');
+    if (lightboxImg) lightboxImg.src = '';
 }
 if (lightbox) {
-    lightbox.addEventListener('click', closeLightbox); 
+    lightbox.addEventListener('click', closeLightbox);
     lightbox.addEventListener('touchstart', closeLightbox, { passive: true });
 }
 
@@ -886,7 +886,7 @@ function saveUserLocally() {
 function syncUserAvatarUI() {
     if (!currentUser) return;
     const url = currentUser.avatar || `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(currentUser.name || 'Alex')}`;
-    
+
     const elements = [
         document.getElementById('avatar-preview'),
         document.getElementById('settings-avatar-preview'),
@@ -897,7 +897,7 @@ function syncUserAvatarUI() {
     elements.forEach(img => {
         if (img) {
             img.src = url;
-            img.onerror = function() {
+            img.onerror = function () {
                 this.onerror = null;
                 this.src = `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(currentUser.name || 'Alex')}`;
             };
@@ -906,9 +906,9 @@ function syncUserAvatarUI() {
 }
 
 if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
-    try { window.Capacitor.Plugins.LocalNotifications.requestPermissions(); } catch(e){}
+    try { window.Capacitor.Plugins.LocalNotifications.requestPermissions(); } catch (e) { }
 } else if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
-    try { Notification.requestPermission(); } catch(e){}
+    try { Notification.requestPermission(); } catch (e) { }
 }
 
 function getSweetheartSvgDataUrl(customColor) {
@@ -942,7 +942,7 @@ function getSweetheartSvgDataUrl(customColor) {
 function getFlirtSvgDataUrl(customColor) {
     const currentTheme = (typeof document !== 'undefined' && document.body) ? (document.body.getAttribute('data-theme') || 'emerald') : 'emerald';
     let pFill = '#22c55e', pShadow = '#14532d', sFill = '#4ade80', sShadow = '#166534', txtColor = 'rgba(255,255,255,0.95)';
-    
+
     if (customColor && customColor.startsWith('#')) {
         pFill = customColor; pShadow = customColor;
         sFill = customColor; sShadow = customColor;
@@ -1113,7 +1113,7 @@ if (savedGlobalWallpaper) {
     applyChatWallpaper(savedGlobalWallpaper);
 }
 
-try { history.replaceState({screen: 'exit'}, '', '#exit'); } catch(e){}
+try { history.replaceState({ screen: 'exit' }, '', '#exit'); } catch (e) { }
 const savedUser = localStorage.getItem('chitchat_user');
 if (savedUser) {
     try {
@@ -1130,7 +1130,7 @@ if (savedUser) {
         if (setAbout) setAbout.value = currentUser.about || '';
         const setBubbleColor = document.getElementById('settings-bubble-color');
         if (setBubbleColor) setBubbleColor.value = currentUser.color || '#dcf8c6';
-    } catch(e) {
+    } catch (e) {
         console.error('Error loading saved user', e);
     }
 }
@@ -1204,7 +1204,7 @@ function playAppOpeningAnimation() {
 
         try {
             if (typeof hapticFeedback === 'function') hapticFeedback('light');
-        } catch(e) {}
+        } catch (e) { }
 
         const exitDelay = prefersReducedMotion ? 100 : 240;
         setTimeout(() => {
@@ -1219,7 +1219,7 @@ function playAppOpeningAnimation() {
         }, exitDelay);
     }
 
-    completeAppOpening = function() {
+    completeAppOpening = function () {
         if (!isDismissed) {
             setTimeout(finishSequence, 160);
         }
@@ -1274,7 +1274,7 @@ function initAppView() {
     if (isAppLockActive()) {
         lockApp();
     }
-    
+
     const savedUserStr = localStorage.getItem('chitchat_user');
     let hasName = false;
     if (currentUser && currentUser.name && currentUser.name.trim()) {
@@ -1286,9 +1286,9 @@ function initAppView() {
                 currentUser = parsed;
                 hasName = true;
             }
-        } catch(e){}
+        } catch (e) { }
     }
-    
+
     if (hasName) {
         if (loginScreen) loginScreen.classList.add('hidden');
         if (location.hash === '#settings') {
@@ -1300,12 +1300,12 @@ function initAppView() {
         } else {
             if (roomListScreen) roomListScreen.classList.remove('hidden');
             renderRoomList();
-            try { history.replaceState({screen: 'lobby'}, '', '#lobby'); } catch(e){}
+            try { history.replaceState({ screen: 'lobby' }, '', '#lobby'); } catch (e) { }
         }
     } else {
         if (loginScreen) loginScreen.classList.remove('hidden');
         if (roomListScreen) roomListScreen.classList.add('hidden');
-        try { history.replaceState({screen: 'login'}, '', '#login'); } catch(e){}
+        try { history.replaceState({ screen: 'login' }, '', '#login'); } catch (e) { }
     }
 }
 
@@ -1313,10 +1313,10 @@ initAppView();
 playAppOpeningAnimation();
 
 if (profilePicUpload) {
-    profilePicUpload.addEventListener('change', function() {
+    profilePicUpload.addEventListener('change', function () {
         if (this.files && this.files[0]) {
             const reader = new FileReader();
-            reader.onload = (e) => { 
+            reader.onload = (e) => {
                 const img = new Image();
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
@@ -1324,16 +1324,16 @@ if (profilePicUpload) {
                     const size = 180;
                     canvas.width = size;
                     canvas.height = size;
-                    
+
                     let minDim = Math.min(img.width, img.height);
                     let sx = (img.width - minDim) / 2;
                     let sy = (img.height - minDim) / 2;
                     ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, size, size);
-                    
+
                     currentUser.avatar = canvas.toDataURL('image/jpeg', 0.8);
                     syncUserAvatarUI();
                     document.querySelectorAll('.preset-avatar-item').forEach(el => el.classList.remove('active'));
-                    saveUserLocally(); 
+                    saveUserLocally();
                     if (socket) socket.emit('update profile', currentUser);
                 };
                 img.src = e.target.result;
@@ -1346,7 +1346,7 @@ if (profilePicUpload) {
 const loginBtn = document.getElementById('login-btn');
 if (loginBtn) {
     loginBtn.addEventListener('click', () => {
-        hapticFeedback('light'); 
+        hapticFeedback('light');
         if (usernameInput) currentUser.name = usernameInput.value.trim();
         if (!currentUser.name) {
             if (usernameInput) {
@@ -1356,32 +1356,32 @@ if (loginBtn) {
             }
             return;
         }
-        if (!currentUser.avatar) { 
-            currentUser.avatar = `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(currentUser.name || 'Alex')}`; 
+        if (!currentUser.avatar) {
+            currentUser.avatar = `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(currentUser.name || 'Alex')}`;
             const setAvatarPrev = document.getElementById('settings-avatar-preview');
-            if (setAvatarPrev) setAvatarPrev.src = currentUser.avatar; 
+            if (setAvatarPrev) setAvatarPrev.src = currentUser.avatar;
         }
         const setUsername = document.getElementById('settings-username');
         if (setUsername) setUsername.value = currentUser.name;
-        if (loginScreen) loginScreen.classList.add('hidden'); 
+        if (loginScreen) loginScreen.classList.add('hidden');
         if (roomListScreen) roomListScreen.classList.remove('hidden');
         renderRoomList();
-        saveUserLocally(); 
-        try { history.replaceState({screen: 'lobby'}, '', '#lobby'); } catch(e){}
+        saveUserLocally();
+        try { history.replaceState({ screen: 'lobby' }, '', '#lobby'); } catch (e) { }
         if (socket) socket.emit('update profile', currentUser);
     });
 }
 
 const settingsBtn = document.getElementById('settings-btn');
 if (settingsBtn) {
-    settingsBtn.onclick = () => { 
-        hapticFeedback('light'); 
+    settingsBtn.onclick = () => {
+        hapticFeedback('light');
         updateSettingsModalUI();
         if (roomListScreen) roomListScreen.classList.add('hidden');
         if (chatScreen) chatScreen.classList.add('hidden');
         if (profileScreen) profileScreen.classList.add('hidden');
-        if (settingsScreen) settingsScreen.classList.remove('hidden'); 
-        try { history.pushState({ screen: 'settings' }, '', '#settings'); } catch(e){}
+        if (settingsScreen) settingsScreen.classList.remove('hidden');
+        try { history.pushState({ screen: 'settings' }, '', '#settings'); } catch (e) { }
     };
 }
 
@@ -1389,7 +1389,7 @@ function updateSettingsModalUI() {
     const cardAvatar = document.getElementById('settings-card-avatar');
     const cardName = document.getElementById('settings-card-name');
     const cardAbout = document.getElementById('settings-card-about');
-    
+
     if (cardAvatar) cardAvatar.src = currentUser.avatar || `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(currentUser.name || 'Alex')}`;
     if (cardName) cardName.textContent = currentUser.name || 'Guest User';
     if (cardAbout) cardAbout.textContent = currentUser.about || 'Hey there! I am using Chit Chat.';
@@ -1431,10 +1431,10 @@ if (closeSettingsPageBtn) {
         settingsScreen.classList.add('hidden');
         if (activeRoomId) {
             chatScreen.classList.remove('hidden');
-            try { history.pushState({ screen: 'chat', roomId: activeRoomId }, '', '#chat'); } catch(e){}
+            try { history.pushState({ screen: 'chat', roomId: activeRoomId }, '', '#chat'); } catch (e) { }
         } else {
             roomListScreen.classList.remove('hidden');
-            try { history.pushState({ screen: 'lobby' }, '', '#lobby'); } catch(e){}
+            try { history.pushState({ screen: 'lobby' }, '', '#lobby'); } catch (e) { }
         }
     };
 }
@@ -1531,7 +1531,7 @@ if (profileRandomBtn) {
         const randomStyle = styles[Math.floor(Math.random() * styles.length)];
         const newUrl = `https://api.dicebear.com/7.x/${randomStyle}/svg?seed=${randomSeed}`;
         currentUser.avatar = newUrl;
-        
+
         syncUserAvatarUI();
         document.querySelectorAll('.avatar-preset-item').forEach(el => el.classList.remove('active'));
         saveUserLocally();
@@ -1655,9 +1655,9 @@ function handleOpenProfile() {
     hapticFeedback('light');
     updateProfileScreenUI();
     if (settingsScreen) settingsScreen.classList.add('hidden');
-    if (roomListScreen) roomListScreen.classList.add('hidden'); 
-    if (profileScreen) profileScreen.classList.remove('hidden'); 
-    try { history.pushState({screen: 'profile'}, '', '#profile'); } catch(e){}
+    if (roomListScreen) roomListScreen.classList.add('hidden');
+    if (profileScreen) profileScreen.classList.remove('hidden');
+    try { history.pushState({ screen: 'profile' }, '', '#profile'); } catch (e) { }
 }
 if (btnOpenProfile) btnOpenProfile.onclick = handleOpenProfile;
 if (settingsProfileCard) settingsProfileCard.onclick = handleOpenProfile;
@@ -1671,41 +1671,41 @@ if (lobbyProfileBtn) {
         if (settingsScreen) settingsScreen.classList.add('hidden');
         if (chatScreen) chatScreen.classList.add('hidden');
         if (profileScreen) profileScreen.classList.remove('hidden');
-        try { history.pushState({screen: 'profile'}, '', '#profile'); } catch(e){}
+        try { history.pushState({ screen: 'profile' }, '', '#profile'); } catch (e) { }
     };
 }
 
 const btnLogout = document.getElementById('btn-logout');
 if (btnLogout) {
-    btnLogout.onclick = () => { if(confirm("Are you sure you want to completely reset the app and log out?")) { localStorage.clear(); window.location.reload(); } };
+    btnLogout.onclick = () => { if (confirm("Are you sure you want to completely reset the app and log out?")) { localStorage.clear(); window.location.reload(); } };
 }
 
 const closeProfileBtn = document.getElementById('close-profile-btn');
 if (closeProfileBtn) {
-    closeProfileBtn.onclick = (e) => { 
-        e.preventDefault(); 
-        hapticFeedback('light'); 
-        if (profileScreen) profileScreen.classList.add('hidden'); 
-        if (settingsScreen) settingsScreen.classList.remove('hidden'); 
+    closeProfileBtn.onclick = (e) => {
+        e.preventDefault();
+        hapticFeedback('light');
+        if (profileScreen) profileScreen.classList.add('hidden');
+        if (settingsScreen) settingsScreen.classList.remove('hidden');
         updateSettingsModalUI();
-        try { history.pushState({screen: 'settings'}, '', '#settings'); } catch(e){}
+        try { history.pushState({ screen: 'settings' }, '', '#settings'); } catch (e) { }
     };
 }
 
 const backBtn = document.getElementById('back-btn');
 if (backBtn) {
-    backBtn.onclick = (e) => { 
-        e.preventDefault(); e.stopPropagation(); hapticFeedback('light'); 
-        if (chatScreen) chatScreen.classList.add('hidden'); 
-        if (roomListScreen) roomListScreen.classList.remove('hidden'); 
+    backBtn.onclick = (e) => {
+        e.preventDefault(); e.stopPropagation(); hapticFeedback('light');
+        if (chatScreen) chatScreen.classList.add('hidden');
+        if (roomListScreen) roomListScreen.classList.remove('hidden');
         if (chatSearchContainer) chatSearchContainer.classList.add('hidden');
         if (chatSearchInput) chatSearchInput.value = '';
         clearChatSearchHighlights();
-        if (socket) socket.emit('leave room'); 
-        activeRoomId = null; isGhostMode = false; 
-        if (ghostBtn) ghostBtn.classList.remove('active'); 
+        if (socket) socket.emit('leave room');
+        activeRoomId = null; isGhostMode = false;
+        if (ghostBtn) ghostBtn.classList.remove('active');
         currentlyTyping.clear();
-        try { history.pushState({screen: 'lobby'}, '', '#lobby'); } catch(e){}
+        try { history.pushState({ screen: 'lobby' }, '', '#lobby'); } catch (e) { }
     };
 }
 
@@ -1728,16 +1728,17 @@ window.addEventListener('popstate', (e) => {
         if (chatSearchInput) chatSearchInput.value = '';
         clearChatSearchHighlights();
         if (activeRoomId) {
-            if (chatScreen) chatScreen.classList.add('hidden'); 
+            if (chatScreen) chatScreen.classList.add('hidden');
             if (roomListScreen) roomListScreen.classList.remove('hidden');
-            if (socket) socket.emit('leave room'); activeRoomId = null; isGhostMode = false; 
+            if (socket) socket.emit('leave room'); activeRoomId = null; isGhostMode = false;
             if (ghostBtn) ghostBtn.classList.remove('active'); currentlyTyping.clear();
         }
         if (profileScreen) profileScreen.classList.add('hidden');
         if (settingsScreen) settingsScreen.classList.add('hidden');
         if (roomListScreen) roomListScreen.classList.remove('hidden');
     } else if (state === 'exit') {
-        if (roomListScreen && !roomListScreen.classList.contains('hidden')) { if (confirm("Are you sure you want to exit Chit Chat?")) history.back(); else try { history.pushState({screen: 'lobby'}, '', '#lobby'); } catch(e){} 
+        if (roomListScreen && !roomListScreen.classList.contains('hidden')) {
+            if (confirm("Are you sure you want to exit Chit Chat?")) history.back(); else try { history.pushState({ screen: 'lobby' }, '', '#lobby'); } catch (e) { }
         } else { history.back(); }
     }
 });
@@ -1749,17 +1750,17 @@ if (saveProfileBtn) {
         const setUsername = document.getElementById('settings-username');
         const setAbout = document.getElementById('settings-about');
         const setBubbleColor = document.getElementById('settings-bubble-color');
-        if(setUsername && setUsername.value.trim()) currentUser.name = setUsername.value.trim();
-        if(setAbout && setAbout.value.trim()) currentUser.about = setAbout.value.trim();
-        if (setBubbleColor) currentUser.color = setBubbleColor.value; 
+        if (setUsername && setUsername.value.trim()) currentUser.name = setUsername.value.trim();
+        if (setAbout && setAbout.value.trim()) currentUser.about = setAbout.value.trim();
+        if (setBubbleColor) currentUser.color = setBubbleColor.value;
         syncUserAvatarUI();
         if (socket) socket.emit('update profile', currentUser);
-        saveUserLocally(); 
+        saveUserLocally();
         showToast('✨ Profile updated successfully!');
-        if (profileScreen) profileScreen.classList.add('hidden'); 
+        if (profileScreen) profileScreen.classList.add('hidden');
         if (settingsScreen) settingsScreen.classList.remove('hidden');
         updateSettingsModalUI();
-        try { history.pushState({screen: 'settings'}, '', '#settings'); } catch(e){}
+        try { history.pushState({ screen: 'settings' }, '', '#settings'); } catch (e) { }
     };
 }
 
@@ -1769,7 +1770,7 @@ function renderRoomList() {
     const listEl = document.getElementById('rooms-ul') || roomsUl;
     if (!listEl) return;
     listEl.innerHTML = '';
-    
+
     // Update lobby header user avatar
     const lobbyAvatar = document.getElementById('lobby-user-avatar');
     if (lobbyAvatar && currentUser && currentUser.avatar) {
@@ -1777,17 +1778,17 @@ function renderRoomList() {
     }
 
     const listToRender = (globalRoomList && globalRoomList.length > 0) ? globalRoomList : defaultRooms;
-    
+
     const emptyState = document.getElementById('empty-rooms-state');
     if (!listToRender || listToRender.length === 0) {
         if (emptyState) emptyState.classList.remove('hidden');
     } else {
         if (emptyState) emptyState.classList.add('hidden');
-        
+
         listToRender.forEach(room => {
-            const li = document.createElement('li'); 
+            const li = document.createElement('li');
             li.className = 'room-card-item';
-            
+
             const roomNameLower = (room.name || '').toLowerCase();
             const isAI = roomNameLower.includes('ai') || roomNameLower.includes('bot') || roomNameLower.includes('lounge');
             const logoUrl = room.logo || `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(room.id || 'room')}`;
@@ -1823,23 +1824,34 @@ function renderRoomList() {
                     </span>
                 </div>
             `;
-            
+
             li.onclick = () => joinRoomPrompt(room);
             listEl.appendChild(li);
         });
+
+        if (window.anime && listEl.children.length > 0) {
+            anime({
+                targets: listEl.children,
+                opacity: [0, 1],
+                translateY: [12, 0],
+                delay: anime.stagger(35),
+                duration: 340,
+                easing: 'easeOutCubic'
+            });
+        }
     }
 }
 
 if (socket) {
-    socket.on('room list', (rooms) => { 
-        globalRoomList = (rooms && rooms.length > 0) ? rooms : defaultRooms; 
-        renderRoomList(); 
+    socket.on('room list', (rooms) => {
+        globalRoomList = (rooms && rooms.length > 0) ? rooms : defaultRooms;
+        renderRoomList();
     });
-    socket.on('global room alert', (alertData) => { 
+    socket.on('global room alert', (alertData) => {
         const roomId = (typeof alertData === 'object' && alertData.roomId) ? alertData.roomId : alertData;
-        if (activeRoomId !== roomId) { 
-            unreadCounts[roomId] = (unreadCounts[roomId] || 0) + 1; 
-            renderRoomList(); 
+        if (activeRoomId !== roomId) {
+            unreadCounts[roomId] = (unreadCounts[roomId] || 0) + 1;
+            renderRoomList();
 
             if (typeof alertData === 'object' && alertData.sender && alertData.sender !== currentUser.name) {
                 playUiSound('receive');
@@ -1847,7 +1859,7 @@ if (socket) {
                 showInAppNotificationBanner(alertData);
                 triggerSystemNotification(alertData.sender, alertData.roomName, alertData.text, alertData.avatar, alertData.roomId);
             }
-        } 
+        }
     });
 }
 
@@ -1871,44 +1883,44 @@ if (createRoomSubmit) {
         const name = nameInp ? nameInp.value : '';
         const isPrivate = privInp ? privInp.checked : false;
         const password = passInp ? passInp.value : '';
-        if(name) { 
-            if (socket) socket.emit('create room', { name, isPrivate, password }); 
-            if (createRoomModal) createRoomModal.classList.add('hidden'); 
+        if (name) {
+            if (socket) socket.emit('create room', { name, isPrivate, password });
+            if (createRoomModal) createRoomModal.classList.add('hidden');
         }
     };
 }
 
 let pendingJoinRoom = null;
 function joinRoomPrompt(room) {
-    hapticFeedback('light'); 
-    if(room.isPrivate) { 
-        pendingJoinRoom = room; 
+    hapticFeedback('light');
+    if (room.isPrivate) {
+        pendingJoinRoom = room;
         const joinPass = document.getElementById('join-room-pass');
-        if (joinPass) joinPass.value = ''; 
+        if (joinPass) joinPass.value = '';
         if (passwordModal) passwordModal.classList.remove('hidden');
     } else { currentRoomPassword = ''; joinRoom(room.id, '', false); }
 }
 
 const joinRoomSubmit = document.getElementById('join-room-submit');
 if (joinRoomSubmit) {
-    joinRoomSubmit.onclick = () => { 
+    joinRoomSubmit.onclick = () => {
         const joinPass = document.getElementById('join-room-pass');
-        currentRoomPassword = joinPass ? joinPass.value : ''; 
-        if (pendingJoinRoom) joinRoom(pendingJoinRoom.id, currentRoomPassword, false); 
-        if (passwordModal) passwordModal.classList.add('hidden'); 
+        currentRoomPassword = joinPass ? joinPass.value : '';
+        if (pendingJoinRoom) joinRoom(pendingJoinRoom.id, currentRoomPassword, false);
+        if (passwordModal) passwordModal.classList.add('hidden');
     };
 }
 
 function joinRoom(roomId, password, isReconnect) { socket.emit('join room', { roomId, password, user: currentUser, isReconnect }); }
 
-socket.on('connect', () => { 
+socket.on('connect', () => {
     if (typeof completeAppOpening === 'function') {
         completeAppOpening();
     } else if (loadingScreen) {
         loadingScreen.classList.add('hidden');
     }
     if (currentUser.name) { socket.emit('update profile', currentUser); loginScreen.classList.add('hidden'); roomListScreen.classList.remove('hidden'); }
-    if (currentUser.name && activeRoomId) joinRoom(activeRoomId, currentRoomPassword, true); 
+    if (currentUser.name && activeRoomId) joinRoom(activeRoomId, currentRoomPassword, true);
 });
 
 socket.on('join error', (msg) => showToast('⚠️ ' + msg, 3500));
@@ -1916,21 +1928,21 @@ socket.on('action error', (msg) => showToast(msg, 3500));
 socket.on('rate limit', (msg) => showToast('⏳ ' + msg, 3500));
 socket.on('chat history', (data) => {
     if (activeRoomId !== data.room.id) {
-        history.pushState({screen: 'chat', roomId: data.room.id}, '', '#chat');
+        history.pushState({ screen: 'chat', roomId: data.room.id }, '', '#chat');
     }
     roomListScreen.classList.add('hidden'); chatScreen.classList.remove('hidden');
-    
+
     const isRoomSwitch = activeRoomId !== data.room.id;
     if (isRoomSwitch) {
         currentlyTyping.clear();
         updateHeaderSubtitle();
     }
-    activeRoomId = data.room.id; 
-    unreadCounts[activeRoomId] = 0; 
+    activeRoomId = data.room.id;
+    unreadCounts[activeRoomId] = 0;
     renderRoomList();
-    
+
     setSendBtnState(activeRoomId === 'ai_lounge' ? 'send' : 'mic');
-    
+
     updateGroupHeader(data.room);
     const savedWallpaper = (activeRoomId && localStorage.getItem('wallpaper_' + activeRoomId)) || localStorage.getItem('chitchat_global_wallpaper');
     applyChatWallpaper(savedWallpaper);
@@ -2016,7 +2028,7 @@ async function registerWebPushSubscription() {
 
     try {
         const registration = await navigator.serviceWorker.ready;
-        
+
         if (Notification.permission !== 'granted') {
             const perm = await Notification.requestPermission();
             updateNotifStatusText();
@@ -2170,7 +2182,7 @@ function triggerSystemNotification(sender, roomName, text, avatar, roomId) {
                 tag: 'chitchat-msg-' + roomId,
                 renotify: true
             });
-            notif.onclick = function() {
+            notif.onclick = function () {
                 window.focus();
                 if (roomId) openRoomById(roomId);
                 notif.close();
@@ -2245,7 +2257,7 @@ function playUiSound(type = 'send') {
             if (AudioContextClass) audioCtx = new AudioContextClass();
         }
         if (audioCtx && audioCtx.state === 'suspended') {
-            audioCtx.resume().catch(() => {});
+            audioCtx.resume().catch(() => { });
         }
         if (!audioCtx) return;
 
@@ -2414,7 +2426,7 @@ function updateHeaderSubtitle() {
     if (currentlyTyping.size > 0) {
         const users = Array.from(currentlyTyping.values());
         const namesList = users.map(u => u.name);
-        
+
         let subtitleText = '';
         if (namesList.length === 1) {
             subtitleText = `${namesList[0]} is typing...`;
@@ -2431,7 +2443,7 @@ function updateHeaderSubtitle() {
         if (floatingTypingBubble && floatingTypingAvatar && floatingTypingName) {
             const firstUser = users[users.length - 1]; // most recent typing user
             floatingTypingAvatar.src = firstUser.avatar || `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(firstUser.name)}`;
-            
+
             const statusLabel = floatingTypingBubble.querySelector('.typing-status-label');
 
             if (users.length === 1) {
@@ -2482,52 +2494,52 @@ socket.on('user typing', (data) => {
 
 [createRoomModal, passwordModal, msgOptionsModal, viewProfileModal, groupInfoModal, createPollModal, appSettingsModal].forEach(modal => {
     if (modal) {
-        modal.addEventListener('click', (e) => { if(e.target === modal) modal.classList.add('hidden'); });
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.add('hidden'); });
     }
 });
 
-function updateGroupHeader(room) { 
-    if (currentRoomName) currentRoomName.textContent = room.name; 
-    if (currentRoomLogo) currentRoomLogo.src = room.logo || `https://api.dicebear.com/7.x/shapes/svg?seed=${room.id}`; 
+function updateGroupHeader(room) {
+    if (currentRoomName) currentRoomName.textContent = room.name;
+    if (currentRoomLogo) currentRoomLogo.src = room.logo || `https://api.dicebear.com/7.x/shapes/svg?seed=${room.id}`;
 }
 if (socket) socket.on('group info updated', updateGroupHeader);
 
 if (headerClickArea) {
-    headerClickArea.onclick = () => { 
-        hapticFeedback('light'); 
-        if (infoRoomLogo && currentRoomLogo) infoRoomLogo.src = currentRoomLogo.src; 
-        if (infoRoomName && currentRoomName) infoRoomName.value = currentRoomName.textContent; 
-        if (groupInfoModal) groupInfoModal.classList.remove('hidden'); 
+    headerClickArea.onclick = () => {
+        hapticFeedback('light');
+        if (infoRoomLogo && currentRoomLogo) infoRoomLogo.src = currentRoomLogo.src;
+        if (infoRoomName && currentRoomName) infoRoomName.value = currentRoomName.textContent;
+        if (groupInfoModal) groupInfoModal.classList.remove('hidden');
     };
 }
 
 const saveGroupInfoBtn = document.getElementById('save-group-info-btn');
 if (saveGroupInfoBtn) {
-    saveGroupInfoBtn.onclick = () => { 
-        const newName = infoRoomName ? infoRoomName.value.trim() : ''; 
-        if(newName) { 
-            if (socket) socket.emit('update group info', { roomId: activeRoomId, name: newName }); 
-            if (groupInfoModal) groupInfoModal.classList.add('hidden'); 
-        } 
+    saveGroupInfoBtn.onclick = () => {
+        const newName = infoRoomName ? infoRoomName.value.trim() : '';
+        if (newName) {
+            if (socket) socket.emit('update group info', { roomId: activeRoomId, name: newName });
+            if (groupInfoModal) groupInfoModal.classList.add('hidden');
+        }
     };
 }
 
 if (groupPicUpload) {
-    groupPicUpload.addEventListener('change', function() { 
-        if (this.files && this.files[0]) { 
-            const reader = new FileReader(); 
-            reader.onload = (e) => { 
-                if (infoRoomLogo) infoRoomLogo.src = e.target.result; 
-                if (socket) socket.emit('update group info', { roomId: activeRoomId, logo: e.target.result }); 
-            }; 
-            reader.readAsDataURL(this.files[0]); 
-        } 
+    groupPicUpload.addEventListener('change', function () {
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                if (infoRoomLogo) infoRoomLogo.src = e.target.result;
+                if (socket) socket.emit('update group info', { roomId: activeRoomId, logo: e.target.result });
+            };
+            reader.readAsDataURL(this.files[0]);
+        }
     });
 }
 
 function applyChatWallpaper(wallpaperVal) {
     if (!chatScreen) return;
-    
+
     chatScreen.style.removeProperty('background-image');
     chatScreen.style.removeProperty('background-color');
     chatScreen.style.removeProperty('background-size');
@@ -2558,7 +2570,7 @@ function applyChatWallpaper(wallpaperVal) {
     if (wallpaperVal.startsWith('#') || wallpaperVal.startsWith('rgb')) {
         chatScreen.classList.add('has-custom-wallpaper');
         chatScreen.style.setProperty('background-color', wallpaperVal, 'important');
-        
+
         // Overlay current pattern design over custom background color
         const activeCard = document.querySelector('.wp-card.active');
         const activeWp = activeCard ? activeCard.dataset.wp : 'default';
@@ -2607,7 +2619,7 @@ if (btnChangeWallpaper) {
 }
 
 if (wallpaperUpload) {
-    wallpaperUpload.addEventListener('change', function() {
+    wallpaperUpload.addEventListener('change', function () {
         if (this.files && this.files[0]) {
             const reader = new FileReader();
             reader.onload = (e) => {
@@ -2717,9 +2729,9 @@ function performChatSearch(query) {
 }
 
 if (btnOpenSearch) {
-    btnOpenSearch.onclick = () => { 
-        if (groupInfoModal) groupInfoModal.classList.add('hidden'); 
-        if (chatSearchContainer) chatSearchContainer.classList.remove('hidden'); 
+    btnOpenSearch.onclick = () => {
+        if (groupInfoModal) groupInfoModal.classList.add('hidden');
+        if (chatSearchContainer) chatSearchContainer.classList.remove('hidden');
         if (chatSearchInput) {
             chatSearchInput.focus();
             if (chatSearchInput.value) performChatSearch(chatSearchInput.value);
@@ -2728,9 +2740,9 @@ if (btnOpenSearch) {
 }
 
 if (closeSearchBtn) {
-    closeSearchBtn.onclick = () => { 
-        if (chatSearchContainer) chatSearchContainer.classList.add('hidden'); 
-        if (chatSearchInput) chatSearchInput.value = ''; 
+    closeSearchBtn.onclick = () => {
+        if (chatSearchContainer) chatSearchContainer.classList.add('hidden');
+        if (chatSearchInput) chatSearchInput.value = '';
         clearChatSearchHighlights();
     };
 }
@@ -2888,8 +2900,8 @@ sendPollBtn.onclick = () => {
         hapticFeedback('heavy');
         const isMultiple = pollToggleMultiple ? pollToggleMultiple.checked : false;
         const isAnonymous = pollToggleAnonymous ? pollToggleAnonymous.checked : false;
-        const pollData = { 
-            question: q, 
+        const pollData = {
+            question: q,
             options: opts.map(o => ({ text: o, votes: [] })),
             isMultiple,
             isAnonymous,
@@ -2918,10 +2930,11 @@ sendPollBtn.onclick = () => {
 // ==========================
 function setSendBtnState(state) {
     if (!sendMicBtn) return;
+    const prevState = sendMicBtn.dataset.state;
     sendMicBtn.dataset.state = state;
     const sendMicIcon = document.getElementById('send-mic-icon');
     if (!sendMicIcon) return;
-    
+
     if (state === 'send') {
         sendMicBtn.title = 'Send Message';
         sendMicBtn.setAttribute('aria-label', 'Send Message');
@@ -2935,16 +2948,26 @@ function setSendBtnState(state) {
         sendMicBtn.setAttribute('aria-label', 'Record Voice Note');
         sendMicIcon.innerHTML = `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>`;
     }
+
+    if (prevState !== state && window.anime) {
+        anime({
+            targets: sendMicBtn,
+            scale: [0.84, 1],
+            rotate: state === 'send' ? [-25, 0] : [25, 0],
+            duration: 250,
+            easing: 'easeOutBack'
+        });
+    }
 }
 
 if (input) {
-    const handleInputChange = () => { 
-        if (editingMsgId) { 
-            setSendBtnState('check'); 
-        } else if ((input.value && input.value.trim().length > 0) || activeRoomId === 'ai_lounge') { 
-            setSendBtnState('send'); 
-        } else { 
-            setSendBtnState('mic'); 
+    const handleInputChange = () => {
+        if (editingMsgId) {
+            setSendBtnState('check');
+        } else if ((input.value && input.value.trim().length > 0) || activeRoomId === 'ai_lounge') {
+            setSendBtnState('send');
+        } else {
+            setSendBtnState('mic');
         }
 
         if (!typingSent) {
@@ -2965,11 +2988,11 @@ if (input) {
     input.addEventListener('compositionend', handleInputChange);
     input.addEventListener('paste', () => setTimeout(handleInputChange, 15));
 
-    const handleEnterKey = (e) => { 
-        if (e.key === 'Enter' && !e.shiftKey) { 
-            e.preventDefault(); 
-            sendMessage(); 
-        } 
+    const handleEnterKey = (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
     };
 
     input.addEventListener('keydown', handleEnterKey);
@@ -2980,37 +3003,37 @@ function sendMessage() {
     const text = input.value ? input.value.trim() : '';
     if (!text && !editingMsgId && activeRoomId !== 'ai_lounge') return;
 
-    if (socket) socket.emit('typing', false); 
+    if (socket) socket.emit('typing', false);
     clearTimeout(typingTimeout);
     typingSent = false;
 
     const targetRoomId = activeRoomId || 'lobby';
 
-    if (editingMsgId) { 
-        if (socket) socket.emit('edit message', { msgId: editingMsgId, newText: text, roomId: targetRoomId }); 
+    if (editingMsgId) {
+        if (socket) socket.emit('edit message', { msgId: editingMsgId, newText: text, roomId: targetRoomId });
         editingMsgId = null;
-    } else { 
-        if (socket) socket.emit('chat message', { 
+    } else {
+        if (socket) socket.emit('chat message', {
             userId: currentUser.id,
-            user: currentUser.name || 'Guest', 
-            avatar: currentUser.avatar || `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(currentUser.name || 'Alex')}`, 
-            color: currentUser.color || '#dcf8c6', 
-            text, 
-            time: formatTo12HourTime(new Date()), 
-            replyTo: replyingTo, 
+            user: currentUser.name || 'Guest',
+            avatar: currentUser.avatar || `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(currentUser.name || 'Alex')}`,
+            color: currentUser.color || '#dcf8c6',
+            text,
+            time: formatTo12HourTime(new Date()),
+            replyTo: replyingTo,
             isGhost: isGhostMode,
             roomId: targetRoomId,
             senderEndpoint: currentPushEndpoint
-        }); 
+        });
         playUiSound('send');
     }
 
-    input.value = ''; 
+    input.value = '';
     try {
         input.dispatchEvent(new Event('input', { bubbles: true }));
-    } catch (e) {}
-    setSendBtnState(activeRoomId === 'ai_lounge' ? 'send' : 'mic'); 
-    replyingTo = null; 
+    } catch (e) { }
+    setSendBtnState(activeRoomId === 'ai_lounge' ? 'send' : 'mic');
+    replyingTo = null;
     if (replyPreviewContainer) replyPreviewContainer.classList.add('hidden');
 }
 
@@ -3022,17 +3045,17 @@ if (attachBtn) {
 }
 
 if (imageUpload) {
-    imageUpload.addEventListener('change', function() {
+    imageUpload.addEventListener('change', function () {
         if (this.files && this.files[0]) {
             const file = this.files[0];
             const targetRoomId = activeRoomId || 'lobby';
-            
+
             if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
                 showToast('Unsupported file type!');
                 return;
             }
 
-            hapticFeedback('heavy'); const reader = new FileReader(); 
+            hapticFeedback('heavy'); const reader = new FileReader();
             reader.onload = (e) => {
                 const fileData = e.target.result;
                 if (file.type.startsWith('video/')) {
@@ -3044,16 +3067,31 @@ if (imageUpload) {
                     const img = new Image(); img.src = fileData;
                     img.onload = () => {
                         const canvas = document.createElement('canvas'); let w = img.width, h = img.height;
-                        if(w > 600) { h *= 600/w; w = 600; } canvas.width = w; canvas.height = h;
+                        if (w > 600) { h *= 600 / w; w = 600; } canvas.width = w; canvas.height = h;
                         canvas.getContext('2d').drawImage(img, 0, 0, w, h);
                         if (socket) socket.emit('chat message', { userId: currentUser.id, user: currentUser.name, avatar: currentUser.avatar, color: currentUser.color, text: '', uploadedImage: canvas.toDataURL('image/jpeg', 0.8), time: formatTo12HourTime(new Date()), isGhost: isGhostMode, roomId: targetRoomId });
                     };
                 }
                 imageUpload.value = '';
-            }; 
+            };
             reader.readAsDataURL(file);
         }
     });
+function openMsgOptionsModal() {
+    if (!msgOptionsModal) return;
+    msgOptionsModal.classList.remove('hidden');
+    if (window.anime) {
+        const reactBtns = msgOptionsModal.querySelectorAll('.react-btn');
+        anime({
+            targets: reactBtns,
+            scale: [0.25, 1],
+            translateY: [16, 0],
+            opacity: [0, 1],
+            delay: anime.stagger(30),
+            duration: 360,
+            easing: 'easeOutBack'
+        });
+    }
 }
 
 let pressTimer;
@@ -3068,8 +3106,8 @@ messages.addEventListener('touchstart', (e) => {
         if (li.classList.contains('my-message')) document.getElementById('opt-delete').classList.remove('hidden');
         else document.getElementById('opt-delete').classList.add('hidden');
 
-        msgOptionsModal.classList.remove('hidden');
-    }, 500); 
+        openMsgOptionsModal();
+    }, 500);
 }, { passive: true });
 messages.addEventListener('touchend', () => clearTimeout(pressTimer));
 messages.addEventListener('touchmove', () => clearTimeout(pressTimer));
@@ -3092,7 +3130,7 @@ messages.addEventListener('contextmenu', (e) => {
     } else {
         document.getElementById('opt-delete').classList.add('hidden');
     }
-    msgOptionsModal.classList.remove('hidden');
+    openMsgOptionsModal();
 });
 
 function triggerReplyForMessage(li) {
@@ -3132,15 +3170,15 @@ messages.addEventListener('touchstart', (e) => {
 messages.addEventListener('touchmove', (e) => {
     if (!swipedElement) return;
     touchCurrentX = e.touches[0].clientX; const diffX = touchCurrentX - touchStartX;
-    if (diffX > 10 && diffX < 80) swipedElement.style.transform = `translateX(${diffX}px)`; 
+    if (diffX > 10 && diffX < 80) swipedElement.style.transform = `translateX(${diffX}px)`;
 }, { passive: true });
 
 messages.addEventListener('touchend', () => {
     if (!swipedElement) return;
-    const diffX = touchCurrentX - touchStartX; 
-    swipedElement.style.transition = 'transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1)'; 
+    const diffX = touchCurrentX - touchStartX;
+    swipedElement.style.transition = 'transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1)';
     swipedElement.style.transform = `translateX(0px)`;
-    if (diffX > 45) { 
+    if (diffX > 45) {
         triggerReplyForMessage(swipedElement);
     }
     swipedElement = null; touchStartX = 0; touchCurrentX = 0;
@@ -3154,7 +3192,7 @@ const optDelete = document.getElementById('opt-delete');
 if (optDelete) optDelete.onclick = () => { if (socket) socket.emit('delete message', selectedMsgId); if (msgOptionsModal) msgOptionsModal.classList.add('hidden'); };
 
 const optPin = document.getElementById('opt-pin');
-if (optPin) optPin.onclick = () => { const li = document.getElementById(`msg-${selectedMsgId}`); if (li && socket) socket.emit('pin message', { msg: { user: li.dataset.sender, text: li.querySelector('.message-text')?.innerText || 'Attachment' }}); if (msgOptionsModal) msgOptionsModal.classList.add('hidden'); };
+if (optPin) optPin.onclick = () => { const li = document.getElementById(`msg-${selectedMsgId}`); if (li && socket) socket.emit('pin message', { msg: { user: li.dataset.sender, text: li.querySelector('.message-text')?.innerText || 'Attachment' } }); if (msgOptionsModal) msgOptionsModal.classList.add('hidden'); };
 
 const optStar = document.getElementById('opt-star');
 if (optStar) optStar.onclick = () => {
@@ -3245,23 +3283,23 @@ if (scrollBottomBtn) {
 }
 
 const optEdit = document.getElementById('opt-edit');
-if (optEdit) optEdit.onclick = () => { 
-    const li = document.getElementById(`msg-${selectedMsgId}`); 
+if (optEdit) optEdit.onclick = () => {
+    const li = document.getElementById(`msg-${selectedMsgId}`);
     if (li && input) {
         const textEl = li.querySelector('.message-text');
         if (textEl) input.value = textEl.innerText.replace('(edited)', '').trim();
     }
-    editingMsgId = selectedMsgId; 
-    setSendBtnState('check'); 
-    if (input) input.focus(); 
-    if (msgOptionsModal) msgOptionsModal.classList.add('hidden'); 
+    editingMsgId = selectedMsgId;
+    setSendBtnState('check');
+    if (input) input.focus();
+    if (msgOptionsModal) msgOptionsModal.classList.add('hidden');
 };
 
 const optReply = document.getElementById('opt-reply');
-if (optReply) optReply.onclick = () => { 
-    const li = document.getElementById(`msg-${selectedMsgId}`); 
+if (optReply) optReply.onclick = () => {
+    const li = document.getElementById(`msg-${selectedMsgId}`);
     if (li) triggerReplyForMessage(li);
-    if (msgOptionsModal) msgOptionsModal.classList.add('hidden'); 
+    if (msgOptionsModal) msgOptionsModal.classList.add('hidden');
 };
 
 const cancelReplyBtn = document.getElementById('cancel-reply-btn');
@@ -3270,7 +3308,7 @@ if (cancelReplyBtn) cancelReplyBtn.onclick = () => { replyingTo = null; if (repl
 const unpinBtn = document.getElementById('unpin-btn');
 if (unpinBtn) unpinBtn.onclick = () => { if (socket) socket.emit('unpin message'); };
 
-window.scrollToQuoteMessage = function(targetId) {
+window.scrollToQuoteMessage = function (targetId) {
     if (!targetId) return;
     const targetEl = document.getElementById(targetId) || document.getElementById('msg-' + targetId);
     if (targetEl) {
@@ -3303,24 +3341,25 @@ document.addEventListener('click', (e) => {
 
 socket.on('pinned updated', (pinnedMsg) => {
     const pinnedBanner = document.getElementById('pinned-banner');
-    if (pinnedMsg) { document.getElementById('pinned-user').textContent = pinnedMsg.user; document.getElementById('pinned-text').textContent = pinnedMsg.text; pinnedBanner.classList.remove('hidden');
+    if (pinnedMsg) {
+        document.getElementById('pinned-user').textContent = pinnedMsg.user; document.getElementById('pinned-text').textContent = pinnedMsg.text; pinnedBanner.classList.remove('hidden');
     } else { pinnedBanner.classList.add('hidden'); }
 });
 
 socket.on('chat message', (data) => {
     if (data.roomId && data.roomId !== activeRoomId) return;
     displayMessage(data, false);
-    
+
     if (data.user !== currentUser.name) {
         playUiSound('receive');
-        
+
         if (document.hidden) {
             const roomObj = globalRoomList.find(r => r.id === activeRoomId);
             const rName = roomObj ? roomObj.name : (currentRoomName ? currentRoomName.textContent : 'Room');
             let summaryText = data.text || (data.isAudio ? '🎤 Voice Note' : (data.uploadedImage ? '📷 Photo' : 'Attachment'));
             triggerSystemNotification(data.user, rName, summaryText, data.avatar, activeRoomId);
         }
-        
+
         if (!document.hidden && activeRoomId) emitMarkRead();
     }
 });
@@ -3334,7 +3373,7 @@ socket.on('poll updated', (updatedMsg) => {
 socket.on('messages read', (payload) => {
     if (payload && payload.roomId && payload.roomId !== activeRoomId) return;
     const readSVG = `<svg class="tick-svg tick-double tick-read-svg" width="18" height="13" viewBox="0 0 24 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 8.5L5.5 12.5L14 3.5"/><path d="M7.5 8.5L11.5 12.5L20 3.5"/></svg>`;
-    
+
     if (payload && Array.isArray(payload.msgIds) && payload.msgIds.length > 0) {
         payload.msgIds.forEach(id => {
             const li = document.getElementById(`msg-${id}`) || document.getElementById(id);
@@ -3357,7 +3396,7 @@ socket.on('messages read', (payload) => {
 socket.on('messages delivered', (payload) => {
     if (payload && payload.roomId && payload.roomId !== activeRoomId) return;
     const deliveredSVG = `<svg class="tick-svg tick-double" width="18" height="13" viewBox="0 0 24 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 8.5L5.5 12.5L14 3.5"/><path d="M7.5 8.5L11.5 12.5L20 3.5"/></svg>`;
-    
+
     if (payload && Array.isArray(payload.msgIds)) {
         payload.msgIds.forEach(id => {
             const li = document.getElementById(`msg-${id}`) || document.getElementById(id);
@@ -3371,20 +3410,20 @@ socket.on('messages delivered', (payload) => {
     }
 });
 
-socket.on('update reactions', (data) => { 
+socket.on('update reactions', (data) => {
     const li = document.getElementById(`msg-${data.id}`);
-    if(li) {
+    if (li) {
         let badge = li.querySelector('.reaction-badge');
         let reactString = Object.entries(data.reactions).map(([emoji, count]) => `${emoji} ${count}`).join(' ');
         let bubble = li.querySelector('.msg-bubble') || li;
-        if (!badge) { 
-            badge = document.createElement('div'); 
-            badge.className = 'reaction-badge'; 
-            badge.id = `reaction-count-${data.id}`; 
-            bubble.appendChild(badge); 
+        if (!badge) {
+            badge = document.createElement('div');
+            badge.className = 'reaction-badge';
+            badge.id = `reaction-count-${data.id}`;
+            bubble.appendChild(badge);
         }
         badge.innerHTML = reactString;
-    } 
+    }
 });
 
 socket.on('message edited', (data) => {
@@ -3421,7 +3460,7 @@ function updateWaveformProgress(container, currentTime, duration) {
     if (!container) return;
     const waveBars = container.querySelectorAll('.wave-bar');
     const timeLabel = container.querySelector('.audio-time-label');
-    
+
     if (timeLabel) {
         timeLabel.textContent = formatAudioTime(currentTime) + (duration ? ` / ${formatAudioTime(duration)}` : '');
     }
@@ -3431,10 +3470,13 @@ function updateWaveformProgress(container, currentTime, duration) {
     const activeCount = Math.floor(progress * waveBars.length);
 
     waveBars.forEach((bar, idx) => {
-        if (idx <= activeCount && progress > 0) {
+        if (idx < activeCount && progress > 0) {
             bar.classList.add('played');
+            bar.classList.remove('current-playing');
+        } else if (idx === activeCount && progress > 0) {
+            bar.classList.add('played', 'current-playing');
         } else {
-            bar.classList.remove('played');
+            bar.classList.remove('played', 'current-playing');
         }
     });
 }
@@ -3449,7 +3491,7 @@ function resetAudioPlayerUI(container) {
     if (playIcon) playIcon.classList.remove('hidden');
     if (pauseIcon) pauseIcon.classList.add('hidden');
     if (timeLabel) timeLabel.textContent = '0:00';
-    waveBars.forEach(bar => bar.classList.remove('played'));
+    waveBars.forEach(bar => bar.classList.remove('played', 'current-playing'));
 }
 
 // ==========================================
@@ -3464,22 +3506,22 @@ function getTickHTML(status = 'sent', msgId = '') {
     if (s === 'pending' || s === 'sending') {
         return `<span class="ticks pending" data-msg-id="${safeId}" title="Sending...">` +
             `<svg class="tick-svg tick-clock" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>` +
-        `</span>`;
+            `</span>`;
     }
     if (s === 'sent') {
         return `<span class="ticks sent" data-msg-id="${safeId}" title="Sent to server">` +
             `<svg class="tick-svg tick-single" width="14" height="12" viewBox="0 0 20 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 8.5 8.5 13 16 4"/></svg>` +
-        `</span>`;
+            `</span>`;
     }
     if (s === 'delivered') {
         return `<span class="ticks delivered" data-msg-id="${safeId}" title="Delivered">` +
             `<svg class="tick-svg tick-double" width="18" height="13" viewBox="0 0 24 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 8.5L5.5 12.5L14 3.5"/><path d="M7.5 8.5L11.5 12.5L20 3.5"/></svg>` +
-        `</span>`;
+            `</span>`;
     }
     // 'read' (WhatsApp blue double-tick)
     return `<span class="ticks read" data-msg-id="${safeId}" title="Read">` +
         `<svg class="tick-svg tick-double tick-read-svg" width="18" height="13" viewBox="0 0 24 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 8.5L5.5 12.5L14 3.5"/><path d="M7.5 8.5L11.5 12.5L20 3.5"/></svg>` +
-    `</span>`;
+        `</span>`;
 }
 
 function emitMarkRead(msgId = null) {
@@ -3511,8 +3553,8 @@ function renderPencilMark(symbol, isNew = false) {
 
 function getMessageInnerHTML(data, isMe, isStacked) {
     let contentText = escapeHTML(data.text || '');
-    if(data.isEdited) contentText += `<span class="edited-tag">(edited)</span>`;
-    
+    if (data.isEdited) contentText += `<span class="edited-tag">(edited)</span>`;
+
     let content = '';
     if (data.xox) {
         const xox = data.xox;
@@ -3528,8 +3570,8 @@ function getMessageInnerHTML(data, isMe, isStacked) {
         const playerXAvatar = avatars.X || `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(playerXName)}`;
 
         const playerOName = players.O;
-        const playerOAvatar = playerOName 
-            ? (avatars.O || `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(playerOName)}`) 
+        const playerOAvatar = playerOName
+            ? (avatars.O || `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(playerOName)}`)
             : null;
 
         const isMePlayerX = currentUser && currentUser.name && currentUser.name === players.X;
@@ -3565,8 +3607,8 @@ function getMessageInnerHTML(data, isMe, isStacked) {
         }).join('');
 
         const playerXDisplayName = escapeHTML(playerXName) + (isMePlayerX ? ' (You)' : '');
-        const playerODisplayName = playerOName 
-            ? (escapeHTML(playerOName) + (isMePlayerO ? ' (You)' : '')) 
+        const playerODisplayName = playerOName
+            ? (escapeHTML(playerOName) + (isMePlayerO ? ' (You)' : ''))
             : '(waiting...)';
 
         content = `
@@ -3597,9 +3639,9 @@ function getMessageInnerHTML(data, isMe, isStacked) {
 
                     <div class="xox-player-box player-o-box ${isOTurn ? 'active-turn' : ''} ${!playerOName ? 'waiting-slot' : ''}">
                         <div class="xox-avatar-ring">
-                            ${playerOAvatar 
-                                ? `<img src="${escapeHTML(playerOAvatar)}" class="xox-player-avatar" alt="${escapeHTML(playerOName)}" title="${escapeHTML(playerOName)}">`
-                                : `<div class="xox-player-avatar xox-empty-avatar" title="Waiting for opponent"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></div>`}
+                            ${playerOAvatar
+                ? `<img src="${escapeHTML(playerOAvatar)}" class="xox-player-avatar" alt="${escapeHTML(playerOName)}" title="${escapeHTML(playerOName)}">`
+                : `<div class="xox-player-avatar xox-empty-avatar" title="Waiting for opponent"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></div>`}
                             <span class="xox-badge badge-o">O</span>
                             <div class="xox-ring-glow"></div>
                         </div>
@@ -3653,11 +3695,11 @@ function getMessageInnerHTML(data, isMe, isStacked) {
 
             let icon = '';
             if (isMultiple) {
-                icon = isSelected 
+                icon = isSelected
                     ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="6" fill="var(--accent)"/><path d="m7 12 3.5 3.5 7-7" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`
                     : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="6"/></svg>`;
             } else {
-                icon = isSelected 
+                icon = isSelected
                     ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9.5" stroke="var(--accent)" stroke-width="2"/><circle cx="12" cy="12" r="5" fill="var(--accent)"/></svg>`
                     : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2"><circle cx="12" cy="12" r="9.5"/></svg>`;
             }
@@ -3702,9 +3744,9 @@ function getMessageInnerHTML(data, isMe, isStacked) {
                     <div class="poll-badge-row">
                         <span class="poll-badge">POLL</span>
                         <span class="poll-type-tag">
-                            ${isMultiple 
-                                ? `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="m9 12 2 2 4-4"/></svg> Multi-choice`
-                                : `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4" fill="currentColor"/></svg> Single-choice`}
+                            ${isMultiple
+                ? `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="m9 12 2 2 4-4"/></svg> Multi-choice`
+                : `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4" fill="currentColor"/></svg> Single-choice`}
                         </span>
                         ${isAnonymous ? `
                             <span class="poll-anon-tag">
@@ -3735,7 +3777,7 @@ function getMessageInnerHTML(data, isMe, isStacked) {
                 </div>
             </div>
         `;
-    } 
+    }
     else if (data.uploadedImage || data.image) {
         const imgSrc = data.uploadedImage || data.image;
         if (data.isAudio) {
@@ -3762,7 +3804,7 @@ function getMessageInnerHTML(data, isMe, isStacked) {
         }
         else if (data.isVideo) content = `${contentText ? `<span class="message-text" style="display:block; margin-bottom:6px;">${contentText}</span>` : ''}<video src="${escapeHTML(imgSrc)}" class="chat-video" controls playsinline></video>`;
         else content = `${contentText ? `<span class="message-text" style="display:block; margin-bottom:6px;">${contentText}</span>` : ''}<img src="${escapeHTML(imgSrc)}" class="chat-image">`;
-    } 
+    }
     else { content = `<span class="message-text">${contentText}</span>`; }
 
     if (data.linkPreview && data.linkPreview.url) {
@@ -3772,22 +3814,22 @@ function getMessageInnerHTML(data, isMe, isStacked) {
             content += `<a href="${escapeHTML(safeUrl)}" target="_blank" rel="noopener noreferrer" class="link-preview-card">${safeImg ? `<img src="${escapeHTML(safeImg)}" class="link-preview-img" style="display:block;">` : ''}<div class="link-preview-content"><div class="link-preview-title">${escapeHTML(data.linkPreview.title || 'Link')}</div>${data.linkPreview.desc ? `<div class="link-preview-desc">${escapeHTML(data.linkPreview.desc)}</div>` : ''}</div></a>`;
         }
     }
-    
+
     let topHeaderHTML = '';
     let senderDisplayName = isMe ? (currentUser.name || 'You') : (data.user || 'Guest');
 
     if (data.replyTo && data.replyTo.user) {
         let targetUser = data.replyTo.user;
-        let targetDisplayName = (targetUser === currentUser.name && !isMe) 
-            ? 'you' 
+        let targetDisplayName = (targetUser === currentUser.name && !isMe)
+            ? 'you'
             : ((targetUser === currentUser.name && isMe) ? 'yourself' : targetUser);
-        
+
         topHeaderHTML = `<span class="msg-header-name">${escapeHTML(senderDisplayName)}</span> <span class="reply-action-label">replied to</span> <span class="msg-header-name">${escapeHTML(targetDisplayName)}</span>`;
     } else if (!isMe && !isStacked) {
         topHeaderHTML = `<span class="msg-header-name">${escapeHTML(data.user)}</span>`;
     }
 
-    let replyHTML = ''; 
+    let replyHTML = '';
     if (data.replyTo && data.replyTo.user) {
         const targetId = data.replyTo.msgId ? (data.replyTo.msgId.startsWith('msg-') ? data.replyTo.msgId : 'msg-' + data.replyTo.msgId) : '';
         const cleanTargetId = targetId.replace(/[^a-zA-Z0-9_-]/g, '');
@@ -3803,7 +3845,7 @@ function getMessageInnerHTML(data, isMe, isStacked) {
     let reactionsHTML = ''; if (data.reactions && Object.keys(data.reactions).length > 0) reactionsHTML = `<div class="reaction-badge" id="reaction-count-${data.id}">${Object.entries(data.reactions).map(([e, c]) => `${escapeHTML(e)} ${escapeHTML(String(c))}`).join(' ')}</div>`;
     const displayTimeStr = formatTo12HourTime(data.time);
     const tickHTML = isMe ? getTickHTML(data.status, data.id) : '';
-    
+
     const hasMedia = !!(data.uploadedImage || data.image);
     const hasTextContent = !!((data.text && String(data.text).trim().length > 0) || (data.message && String(data.message).trim().length > 0));
     const isMediaOnly = !!(hasMedia && !data.isAudio && !hasTextContent && !replyHTML);
@@ -3819,8 +3861,8 @@ function getMessageInnerHTML(data, isMe, isStacked) {
                 </div>
             </div>`;
     } else {
-        const avatarHTML = !isStacked 
-            ? `<img src="${escapeHTML(data.avatar)}" class="avatar-small" data-name="${escapeHTML(data.user)}" title="${escapeHTML(data.user)}">` 
+        const avatarHTML = !isStacked
+            ? `<img src="${escapeHTML(data.avatar)}" class="avatar-small" data-name="${escapeHTML(data.user)}" title="${escapeHTML(data.user)}">`
             : `<div class="avatar-placeholder"></div>`;
         return `
             ${avatarHTML}
@@ -3864,14 +3906,14 @@ if (closePvModalBtn && pollVotersModal) {
 function openPollVotersModal(msgData) {
     if (!msgData || !msgData.poll) return;
     currentViewPollId = msgData.id;
-    
+
     const pvTitle = document.getElementById('pv-modal-title');
     const pvSub = document.getElementById('pv-modal-sub');
-    
+
     if (pvTitle) pvTitle.textContent = msgData.poll.question || 'Poll Results';
     if (pvSub) {
-        pvSub.innerHTML = msgData.poll.isAnonymous 
-            ? `<span style="display:inline-flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Anonymous Poll (Voters hidden)</span>` 
+        pvSub.innerHTML = msgData.poll.isAnonymous
+            ? `<span style="display:inline-flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Anonymous Poll (Voters hidden)</span>`
             : `<span style="display:inline-flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> ${msgData.poll.isMultiple ? 'Multiple Choice Breakdown' : 'Single Choice Breakdown'}</span>`;
     }
 
@@ -3957,13 +3999,13 @@ if (socket) {
             if (data.xox.status === 'won') {
                 const winnerName = data.xox.winner === 'X' ? data.xox.players?.X : data.xox.players?.O;
                 triggerReactionParticles(window.innerWidth / 2, window.innerHeight / 2, '🎉');
-                try { playUiSound('celebrate'); } catch (e) {}
+                try { playUiSound('celebrate'); } catch (e) { }
                 showToast(`🎉 ${winnerName || 'Winner'} won Tic-Tac-Toe! 🏆`, { icon: '🏆', type: 'success', duration: 4000 });
             } else if (data.xox.status === 'draw') {
-                try { playUiSound('pop'); } catch (e) {}
+                try { playUiSound('pop'); } catch (e) { }
                 showToast("🤝 It's a draw! Well played both!", { icon: '🤝', type: 'game' });
             } else {
-                try { playUiSound('pop'); } catch (e) {}
+                try { playUiSound('pop'); } catch (e) { }
             }
         }
     });
@@ -4075,7 +4117,7 @@ function updateXoxGameCard(card, data) {
                 btn.setAttribute('aria-label', `Square ${idx + 1}: ${val}`);
                 const valClass = val === 'X' ? 'val-x' : 'val-o';
                 btn.innerHTML = `<span class="xox-symbol ${valClass}">${renderPencilMark(val, true)}</span>`;
-                
+
                 // Clean up animation class after drawing completes so it stays completely static
                 setTimeout(() => {
                     const svg = btn.querySelector('.pencil-svg');
@@ -4135,13 +4177,13 @@ function sendXoxGame() {
         xox: {
             board: Array(9).fill(''),
             turn: 'X',
-            players: { 
-                X: currentUser.name, 
-                O: isAILounge ? '🤖 Bot' : null 
+            players: {
+                X: currentUser.name,
+                O: isAILounge ? '🤖 Bot' : null
             },
-            playerAvatars: { 
-                X: currentUser.avatar || `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(currentUser.name || 'Alex')}`, 
-                O: isAILounge ? 'https://api.dicebear.com/7.x/lorelei/svg?seed=ChitChatBot&backgroundColor=b6e3f4' : null 
+            playerAvatars: {
+                X: currentUser.avatar || `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(currentUser.name || 'Alex')}`,
+                O: isAILounge ? 'https://api.dicebear.com/7.x/lorelei/svg?seed=ChitChatBot&backgroundColor=b6e3f4' : null
             },
             status: 'in_progress',
             winner: null,
@@ -4230,7 +4272,7 @@ function triggerKissAnimation() {
     try {
         hapticFeedback('heavy');
         playUiSound('pop');
-    } catch(e){}
+    } catch (e) { }
 
     const existing = document.getElementById('kiss-animation-container');
     if (existing) existing.remove();
@@ -4246,22 +4288,22 @@ function triggerKissAnimation() {
 
     // Cute emoji selection for a sweet aesthetic shower
     const cuteEmojis = ['💋', '💋', '💋', '💖', '💕', '🌸', '✨', '💗', '🎀'];
-    
+
     // Generate 16 floating emojis driven 100% by CSS keyframe GPU acceleration
     const kissCount = 16;
     for (let i = 0; i < kissCount; i++) {
         const el = document.createElement('div');
         el.className = 'floating-kiss-emoji';
         el.textContent = cuteEmojis[Math.floor(Math.random() * cuteEmojis.length)];
-        
+
         // Random horizontal spawn position (5% to 92%)
         const left = (Math.random() * 87 + 5).toFixed(2);
         const fontSize = Math.floor(Math.random() * 16 + 26); // 26px to 42px
-        
+
         // Constant linear floating speed (3.0s to 3.8s) and delay
         const duration = (Math.random() * 0.8 + 3.0).toFixed(2);
         const delay = (Math.random() * 0.8).toFixed(2);
-        
+
         // Rotation & sway variables for CSS transform
         const initRot = (Math.random() * 30 - 15).toFixed(1); // -15deg to +15deg
         const midRot = (Math.random() * 20 - 10).toFixed(1);
@@ -4322,24 +4364,24 @@ function formatTo12HourTime(timeInput) {
 
 function checkIsMe(data) {
     if (!data) return false;
-    
+
     // 1. Live socket sender match (exact socket connection that sent the message)
     if (data.senderSocketId && socket && socket.id && data.senderSocketId === socket.id) {
         return true;
     }
-    
+
     // 2. Permanent unique user ID match
     if (data.userId && currentUser && currentUser.id && data.userId === currentUser.id) {
         return true;
     }
-    
+
     // 3. Custom username match (case-insensitive, ignoring generic "guest")
     const senderName = data.user ? String(data.user).trim() : '';
     const myName = currentUser && currentUser.name ? String(currentUser.name).trim() : '';
     if (senderName && myName && senderName.toLowerCase() === myName.toLowerCase() && senderName.toLowerCase() !== 'guest' && senderName.toLowerCase() !== 'guest user') {
         return true;
     }
-    
+
     return false;
 }
 
@@ -4367,12 +4409,12 @@ function displayMessage(data, isHistory) {
     const isStacked = (lastMsg && !lastMsg.classList.contains('system-message') && lastMsg.dataset.sender === data.user);
 
     li.className = isMe ? 'my-message' : 'other-message';
-    if(isStacked) li.classList.add('stacked');
-    if(data.isGhost) li.classList.add('ghost-message');
-    if(data.xox) li.classList.add('xox-message');
+    if (isStacked) li.classList.add('stacked');
+    if (data.isGhost) li.classList.add('ghost-message');
+    if (data.xox) li.classList.add('xox-message');
     const hasMsgMedia = !!(data.uploadedImage || data.image);
     const hasMsgText = !!((data.text && String(data.text).trim().length > 0) || (data.message && String(data.message).trim().length > 0));
-    if(hasMsgMedia && !data.isAudio && !hasMsgText) li.classList.add('media-only-message');
+    if (hasMsgMedia && !data.isAudio && !hasMsgText) li.classList.add('media-only-message');
     if (data.color) li.style.setProperty('--bubble-color', data.color);
 
     li.innerHTML = getMessageInnerHTML(data, isMe, isStacked);
@@ -4403,7 +4445,7 @@ function displayMessage(data, isHistory) {
 let currentPlayingAudio = null;
 let currentPlayingContainer = null;
 
-document.getElementById('messages').addEventListener('click', (e) => { 
+document.getElementById('messages').addEventListener('click', (e) => {
     const speedBtn = e.target.closest('.audio-speed-btn');
     if (speedBtn) {
         e.stopPropagation();
@@ -4426,7 +4468,7 @@ document.getElementById('messages').addEventListener('click', (e) => {
 
     if (!playBtn && !track) return;
 
-    const playerContainer = (playBtn || track).closest('.custom-audio-player'); 
+    const playerContainer = (playBtn || track).closest('.custom-audio-player');
     if (!playerContainer) return;
 
     const audioSrc = playerContainer.dataset.audioSrc;
@@ -4450,13 +4492,13 @@ document.getElementById('messages').addEventListener('click', (e) => {
 
     // Toggle Play/Pause
     if (currentPlayingAudio && currentPlayingContainer === playerContainer) {
-        if (currentPlayingAudio.paused) { 
-            currentPlayingAudio.play(); 
+        if (currentPlayingAudio.paused) {
+            currentPlayingAudio.play();
             if (playIcon) playIcon.classList.add('hidden');
             if (pauseIcon) pauseIcon.classList.remove('hidden');
             hapticFeedback('light');
-        } else { 
-            currentPlayingAudio.pause(); 
+        } else {
+            currentPlayingAudio.pause();
             if (playIcon) playIcon.classList.remove('hidden');
             if (pauseIcon) pauseIcon.classList.add('hidden');
             hapticFeedback('light');
@@ -4471,7 +4513,7 @@ document.getElementById('messages').addEventListener('click', (e) => {
         }
 
         hapticFeedback('light');
-        currentPlayingAudio = new Audio(audioSrc); 
+        currentPlayingAudio = new Audio(audioSrc);
         currentPlayingContainer = playerContainer;
 
         const currentSpeed = parseFloat(playerSpeedBtn ? (playerSpeedBtn.dataset.speed || 1) : 1);
@@ -4480,17 +4522,17 @@ document.getElementById('messages').addEventListener('click', (e) => {
         if (playIcon) playIcon.classList.add('hidden');
         if (pauseIcon) pauseIcon.classList.remove('hidden');
 
-        currentPlayingAudio.play().catch(err => console.log('Audio playback error:', err)); 
+        currentPlayingAudio.play().catch(err => console.log('Audio playback error:', err));
 
         currentPlayingAudio.addEventListener('loadedmetadata', () => {
             updateWaveformProgress(playerContainer, 0, currentPlayingAudio.duration);
         });
 
-        currentPlayingAudio.addEventListener('timeupdate', () => { 
+        currentPlayingAudio.addEventListener('timeupdate', () => {
             updateWaveformProgress(playerContainer, currentPlayingAudio.currentTime, currentPlayingAudio.duration);
         });
 
-        currentPlayingAudio.addEventListener('ended', () => { 
+        currentPlayingAudio.addEventListener('ended', () => {
             resetAudioPlayerUI(playerContainer);
             currentPlayingAudio = null;
             currentPlayingContainer = null;
@@ -4498,7 +4540,7 @@ document.getElementById('messages').addEventListener('click', (e) => {
     }
 });
 
-document.getElementById('messages').addEventListener('click', (e) => { 
+document.getElementById('messages').addEventListener('click', (e) => {
     const xoxCell = e.target.closest('.xox-cell');
     if (xoxCell) {
         const msgId = xoxCell.dataset.msgid;
@@ -4524,9 +4566,9 @@ document.getElementById('messages').addEventListener('click', (e) => {
             showToast('This poll is closed');
             return;
         }
-        hapticFeedback('light'); 
-        socket.emit('vote poll', { msgId: pollOpt.dataset.msgid, optionIndex: parseInt(pollOpt.dataset.optidx) }); 
-        return; 
+        hapticFeedback('light');
+        socket.emit('vote poll', { msgId: pollOpt.dataset.msgid, optionIndex: parseInt(pollOpt.dataset.optidx) });
+        return;
     }
 
     const closePollBtn = e.target.closest('.btn-close-poll');
@@ -4548,8 +4590,8 @@ document.getElementById('messages').addEventListener('click', (e) => {
         return;
     }
 
-    if(e.target.classList.contains('chat-image')) { openLightboxModal(e.target.src); } 
-    if(e.target.classList.contains('avatar-small')) { const friendName = e.target.dataset.name; socket.emit('get user info', friendName); }
+    if (e.target.classList.contains('chat-image')) { openLightboxModal(e.target.src); }
+    if (e.target.classList.contains('avatar-small')) { const friendName = e.target.dataset.name; socket.emit('get user info', friendName); }
 });
 
 // View User Profile socket response handler
@@ -4608,19 +4650,19 @@ document.querySelectorAll('.emoji-item').forEach(item => {
     });
 });
 
-const availableThemes = ['emerald', 'light', 'dark', 'pink']; 
+const availableThemes = ['emerald', 'light', 'dark', 'pink'];
 let currentThemeIndex = 0;
 const savedTheme = localStorage.getItem('chitchat_theme') || 'emerald';
-currentThemeIndex = availableThemes.indexOf(savedTheme); 
-if(currentThemeIndex === -1) currentThemeIndex = 0;
+currentThemeIndex = availableThemes.indexOf(savedTheme);
+if (currentThemeIndex === -1) currentThemeIndex = 0;
 
 const THEME_ICONS_SVG = {
     emerald: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="leafGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#34d399"/><stop offset="50%" stop-color="#10b981"/><stop offset="100%" stop-color="#059669"/></linearGradient></defs><path d="M20.5 3.5C20.5 3.5 13.5 3 8 8.5C3.8 12.7 3.5 18.5 3.5 18.5C3.5 18.5 9.3 18.2 13.5 14C19 8.5 20.5 3.5 20.5 3.5Z" fill="url(#leafGrad)"/><path d="M3.5 18.5C7.5 14.5 11.5 11 16.5 7.5" stroke="#047857" stroke-width="2" stroke-linecap="round"/><circle cx="17" cy="7" r="1.2" fill="#ecfdf5"/></svg>`,
-    
+
     light: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="sunGrad" x1="4" y1="4" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#fde047"/><stop offset="50%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#f59e0b"/></linearGradient><linearGradient id="sunRayGrad" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#d97706"/></linearGradient></defs><circle cx="12" cy="12" r="4.6" fill="url(#sunGrad)"/><path d="M12 2.5V4.5M12 19.5V21.5M2.5 12H4.5M19.5 12H21.5M5.28 5.28L6.7 6.7M17.3 17.3L18.72 18.72M5.28 18.72L6.7 17.3M17.3 6.7L18.72 5.28" stroke="url(#sunRayGrad)" stroke-width="2.2" stroke-linecap="round"/></svg>`,
-    
+
     dark: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="moonGrad" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#a5b4fc"/><stop offset="50%" stop-color="#818cf8"/><stop offset="100%" stop-color="#6366f1"/></linearGradient></defs><path d="M20.5 13.2A8.5 8.5 0 1 1 10.8 3.5A7 7 0 0 0 20.5 13.2Z" fill="url(#moonGrad)"/><path d="M18.5 4.5L19 5.8L20.5 6.3L19 6.8L18.5 8.1L18 6.8L16.5 6.3L18 5.8L18.5 4.5Z" fill="#c7d2fe"/><circle cx="13.5" cy="4" r="0.9" fill="#e0e7ff"/></svg>`,
-    
+
     pink: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="roseHGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#fb7185"/><stop offset="50%" stop-color="#f43f5e"/><stop offset="100%" stop-color="#e11d48"/></linearGradient><radialGradient id="roseCoreGrad" cx="12" cy="12" r="3.5" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#ffffff"/><stop offset="60%" stop-color="#fff1f2"/><stop offset="100%" stop-color="#fecdd3"/></radialGradient></defs><path d="M12 2.2C13.8 4.8 13.9 7.2 12 8.8C10.1 7.2 10.2 4.8 12 2.2Z" fill="url(#roseHGrad)"/><path d="M21.3 9C19.3 10.7 16.9 10.2 15.6 8.3C16.8 6.7 19.3 6.3 21.3 9Z" fill="url(#roseHGrad)"/><path d="M17.7 20C15.7 18.2 14.8 15.8 16.1 14C17.8 14.8 19.5 17 17.7 20Z" fill="url(#roseHGrad)"/><path d="M6.3 20C4.5 17 6.2 14.8 7.9 14C9.2 15.8 8.3 18.2 6.3 20Z" fill="url(#roseHGrad)"/><path d="M2.7 9C4.7 6.3 7.2 6.7 8.4 8.3C7.1 10.2 4.7 10.7 2.7 9Z" fill="url(#roseHGrad)"/><circle cx="12" cy="12" r="3.2" fill="url(#roseCoreGrad)" stroke="#fda4af" stroke-width="0.8"/></svg>`
 };
 
@@ -4681,7 +4723,7 @@ function applyTheme(themeName) {
     const savedWallpaper = (typeof activeRoomId !== 'undefined' && activeRoomId && localStorage.getItem('wallpaper_' + activeRoomId)) || localStorage.getItem('chitchat_global_wallpaper');
     const activeCard = document.querySelector('.wp-card.active');
     const activeWp = activeCard ? activeCard.dataset.wp : (savedWallpaper ? savedWallpaper.replace('pattern:', '') : '');
-    
+
     if ((activeWp === 'sweetheart' || activeWp === 'flirt') && typeof applyChatWallpaper === 'function') {
         applyChatWallpaper('pattern:' + activeWp);
     }
@@ -4692,9 +4734,9 @@ applyTheme(availableThemes[currentThemeIndex]);
 const btnThemeCycle = document.getElementById('btn-theme-cycle');
 if (btnThemeCycle) {
     btnThemeCycle.onclick = () => {
-        hapticFeedback('light'); 
+        hapticFeedback('light');
         currentThemeIndex = (currentThemeIndex + 1) % availableThemes.length;
-        const newTheme = availableThemes[currentThemeIndex]; 
+        const newTheme = availableThemes[currentThemeIndex];
         applyTheme(newTheme);
 
         const iconSpan = document.getElementById('theme-btn-icon');
@@ -4716,9 +4758,9 @@ document.querySelectorAll('.theme-selector-grid .theme-card-btn').forEach(btn =>
     });
 });
 
-let mediaRecorder; 
-let audioChunks = []; 
-let isRecording = false; 
+let mediaRecorder;
+let audioChunks = [];
+let isRecording = false;
 let isRecordingPaused = false;
 let recordingTimerInterval = null;
 let recordingSeconds = 0;
@@ -4781,7 +4823,7 @@ function startLiveVisualizer(stream) {
     try {
         const AudioContextClass = window.AudioContext || window.webkitAudioContext;
         if (!AudioContextClass) return;
-        
+
         if (!audioContext || audioContext.state === 'closed') {
             audioContext = new AudioContextClass();
         } else if (audioContext.state === 'suspended') {
@@ -4791,7 +4833,7 @@ function startLiveVisualizer(stream) {
         analyserNode = audioContext.createAnalyser();
         analyserNode.fftSize = 64;
         analyserNode.smoothingTimeConstant = 0.45;
-        
+
         micSourceNode = audioContext.createMediaStreamSource(stream);
         micSourceNode.connect(analyserNode);
 
@@ -4826,7 +4868,7 @@ function startLiveVisualizer(stream) {
             const val = Math.round(((s / (dataArray.length || 1)) / 255) * 100);
             liveWaveformSamples.push(Math.max(16, Math.min(100, val)));
         }, 80);
-    } catch(e) {
+    } catch (e) {
         console.warn('Live audio visualizer error:', e);
     }
 }
@@ -4841,7 +4883,7 @@ function stopLiveVisualizer() {
         sampleIntervalId = null;
     }
     if (micSourceNode) {
-        try { micSourceNode.disconnect(); } catch(e){}
+        try { micSourceNode.disconnect(); } catch (e) { }
         micSourceNode = null;
     }
     const waveBars = document.querySelectorAll('#recording-waves .rec-wave-bar');
@@ -4867,12 +4909,12 @@ function cleanupPreviewAudio() {
 }
 
 async function startRecording(e) {
-    if (e && e.cancelable) e.preventDefault(); 
-    if ((input && input.value && input.value.trim().length > 0) || activeRoomId === 'ai_lounge') return; 
+    if (e && e.cancelable) e.preventDefault();
+    if ((input && input.value && input.value.trim().length > 0) || activeRoomId === 'ai_lounge') return;
     if (isRecording) return;
 
     if (input) {
-        try { input.blur(); } catch(e){}
+        try { input.blur(); } catch (e) { }
     }
 
     if (!navigator || !navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
@@ -4884,19 +4926,19 @@ async function startRecording(e) {
         return;
     }
 
-    hapticFeedback('medium'); 
+    hapticFeedback('medium');
     isRecordingCancelled = false;
     isRecordingPaused = false;
     cleanupPreviewAudio();
     recordStartTime = Date.now();
 
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({ 
+        const stream = await navigator.mediaDevices.getUserMedia({
             audio: {
                 echoCancellation: true,
                 noiseSuppression: true,
                 autoGainControl: true
-            } 
+            }
         });
         currentAudioStream = stream;
 
@@ -4916,9 +4958,9 @@ async function startRecording(e) {
         mediaRecorder = Object.keys(options).length > 0 ? new MediaRecorder(stream, options) : new MediaRecorder(stream);
         audioChunks = [];
 
-        mediaRecorder.ondataavailable = event => { 
+        mediaRecorder.ondataavailable = event => {
             if (event.data && event.data.size > 0) {
-                audioChunks.push(event.data); 
+                audioChunks.push(event.data);
             }
         };
 
@@ -4936,38 +4978,38 @@ async function startRecording(e) {
 
             if (!isRecordingCancelled && audioChunks.length > 0) {
                 const finalMime = mediaRecorder.mimeType || 'audio/webm';
-                const audioBlob = new Blob(audioChunks, { type: finalMime }); 
+                const audioBlob = new Blob(audioChunks, { type: finalMime });
                 if (audioBlob.size > 150) {
                     const normalizedWave = normalizeWaveform(liveWaveformSamples, 24);
                     const finalDuration = Math.max(1, recordingSeconds);
 
                     const reader = new FileReader();
-                    reader.onload = (event) => { 
+                    reader.onload = (event) => {
                         if (socket) {
-                            socket.emit('chat message', { 
+                            socket.emit('chat message', {
                                 userId: currentUser.id,
-                                user: currentUser.name, 
-                                avatar: currentUser.avatar, 
-                                color: currentUser.color, 
-                                text: '', 
-                                uploadedImage: event.target.result, 
-                                isAudio: true, 
+                                user: currentUser.name,
+                                avatar: currentUser.avatar,
+                                color: currentUser.color,
+                                text: '',
+                                uploadedImage: event.target.result,
+                                isAudio: true,
                                 duration: finalDuration,
                                 waveform: normalizedWave,
-                                time: formatTo12HourTime(new Date()), 
+                                time: formatTo12HourTime(new Date()),
                                 isGhost: isGhostMode,
                                 roomId: activeRoomId || 'lobby'
-                            }); 
+                            });
                             playUiSound('send');
                         }
                     };
-                    reader.readAsDataURL(audioBlob); 
+                    reader.readAsDataURL(audioBlob);
                 }
             }
-            audioChunks = []; 
+            audioChunks = [];
             liveWaveformSamples = [];
             if (currentAudioStream) {
-                currentAudioStream.getTracks().forEach(track => track.stop()); 
+                currentAudioStream.getTracks().forEach(track => track.stop());
                 currentAudioStream = null;
             }
             isRecording = false;
@@ -4996,8 +5038,8 @@ async function startRecording(e) {
         if (inputPill) inputPill.classList.add('hidden');
         if (sendMicBtn) sendMicBtn.classList.add('hidden');
 
-    } catch(err) { 
-        isRecording = false; 
+    } catch (err) {
+        isRecording = false;
         console.error('Microphone access error:', err);
         if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
             showToast("Microphone permission was denied. Please allow mic access in your browser settings.");
@@ -5015,14 +5057,14 @@ function stopRecording(cancel = false) {
     if (isRecording && mediaRecorder && mediaRecorder.state !== 'inactive') {
         try {
             if (typeof mediaRecorder.requestData === 'function') {
-                try { mediaRecorder.requestData(); } catch(e){}
+                try { mediaRecorder.requestData(); } catch (e) { }
             }
             mediaRecorder.stop();
-        } catch(err) {
+        } catch (err) {
             console.error('Error stopping MediaRecorder:', err);
         }
         isRecording = false;
-        hapticFeedback(cancel ? 'light' : 'heavy'); 
+        hapticFeedback(cancel ? 'light' : 'heavy');
     } else {
         if (recOverlay) {
             recOverlay.classList.remove('is-paused');
@@ -5054,7 +5096,7 @@ function togglePauseRecording() {
 
         // Request available chunks to build preview
         if (typeof mediaRecorder.requestData === 'function') {
-            try { mediaRecorder.requestData(); } catch(e){}
+            try { mediaRecorder.requestData(); } catch (e) { }
         }
 
         setTimeout(() => {
@@ -5314,6 +5356,11 @@ function triggerReactionParticles(x, y, emoji = '✨') {
     const toggle = document.getElementById('toggle-reaction-fx');
     if (toggle && !toggle.checked) return;
 
+    if (typeof window.triggerVibeReactionBurst === 'function') {
+        window.triggerVibeReactionBurst(emoji, x, y);
+        return;
+    }
+
     for (let i = 0; i < 6; i++) {
         const p = document.createElement('span');
         p.className = 'reaction-particle';
@@ -5544,7 +5591,7 @@ function populateMediaVault() {
                 let parsedDomain = foundUrl;
                 try {
                     parsedDomain = new URL(foundUrl).hostname.replace(/^www\./, '');
-                } catch(e) {}
+                } catch (e) { }
 
                 const row = document.createElement('div');
                 row.className = 'vault-item-row';
@@ -5698,14 +5745,14 @@ function endAndResetCall(playedSound = true) {
     stopCallTimer();
 
     if (rtcPeerConn) {
-        try { rtcPeerConn.close(); } catch(e) {}
+        try { rtcPeerConn.close(); } catch (e) { }
         rtcPeerConn = null;
     }
 
     if (rtcLocalStream) {
         try {
             rtcLocalStream.getTracks().forEach(t => t.stop());
-        } catch(e) {}
+        } catch (e) { }
         rtcLocalStream = null;
     }
 
@@ -5724,7 +5771,7 @@ function endAndResetCall(playedSound = true) {
     if (btnCallToggleCam) btnCallToggleCam.classList.remove('active-off');
 
     if (playedSound) {
-        try { playUiSound('callEnd'); } catch(e) {}
+        try { playUiSound('callEnd'); } catch (e) { }
     }
 }
 
@@ -5802,8 +5849,8 @@ socket.on('call-incoming', (data) => {
 socket.on('call-rejected', (data) => {
     stopRingtoneLoop();
     endAndResetCall(true);
-    const msg = data && data.reason === 'busy' 
-        ? 'User is busy in another call' 
+    const msg = data && data.reason === 'busy'
+        ? 'User is busy in another call'
         : (data && data.reason === 'cancelled' ? 'Call cancelled' : 'Call declined');
     showToast(msg);
 });
@@ -5842,13 +5889,13 @@ function setupPeerConnectionEvents(targetSocketId) {
                 if (callRemoteVideo) {
                     callRemoteVideo.srcObject = stream;
                     callRemoteVideo.classList.remove('hidden');
-                    callRemoteVideo.play().catch(() => {});
+                    callRemoteVideo.play().catch(() => { });
                 }
                 if (callVoicePlaceholder) callVoicePlaceholder.classList.add('hidden');
             } else {
                 if (callRemoteAudio) {
                     callRemoteAudio.srcObject = stream;
-                    callRemoteAudio.play().catch(() => {});
+                    callRemoteAudio.play().catch(() => { });
                 }
                 if (callVoicePlaceholder) callVoicePlaceholder.classList.remove('hidden');
                 if (callRemoteVideo) callRemoteVideo.classList.add('hidden');
@@ -5918,7 +5965,7 @@ socket.on('call-accepted', async (data) => {
             to: activeCallPeerSocketId,
             signal: { type: 'offer', sdp: offer }
         });
-    } catch(err) {
+    } catch (err) {
         console.error('WebRTC offer error:', err);
     }
 });
@@ -6034,9 +6081,123 @@ if (btnCallSwitchCam) {
             }
             hapticFeedback('light');
             showToast('Camera flipped');
-        } catch(e) {
+        } catch (e) {
             showToast('Unable to flip camera');
         }
     };
 }
+
+/* ==========================================================================
+   VIBE CODER MOTION ENGINE (Anime.js, GSAP & Transitions.dev)
+   ========================================================================== */
+
+(function initVibeMotionEngine() {
+    // 1. Reactive Emoji Burst on Message Reactions & Quick Emojis
+    window.triggerVibeReactionBurst = function(emoji, x, y) {
+        const count = 10;
+        const emojis = emoji ? [emoji] : ['✨', '💖', '🔥', '🎉', '👍', '😊'];
+
+        for (let i = 0; i < count; i++) {
+            const p = document.createElement('span');
+            p.className = 'vibe-burst-particle';
+            p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+            p.style.left = `${x || window.innerWidth / 2}px`;
+            p.style.top = `${y || window.innerHeight / 2}px`;
+            document.body.appendChild(p);
+
+            const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.5;
+            const distance = 50 + Math.random() * 70;
+            const destX = Math.cos(angle) * distance;
+            const destY = Math.sin(angle) * distance - 25;
+
+            if (window.anime) {
+                anime({
+                    targets: p,
+                    translateX: destX,
+                    translateY: destY,
+                    opacity: [1, 0],
+                    scale: [0.6, 1.4],
+                    rotate: (Math.random() - 0.5) * 70,
+                    duration: 650 + Math.random() * 250,
+                    easing: 'easeOutCubic',
+                    complete: () => p.remove()
+                });
+            } else {
+                p.style.transition = 'transform 0.6s ease-out, opacity 0.6s ease-out';
+                p.style.transform = `translate(${destX}px, ${destY}px) scale(1.3)`;
+                p.style.opacity = '0';
+                setTimeout(() => p.remove(), 600);
+            }
+        }
+    };
+
+    // Attach click listener for reaction buttons and emoji drawers
+    document.addEventListener('click', (e) => {
+        const target = e.target.closest('.react-btn, .emoji-item, .reaction-pill');
+        if (target) {
+            const rect = target.getBoundingClientRect();
+            const emojiText = target.textContent.trim().match(/\p{Extended_Pictographic}|\p{Emoji_Presentation}/u);
+            const emoji = emojiText ? emojiText[0] : '✨';
+            window.triggerVibeReactionBurst(emoji, rect.left + rect.width / 2, rect.top + rect.height / 2);
+        }
+    });
+
+    // 2. Anime.js Elastic Pop-in for New Messages
+    const messagesContainer = document.getElementById('messages');
+    if (messagesContainer && window.MutationObserver) {
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                mutation.addedNodes.forEach((node) => {
+                    if (node.nodeType === 1 && (node.tagName === 'LI' || node.classList.contains('message') || node.classList.contains('msg-row'))) {
+                        if (window.anime) {
+                            anime({
+                                targets: node,
+                                translateY: [18, 0],
+                                scale: [0.94, 1],
+                                opacity: [0, 1],
+                                duration: 320,
+                                easing: 'easeOutBack'
+                            });
+                        }
+                    }
+                });
+            });
+        });
+        observer.observe(messagesContainer, { childList: true });
+    }
+
+    // 3. Cute Mascot Animation for Loading Screen
+    if (window.anime) {
+        const mascot = document.querySelector('.cute-mascot-svg');
+        if (mascot) {
+            anime({
+                targets: '.mascot-eye',
+                scaleY: [1, 0.1, 1],
+                duration: 2200,
+                loop: true,
+                delay: 2000,
+                easing: 'easeInOutQuad'
+            });
+            anime({
+                targets: '.mascot-dot',
+                translateY: [-4, 4],
+                duration: 600,
+                direction: 'alternate',
+                loop: true,
+                delay: anime.stagger(120),
+                easing: 'easeInOutSine'
+            });
+            anime({
+                targets: '.cute-charm',
+                translateY: [-6, 6],
+                duration: 1500,
+                direction: 'alternate',
+                loop: true,
+                delay: anime.stagger(250),
+                easing: 'easeInOutSine'
+            });
+        }
+    }
+})();
+
 
