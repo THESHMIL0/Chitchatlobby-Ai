@@ -103,7 +103,8 @@ const createRoomModal = document.getElementById('create-room-modal');
 const passwordModal = document.getElementById('password-modal');
 const msgOptionsModal = document.getElementById('msg-options-modal');
 const viewProfileModal = document.getElementById('view-profile-modal');
-const groupInfoModal = document.getElementById('group-info-modal');
+const roomSettingsScreen = document.getElementById('room-settings-screen');
+const groupInfoModal = roomSettingsScreen;
 
 const usernameInput = document.getElementById('username-input');
 const avatarPreview = document.getElementById('avatar-preview');
@@ -1801,10 +1802,26 @@ window.addEventListener('popstate', (e) => {
         if (chatScreen) chatScreen.classList.add('hidden');
         if (profileScreen) profileScreen.classList.remove('hidden');
         updateProfileScreenUI();
+    } else if (state === 'room-settings') {
+        if (chatScreen) chatScreen.classList.add('hidden');
+        if (settingsScreen) settingsScreen.classList.add('hidden');
+        if (profileScreen) profileScreen.classList.add('hidden');
+        if (roomListScreen) roomListScreen.classList.add('hidden');
+        if (roomSettingsScreen) {
+            roomSettingsScreen.classList.remove('hidden');
+            openRoomSettingsScreen();
+        }
+    } else if (state === 'chat') {
+        if (roomSettingsScreen) roomSettingsScreen.classList.add('hidden');
+        if (settingsScreen) settingsScreen.classList.add('hidden');
+        if (profileScreen) profileScreen.classList.add('hidden');
+        if (roomListScreen) roomListScreen.classList.add('hidden');
+        if (chatScreen) chatScreen.classList.remove('hidden');
     } else if (state === 'lobby' || state === '') {
         if (chatSearchContainer) chatSearchContainer.classList.add('hidden');
         if (chatSearchInput) chatSearchInput.value = '';
         clearChatSearchHighlights();
+        if (roomSettingsScreen) roomSettingsScreen.classList.add('hidden');
         if (activeRoomId) {
             if (chatScreen) chatScreen.classList.add('hidden');
             if (roomListScreen) roomListScreen.classList.remove('hidden');
@@ -2539,6 +2556,7 @@ function updateHeaderSubtitle() {
 }
 
 socket.on('room users', (usersList) => {
+    currentRoomMembersCache = usersList || [];
     if (activeRoomId === 'ai_lounge') {
         baseOnlineText = "🤖 Bot • AI Assistant";
     } else if (usersList.length <= 1) { 
@@ -2547,6 +2565,9 @@ socket.on('room users', (usersList) => {
         baseOnlineText = "Online: You, " + usersList.filter(u => u !== currentUser.name).join(', '); 
     }
     updateHeaderSubtitle();
+    if (roomSettingsScreen && !roomSettingsScreen.classList.contains('hidden')) {
+        renderRoomSettingsMembers(currentRoomMembersCache);
+    }
 });
 
 socket.on('user typing', (data) => {
@@ -2561,7 +2582,7 @@ socket.on('user typing', (data) => {
     updateHeaderSubtitle();
 });
 
-[createRoomModal, passwordModal, msgOptionsModal, viewProfileModal, groupInfoModal, createPollModal, appSettingsModal].forEach(modal => {
+[createRoomModal, passwordModal, msgOptionsModal, viewProfileModal, createPollModal, appSettingsModal].forEach(modal => {
     if (modal) {
         modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.add('hidden'); });
     }
@@ -2570,15 +2591,124 @@ socket.on('user typing', (data) => {
 function updateGroupHeader(room) {
     if (currentRoomName) currentRoomName.textContent = room.name;
     if (currentRoomLogo) currentRoomLogo.src = room.logo || `https://api.dicebear.com/7.x/shapes/svg?seed=${room.id}`;
+    if (infoRoomLogo && room.logo) infoRoomLogo.src = room.logo;
+    if (roomSettingsTitleDisplay && room.name) roomSettingsTitleDisplay.textContent = room.name;
 }
 if (socket) socket.on('group info updated', updateGroupHeader);
 
+// ==========================================
+// ⚙️ ROOM SETTINGS (FULL-PAGE SCREEN)
+// ==========================================
+const closeRoomSettingsBtn = document.getElementById('close-room-settings-btn');
+const btnLeaveRoomFromSettings = document.getElementById('btn-leave-room-from-settings');
+const roomSettingsTitleDisplay = document.getElementById('room-settings-title-display');
+const roomSettingsStatusDisplay = document.getElementById('room-settings-status-display');
+const roomSettingsMembersList = document.getElementById('room-settings-members-list');
+const roomSettingsMembersCountLabel = document.getElementById('room-settings-members-count-label');
+let currentRoomMembersCache = [];
+
+function renderRoomSettingsMembers(usersList) {
+    if (!roomSettingsMembersList) return;
+    const users = Array.isArray(usersList) ? usersList : currentRoomMembersCache;
+    currentRoomMembersCache = users;
+
+    if (roomSettingsMembersCountLabel) {
+        roomSettingsMembersCountLabel.textContent = `ROOM PARTICIPANTS (${users.length})`;
+    }
+
+    if (!users || users.length === 0) {
+        roomSettingsMembersList.innerHTML = `
+            <div style="padding: 16px; text-align: center; color: var(--text-secondary); font-size: 13px;">
+                No other participants currently in this room
+            </div>
+        `;
+        return;
+    }
+
+    roomSettingsMembersList.innerHTML = users.map(userName => {
+        const isMe = (currentUser && currentUser.name === userName);
+        const isBot = (userName === 'ChitChat AI' || (activeRoomId === 'ai_lounge' && userName.toLowerCase().includes('bot')));
+        const avatarUrl = isBot 
+            ? '/ai-icon.svg' 
+            : `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(userName)}`;
+
+        return `
+            <div class="room-member-row">
+                <div class="room-member-lead">
+                    <img class="room-member-avatar" src="${escapeHTML(avatarUrl)}" alt="${escapeHTML(userName)}"
+                        onerror="this.onerror=null;this.src='https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(userName)}';">
+                    <div class="room-member-info">
+                        <span class="room-member-name">${escapeHTML(userName)}${isMe ? ' (You)' : ''}</span>
+                        <span class="room-member-tag">${isBot ? 'Official AI Assistant' : (isMe ? 'Active now' : 'Online')}</span>
+                    </div>
+                </div>
+                ${isBot ? '<span class="room-member-badge badge-bot">BOT</span>' : '<span class="room-member-badge">ONLINE</span>'}
+            </div>
+        `;
+    }).join('');
+}
+
+function openRoomSettingsScreen() {
+    hapticFeedback('light');
+    if (chatScreen) chatScreen.classList.add('hidden');
+    if (roomListScreen) roomListScreen.classList.add('hidden');
+    if (settingsScreen) settingsScreen.classList.add('hidden');
+    if (profileScreen) profileScreen.classList.add('hidden');
+
+    if (roomSettingsScreen) {
+        roomSettingsScreen.classList.remove('hidden');
+        const roomName = (currentRoomName && currentRoomName.textContent) ? currentRoomName.textContent : 'Room';
+        if (infoRoomLogo && currentRoomLogo) infoRoomLogo.src = currentRoomLogo.src;
+        if (infoRoomName) infoRoomName.value = roomName;
+        if (roomSettingsTitleDisplay) roomSettingsTitleDisplay.textContent = roomName;
+        if (roomSettingsStatusDisplay) {
+            roomSettingsStatusDisplay.textContent = (activeRoomId === 'ai_lounge') 
+                ? 'Private AI Assistant Lounge' 
+                : (activeRoomId === 'lobby' ? 'Public Lobby • Open Discussion' : `Custom Room #${activeRoomId}`);
+        }
+        renderRoomSettingsMembers(currentRoomMembersCache);
+        try { history.pushState({ screen: 'room-settings', roomId: activeRoomId }, '', '#room-settings'); } catch (e) { }
+    }
+}
+
+function closeRoomSettingsScreen() {
+    hapticFeedback('light');
+    if (roomSettingsScreen) roomSettingsScreen.classList.add('hidden');
+    if (activeRoomId) {
+        if (chatScreen) chatScreen.classList.remove('hidden');
+        try { history.pushState({ screen: 'chat', roomId: activeRoomId }, '', '#chat'); } catch (e) { }
+    } else {
+        if (roomListScreen) roomListScreen.classList.remove('hidden');
+        try { history.pushState({ screen: 'lobby' }, '', '#lobby'); } catch (e) { }
+    }
+}
+
 if (headerClickArea) {
     headerClickArea.onclick = () => {
-        hapticFeedback('light');
-        if (infoRoomLogo && currentRoomLogo) infoRoomLogo.src = currentRoomLogo.src;
-        if (infoRoomName && currentRoomName) infoRoomName.value = currentRoomName.textContent;
-        if (groupInfoModal) groupInfoModal.classList.remove('hidden');
+        openRoomSettingsScreen();
+    };
+}
+
+if (closeRoomSettingsBtn) {
+    closeRoomSettingsBtn.onclick = (e) => {
+        if (e) { e.preventDefault(); e.stopPropagation(); }
+        closeRoomSettingsScreen();
+    };
+}
+
+if (btnLeaveRoomFromSettings) {
+    btnLeaveRoomFromSettings.onclick = () => {
+        hapticFeedback('medium');
+        if (roomSettingsScreen) roomSettingsScreen.classList.add('hidden');
+        if (chatScreen) chatScreen.classList.add('hidden');
+        if (socket) socket.emit('leave room');
+        activeRoomId = null;
+        isGhostMode = false;
+        if (ghostBtn) ghostBtn.classList.remove('active');
+        currentlyTyping.clear();
+        if (roomListScreen) roomListScreen.classList.remove('hidden');
+        try { history.pushState({ screen: 'lobby' }, '', '#lobby'); } catch (e) { }
+        showToast('Returned to lobby');
     };
 }
 
@@ -2587,22 +2717,61 @@ if (saveGroupInfoBtn) {
     saveGroupInfoBtn.onclick = () => {
         const newName = infoRoomName ? infoRoomName.value.trim() : '';
         if (newName) {
+            hapticFeedback('medium');
             if (socket) socket.emit('update group info', { roomId: activeRoomId, name: newName });
-            if (groupInfoModal) groupInfoModal.classList.add('hidden');
+            if (currentRoomName) currentRoomName.textContent = newName;
+            if (roomSettingsTitleDisplay) roomSettingsTitleDisplay.textContent = newName;
+            showToast('Room name updated! ✨', 'success');
+        } else {
+            showToast('Please enter a room name');
         }
     };
 }
 
 if (groupPicUpload) {
     groupPicUpload.addEventListener('change', function () {
-        if (this.files && this.files[0]) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                if (infoRoomLogo) infoRoomLogo.src = e.target.result;
-                if (socket) socket.emit('update group info', { roomId: activeRoomId, logo: e.target.result });
-            };
-            reader.readAsDataURL(this.files[0]);
+        if (!this.files || !this.files[0]) return;
+        const file = this.files[0];
+        if (file.size > 5 * 1024 * 1024) {
+            showToast('Logo must be under 5MB');
+            this.value = '';
+            return;
         }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const rawData = e.target.result;
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const size = 200;
+                canvas.width = size;
+                canvas.height = size;
+                const ctx = canvas.getContext('2d');
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+
+                const minDim = Math.min(img.naturalWidth || img.width, img.naturalHeight || img.height);
+                const sx = ((img.naturalWidth || img.width) - minDim) / 2;
+                const sy = ((img.naturalHeight || img.height) - minDim) / 2;
+                ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, size, size);
+
+                const compressed = canvas.toDataURL('image/jpeg', 0.85);
+                if (infoRoomLogo) infoRoomLogo.src = compressed;
+                if (currentRoomLogo) currentRoomLogo.src = compressed;
+                if (socket) socket.emit('update group info', { roomId: activeRoomId, logo: compressed });
+                showToast('Room logo updated! 🖼️', 'success');
+            };
+            img.onerror = () => {
+                if (infoRoomLogo) infoRoomLogo.src = rawData;
+                if (currentRoomLogo) currentRoomLogo.src = rawData;
+                if (socket) socket.emit('update group info', { roomId: activeRoomId, logo: rawData });
+                showToast('Room logo updated! 🖼️', 'success');
+            };
+            img.src = rawData;
+        };
+        reader.readAsDataURL(file);
+        this.value = '';
     });
 }
 

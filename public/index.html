@@ -949,58 +949,172 @@
         </div>
     </div>
 
-    <!-- Group Info Modal -->
-    <div id="group-info-modal" class="modal hidden">
-        <div class="modal-content form-modal">
-            <div class="modal-drag-pill"></div>
-            <h3>Room Settings</h3>
-            <div class="room-pic-select-wrap">
-                <img id="info-room-logo" class="info-room-logo-img" src="/icon.svg" alt="Room Logo" title="Room Logo">
-                <label for="group-pic-upload" class="sr-only">Upload room logo</label>
-                <input type="file" id="group-pic-upload" accept="image/*" class="hidden" title="Upload room logo"
-                    aria-label="Upload room logo">
-                <button onclick="document.getElementById('group-pic-upload').click()" class="icon-btn change-logo-btn"
-                    type="button" title="Change Logo" aria-label="Change Logo">Change Logo</button>
-            </div>
-            <label for="info-room-name" class="sr-only">Room Name</label>
-            <input type="text" id="info-room-name" class="premium-input" placeholder="Room Name" title="Room Name"
-                aria-label="Room Name">
-            <button id="save-group-info-btn" class="primary-btn save-group-btn" title="Save Changes"
-                aria-label="Save Changes" type="button">Save Changes</button>
+    <!-- Room Settings Screen (Full Page) -->
+    <div id="room-settings-screen" class="screen hidden">
+        <!-- Clean Modern Header -->
+        <div class="settings-clean-header">
+            <button id="close-room-settings-btn" class="clean-back-btn" title="Back to Chat" type="button"
+                aria-label="Back to Chat">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5M12 19l-7-7 7-7" />
+                </svg>
+            </button>
+            <h2 class="settings-clean-title">Room Settings</h2>
+            <div class="header-nav-spacer"></div>
+        </div>
 
-            <div class="menu-list">
-                <button id="btn-view-starred" class="menu-btn" title="View Starred Messages"
-                    aria-label="View Starred Messages" type="button"><svg width="17" height="17" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <polygon
-                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                    </svg><span>Starred Messages</span></button>
-                <button id="btn-open-media-vault" class="menu-btn" title="Media, Files & Links Vault"
-                    aria-label="Media, Files & Links Vault" type="button"><svg width="17" height="17"
-                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                        <circle cx="8.5" cy="8.5" r="1.5" />
-                        <polyline points="21 15 16 10 5 21" />
-                    </svg><span>Media, Files & Links Vault</span></button>
-                <button id="btn-change-wallpaper" class="menu-btn" title="Change Chat Wallpaper"
-                    aria-label="Change Chat Wallpaper" type="button"><svg width="17" height="17" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                        <circle cx="8.5" cy="8.5" r="1.5" />
-                        <polyline points="21 15 16 10 5 21" />
-                    </svg><span>Chat Wallpaper</span></button>
-                <label for="wallpaper-upload" class="sr-only">Upload chat wallpaper</label>
-                <input type="file" id="wallpaper-upload" accept="image/*" class="hidden" title="Upload chat wallpaper"
-                    aria-label="Upload chat wallpaper">
-                <button id="btn-reset-wallpaper" class="menu-btn" title="Reset Wallpaper" aria-label="Reset Wallpaper"
-                    type="button"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="1 4 1 10 7 10" />
-                        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
-                    </svg><span>Reset Wallpaper</span></button>
+        <div class="settings-clean-scroll">
+            <!-- Room Hero Card -->
+            <div class="room-settings-hero-card">
+                <div class="room-hero-avatar-wrap">
+                    <img id="info-room-logo" class="room-hero-avatar" src="/icon.svg" alt="Room Logo" title="Room Logo"
+                        onerror="this.onerror=null;this.src='/icon.svg';">
+                    <button type="button" id="btn-trigger-room-pic" class="room-avatar-edit-badge"
+                        onclick="document.getElementById('group-pic-upload').click()" title="Change room logo"
+                        aria-label="Change room logo">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                            <circle cx="12" cy="13" r="4"></circle>
+                        </svg>
+                    </button>
+                    <label for="group-pic-upload" class="sr-only">Upload room logo (max 5MB)</label>
+                    <input type="file" id="group-pic-upload" accept="image/*" class="visually-hidden-file-input"
+                        title="Upload room logo (max 5MB)" aria-label="Upload room logo">
+                </div>
+
+                <div class="room-hero-meta">
+                    <h3 id="room-settings-title-display" class="room-hero-name">Room</h3>
+                    <p id="room-settings-status-display" class="room-hero-status">Active conversation</p>
+                </div>
+            </div>
+
+            <!-- Edit Room Info Group -->
+            <div class="clean-group">
+                <div class="clean-group-label">ROOM INFORMATION</div>
+                <div class="clean-card room-settings-form-card">
+                    <div class="room-name-field-group">
+                        <label for="info-room-name" class="room-input-label">Room Name</label>
+                        <div class="room-input-row">
+                            <input type="text" id="info-room-name" class="room-settings-input" placeholder="Enter room name..."
+                                title="Room Name" aria-label="Room Name" maxlength="40">
+                            <button id="save-group-info-btn" class="primary-btn save-room-btn" title="Save Room Name"
+                                aria-label="Save Room Name" type="button">Save</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Features & Media Group -->
+            <div class="clean-group">
+                <div class="clean-group-label">CONTENT & MEDIA</div>
+                <div class="clean-card">
+                    <div id="btn-view-starred" class="clean-row clean-row-clickable" role="button" tabindex="0">
+                        <div class="clean-row-lead">
+                            <div class="clean-icon-box icon-star">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon
+                                        points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                </svg>
+                            </div>
+                            <span class="clean-label">Starred Messages</span>
+                        </div>
+                        <span class="clean-chevron" aria-hidden="true">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M9 18l6-6-6-6" />
+                            </svg>
+                        </span>
+                    </div>
+
+                    <div id="btn-open-media-vault" class="clean-row clean-row-clickable" role="button" tabindex="0">
+                        <div class="clean-row-lead">
+                            <div class="clean-icon-box icon-media">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                    <circle cx="8.5" cy="8.5" r="1.5" />
+                                    <polyline points="21 15 16 10 5 21" />
+                                </svg>
+                            </div>
+                            <span class="clean-label">Media, Files & Links Vault</span>
+                        </div>
+                        <span class="clean-chevron" aria-hidden="true">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M9 18l6-6-6-6" />
+                            </svg>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Wallpaper & Personalization Group -->
+            <div class="clean-group">
+                <div class="clean-group-label">CHAT WALLPAPER</div>
+                <div class="clean-card">
+                    <div id="btn-change-wallpaper" class="clean-row clean-row-clickable" role="button" tabindex="0">
+                        <div class="clean-row-lead">
+                            <div class="clean-icon-box icon-wallpaper">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                            <div class="clean-row-text">
+                                <span class="clean-label">Custom Wallpaper</span>
+                                <span class="clean-sublabel">Upload custom background photo</span>
+                            </div>
+                        </div>
+                        <span class="clean-chevron" aria-hidden="true">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M9 18l6-6-6-6" />
+                            </svg>
+                        </span>
+                    </div>
+                    <label for="wallpaper-upload" class="sr-only">Upload chat wallpaper</label>
+                    <input type="file" id="wallpaper-upload" accept="image/*" class="visually-hidden-file-input"
+                        title="Upload chat wallpaper" aria-label="Upload chat wallpaper">
+
+                    <div id="btn-reset-wallpaper" class="clean-row clean-row-clickable" role="button" tabindex="0">
+                        <div class="clean-row-lead">
+                            <div class="clean-icon-box icon-reset">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="1 4 1 10 7 10" />
+                                    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+                                </svg>
+                            </div>
+                            <span class="clean-label">Reset to Default Wallpaper</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Members List Group -->
+            <div class="clean-group">
+                <div class="clean-group-label" id="room-settings-members-count-label">ROOM PARTICIPANTS</div>
+                <div class="clean-card" id="room-settings-members-list">
+                    <!-- Populated dynamically with active participants in the room -->
+                </div>
+            </div>
+
+            <!-- Leave Room Action Group -->
+            <div class="clean-group">
+                <div class="clean-card">
+                    <button id="btn-leave-room-from-settings" class="room-settings-danger-btn" type="button"
+                        title="Leave this conversation" aria-label="Leave this conversation">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                        <span>Leave Room / Back to Lobby</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
