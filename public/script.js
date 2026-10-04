@@ -5468,11 +5468,6 @@ function applyChatFontSize(sizeVal) {
     if (custSlider) custSlider.value = numSize;
     if (custVal) custVal.textContent = formatted;
 
-    const setSlider = document.getElementById('settings-font-size-slider');
-    const setVal = document.getElementById('settings-font-size-value');
-    if (setSlider) setSlider.value = numSize;
-    if (setVal) setVal.textContent = formatted;
-
     // Dynamically update font size of live preview texts in real-time
     document.querySelectorAll('.font-preview-text').forEach(el => {
         el.style.fontSize = formatted;
@@ -5482,7 +5477,6 @@ function applyChatFontSize(sizeVal) {
     const pct = Math.max(0, Math.min(100, ((numSize - 13) / (22 - 13)) * 100));
     const fillStyle = `linear-gradient(to right, var(--accent) 0%, var(--accent) ${pct}%, var(--border-color, rgba(148, 163, 184, 0.3)) ${pct}%, var(--border-color, rgba(148, 163, 184, 0.3)) 100%)`;
 
-    if (setSlider) setSlider.style.setProperty('--slider-fill-track', fillStyle);
     if (custSlider) custSlider.style.setProperty('--slider-fill-track', fillStyle);
 
     // Update notch dots state across all stepped tracks
@@ -5502,11 +5496,10 @@ function applyChatFontSize(sizeVal) {
     });
 
     // Gentle Anime.js spring pop on the size badge
-    if (window.anime) {
-        const badges = [setVal, custVal].filter(Boolean);
-        window.anime.remove(badges);
+    if (window.anime && custVal) {
+        window.anime.remove(custVal);
         window.anime({
-            targets: badges,
+            targets: custVal,
             scale: [1, 1.2, 1],
             duration: 220,
             easing: 'easeOutBack'
@@ -5517,11 +5510,6 @@ function applyChatFontSize(sizeVal) {
 const fontSizeSlider = document.getElementById('font-size-slider');
 if (fontSizeSlider) {
     fontSizeSlider.addEventListener('input', (e) => applyChatFontSize(e.target.value));
-}
-
-const settingsFontSizeSlider = document.getElementById('settings-font-size-slider');
-if (settingsFontSizeSlider) {
-    settingsFontSizeSlider.addEventListener('input', (e) => applyChatFontSize(e.target.value));
 }
 
 // Allow clicking on any stepped notch to jump smoothly to that size
