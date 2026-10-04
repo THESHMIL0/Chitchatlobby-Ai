@@ -1888,8 +1888,6 @@ input {
    🖼️ PICTURE / MEDIA MESSAGE UNBOXING
 ==================================== */
 /* Completely remove outer box & border from picture messages */
-.media-only-message,
-.media-only-message .msg-content-wrapper,
 .media-only-message .msg-bubble,
 .msg-bubble-media-only,
 .msg-bubble:has(> .chat-image),
@@ -1911,22 +1909,38 @@ li:has(.chat-video:only-child) .msg-bubble {
 /* Ensure picture has clean rounded corners without any border, box, or shadow */
 .chat-image,
 .chat-video {
-    max-width: 260px;
-    max-height: 320px;
+    max-width: min(280px, 75vw);
+    max-height: 340px;
+    min-width: 130px;
+    min-height: 130px;
     border-radius: 16px;
     border: none !important;
     outline: none !important;
     object-fit: cover;
     display: block;
     margin: 0;
-    box-shadow: none !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.16);
     clear: both;
     cursor: pointer;
+    background: var(--input-bg);
     transition: transform 0.15s ease, opacity 0.15s ease;
 }
 
 .chat-image:active {
     transform: scale(0.98);
+}
+
+.chat-image.media-load-failed {
+    min-width: 160px;
+    min-height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px dashed rgba(239, 68, 68, 0.4) !important;
+    color: var(--text-secondary);
+    font-size: 11px;
+    padding: 10px;
 }
 
 /* Floating timestamp & tick overlay on borderless photos (WhatsApp/Telegram style) */

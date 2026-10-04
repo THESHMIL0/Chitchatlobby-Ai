@@ -79,6 +79,20 @@ window.handleAvatarError = function(img, name) {
     img.src = getInlineSvgAvatar(name || 'User');
 };
 
+window.handleChatMediaLoaded = function(el) {
+    if (!el) return;
+    if (messages && (messages.scrollHeight - messages.scrollTop - messages.clientHeight < 280)) {
+        messages.scrollTop = messages.scrollHeight;
+    }
+};
+
+window.handleChatMediaError = function(el) {
+    if (!el) return;
+    el.onerror = null;
+    el.classList.add('media-load-failed');
+    el.alt = 'Photo could not be loaded';
+};
+
 function showToast(msg, options = {}) {
     let duration = 3200;
     let icon = '';
@@ -1364,33 +1378,83 @@ function initAppView() {
 initAppView();
 playAppOpeningAnimation();
 
+function handleProfilePhotoFile(file) {
+    if (!file) return;
+    const isImage = (file.type && file.type.startsWith('image/')) ||
+        /\.(jpe?g|png|gif|webp|bmp|svg|heic|heif|avif)$/i.test(file.name || '');
+
+    if (!isImage) {
+        showToast('Please select a valid image file');
+        if (profilePicUpload) profilePicUpload.value = '';
+        return;
+    }
+
+    if (file.size > 15 * 1024 * 1024) {
+        showToast('Image is too large. Please select a photo under 15MB.');
+        if (profilePicUpload) profilePicUpload.value = '';
+        return;
+    }
+
+    showToast('Updating profile photo...', { icon: '✨' });
+    const reader = new FileReader();
+    reader.onerror = () => {
+        showToast('Failed to read image file');
+        if (profilePicUpload) profilePicUpload.value = '';
+    };
+    reader.onload = (e) => {
+        const rawData = e.target.result;
+        if (profilePicUpload) profilePicUpload.value = '';
+
+        const img = new Image();
+        img.onload = () => {
+            try {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const size = 240;
+                canvas.width = size;
+                canvas.height = size;
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+
+                const naturalW = img.naturalWidth || img.width || size;
+                const naturalH = img.naturalHeight || img.height || size;
+                const minDim = Math.min(naturalW, naturalH);
+                const sx = (naturalW - minDim) / 2;
+                const sy = (naturalH - minDim) / 2;
+                ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, size, size);
+
+                const finalAvatar = canvas.toDataURL('image/jpeg', 0.85);
+                currentUser.avatar = finalAvatar;
+                syncUserAvatarUI();
+                document.querySelectorAll('.preset-avatar-item').forEach(el => el.classList.remove('active'));
+                saveUserLocally();
+                if (socket) socket.emit('update profile', currentUser);
+                showToast('Profile photo updated! ✨', { icon: '✨' });
+            } catch (canvasErr) {
+                // Fallback to raw data
+                currentUser.avatar = rawData;
+                syncUserAvatarUI();
+                saveUserLocally();
+                if (socket) socket.emit('update profile', currentUser);
+                showToast('Profile photo updated! ✨', { icon: '✨' });
+            }
+        };
+        img.onerror = () => {
+            currentUser.avatar = rawData;
+            syncUserAvatarUI();
+            saveUserLocally();
+            if (socket) socket.emit('update profile', currentUser);
+            showToast('Profile photo updated! ✨', { icon: '✨' });
+        };
+        img.src = rawData;
+    };
+    reader.readAsDataURL(file);
+}
+
 if (profilePicUpload) {
     profilePicUpload.addEventListener('change', function () {
         if (this.files && this.files[0]) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const img = new Image();
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    const size = 180;
-                    canvas.width = size;
-                    canvas.height = size;
-
-                    let minDim = Math.min(img.width, img.height);
-                    let sx = (img.width - minDim) / 2;
-                    let sy = (img.height - minDim) / 2;
-                    ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, size, size);
-
-                    currentUser.avatar = canvas.toDataURL('image/jpeg', 0.8);
-                    syncUserAvatarUI();
-                    document.querySelectorAll('.preset-avatar-item').forEach(el => el.classList.remove('active'));
-                    saveUserLocally();
-                    if (socket) socket.emit('update profile', currentUser);
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(this.files[0]);
+            handleProfilePhotoFile(this.files[0]);
         }
     });
 }
@@ -2124,7 +2188,6 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden && ac
 // 🔔 NOTIFICATIONS SYSTEM
 // ==========================
 const togglePushNotifications = document.getElementById('toggle-push-notifications');
-const btnRequestPushPermission = document.getElementById('btn-request-push-permission');
 let currentPushEndpoint = localStorage.getItem('chitchat_push_endpoint') || null;
 
 function updateNotifStatusText() {
@@ -2133,25 +2196,12 @@ function updateNotifStatusText() {
 
     if (!('Notification' in window)) {
         statusText.textContent = 'Unsupported in browser';
-        if (btnRequestPushPermission) btnRequestPushPermission.style.display = 'none';
     } else if (Notification.permission === 'granted') {
         statusText.textContent = 'Active in background';
-        if (btnRequestPushPermission) {
-            btnRequestPushPermission.textContent = 'Test Push';
-            btnRequestPushPermission.style.display = 'inline-block';
-        }
     } else if (Notification.permission === 'denied') {
         statusText.textContent = 'Blocked in browser';
-        if (btnRequestPushPermission) {
-            btnRequestPushPermission.textContent = 'Blocked';
-            btnRequestPushPermission.style.display = 'inline-block';
-        }
     } else {
         statusText.textContent = 'Alerts when app is closed';
-        if (btnRequestPushPermission) {
-            btnRequestPushPermission.textContent = 'Enable';
-            btnRequestPushPermission.style.display = 'inline-block';
-        }
     }
 
     checkShowPushPromptCard();
@@ -2255,41 +2305,6 @@ if (togglePushNotifications) {
     });
 }
 
-if (btnRequestPushPermission) {
-    btnRequestPushPermission.addEventListener('click', async () => {
-        if ('Notification' in window && Notification.permission === 'granted') {
-            if (!currentPushEndpoint) {
-                await registerWebPushSubscription();
-            }
-            if (currentPushEndpoint) {
-                try {
-                    const res = await fetch('/api/push/send-test', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            endpoint: currentPushEndpoint,
-                            userName: currentUser ? currentUser.name : 'Guest',
-                            delayMs: 4000
-                        })
-                    });
-                    const resData = await res.json();
-                    if (resData.success) {
-                        showToast('Test push scheduled! Minimize/lock screen within 4 seconds!');
-                    } else {
-                        showToast('⚠️ Test push: ' + (resData.error || 'Re-subscribing...'));
-                        registerWebPushSubscription();
-                    }
-                } catch (e) {
-                    showToast('⚠️ Error testing push notification');
-                }
-            } else {
-                triggerSystemNotification('ChitChat Test', 'Lobby', 'Test Web Push Notification working!', currentUser ? currentUser.avatar : null, 'lobby');
-            }
-        } else {
-            registerWebPushSubscription();
-        }
-    });
-}
 
 // Visual Push Prompt Card Actions
 const btnEnablePushPrompt = document.getElementById('btn-enable-push-prompt');
@@ -3393,41 +3408,175 @@ function sendMessage() {
 // ==========================
 // ✅ SAFE FILE UPLOAD CHECK
 // ==========================
+function sendMediaMessage(dataUrl, isVideo = false, originalFileName = '') {
+    if (!dataUrl) return;
+    const targetRoomId = activeRoomId || 'lobby';
+    const safeAvatar = getSafeAvatarUrl(currentUser.avatar, currentUser.name || 'Alex');
+    const senderName = currentUser.name || 'Alex';
+
+    const msgPayload = {
+        userId: currentUser.id || ('usr_' + socket.id),
+        user: senderName,
+        avatar: safeAvatar,
+        color: currentUser.color || '#dcf8c6',
+        text: '',
+        uploadedImage: dataUrl,
+        isVideo: !!isVideo,
+        time: formatTo12HourTime(new Date()),
+        isGhost: isGhostMode,
+        roomId: targetRoomId,
+        replyTo: replyingTo
+    };
+
+    if (socket) {
+        socket.emit('chat message', msgPayload);
+        playUiSound('send');
+    }
+    clearReply();
+    showToast(isVideo ? 'Video sent! 🎥' : 'Photo sent! 📷');
+    if (messages) {
+        requestAnimationFrame(() => {
+            messages.scrollTop = messages.scrollHeight;
+        });
+    }
+}
+
+function handleChatMediaFile(file) {
+    if (!file) return;
+
+    const isImage = (file.type && file.type.startsWith('image/')) ||
+        /\.(jpe?g|png|gif|webp|bmp|svg|heic|heif|avif)$/i.test(file.name || '');
+    const isVideo = (file.type && file.type.startsWith('video/')) ||
+        /\.(mp4|webm|mov|ogg)$/i.test(file.name || '');
+
+    if (!isImage && !isVideo) {
+        showToast('Please select a valid image or video file.');
+        if (imageUpload) imageUpload.value = '';
+        return;
+    }
+
+    if (isVideo && file.size > 20 * 1024 * 1024) {
+        showToast('Video is too large! Maximum limit is 20MB.');
+        if (imageUpload) imageUpload.value = '';
+        return;
+    }
+
+    if (isImage && file.size > 20 * 1024 * 1024) {
+        showToast('Photo is too large! Maximum limit is 20MB.');
+        if (imageUpload) imageUpload.value = '';
+        return;
+    }
+
+    hapticFeedback('heavy');
+    showToast(isVideo ? 'Sending video...' : 'Sending photo...', { icon: isVideo ? '🎥' : '📷' });
+
+    const reader = new FileReader();
+    reader.onerror = () => {
+        showToast('Failed to read media file. Please try again.');
+        if (imageUpload) imageUpload.value = '';
+    };
+
+    reader.onload = (e) => {
+        const fileData = e.target.result;
+        if (imageUpload) imageUpload.value = '';
+
+        if (isVideo) {
+            sendMediaMessage(fileData, true, file.name);
+            return;
+        }
+
+        if (file.type === 'image/gif') {
+            sendMediaMessage(fileData, false, file.name);
+            return;
+        }
+
+        // For photos (JPEG, PNG, WebP, etc.), compress to fit within optimal bandwidth
+        const img = new Image();
+        img.onload = () => {
+            try {
+                const canvas = document.createElement('canvas');
+                let w = img.naturalWidth || img.width || 800;
+                let h = img.naturalHeight || img.height || 600;
+                const maxDim = 1200;
+                if (w > maxDim || h > maxDim) {
+                    if (w > h) {
+                        h = Math.round((h * maxDim) / w);
+                        w = maxDim;
+                    } else {
+                        w = Math.round((w * maxDim) / h);
+                        h = maxDim;
+                    }
+                }
+                canvas.width = w;
+                canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                ctx.drawImage(img, 0, 0, w, h);
+                const compressedData = canvas.toDataURL('image/jpeg', 0.82);
+                sendMediaMessage(compressedData, false, file.name);
+            } catch (canvasErr) {
+                // If canvas export fails, safely fall back to original file data
+                sendMediaMessage(fileData, false, file.name);
+            }
+        };
+        img.onerror = () => {
+            // If browser cannot decode in Image element, fall back to fileData
+            sendMediaMessage(fileData, false, file.name);
+        };
+        // Attach onload and onerror before setting src
+        img.src = fileData;
+    };
+
+    reader.readAsDataURL(file);
+}
+
 if (attachBtn) {
-    attachBtn.onclick = () => { hapticFeedback('light'); if (imageUpload) imageUpload.click(); };
+    attachBtn.onclick = () => {
+        hapticFeedback('light');
+        if (imageUpload) imageUpload.click();
+    };
 }
 
 if (imageUpload) {
     imageUpload.addEventListener('change', function () {
         if (this.files && this.files[0]) {
-            const file = this.files[0];
-            const targetRoomId = activeRoomId || 'lobby';
+            handleChatMediaFile(this.files[0]);
+        }
+    });
+}
 
-            if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
-                showToast('Unsupported file type!');
-                return;
-            }
-
-            hapticFeedback('heavy'); const reader = new FileReader();
-            reader.onload = (e) => {
-                const fileData = e.target.result;
-                if (file.type.startsWith('video/')) {
-                    if (file.size > 20 * 1024 * 1024) return showToast('Video is too large! Limit is 20MB.');
-                    if (socket) socket.emit('chat message', { userId: currentUser.id, user: currentUser.name, avatar: currentUser.avatar, color: currentUser.color, text: '', uploadedImage: fileData, isVideo: true, time: formatTo12HourTime(new Date()), isGhost: isGhostMode, roomId: targetRoomId });
-                } else if (file.type === 'image/gif') {
-                    if (socket) socket.emit('chat message', { userId: currentUser.id, user: currentUser.name, avatar: currentUser.avatar, color: currentUser.color, text: '', uploadedImage: fileData, time: formatTo12HourTime(new Date()), isGhost: isGhostMode, roomId: targetRoomId });
-                } else {
-                    const img = new Image(); img.src = fileData;
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas'); let w = img.width, h = img.height;
-                        if (w > 600) { h *= 600 / w; w = 600; } canvas.width = w; canvas.height = h;
-                        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                        if (socket) socket.emit('chat message', { userId: currentUser.id, user: currentUser.name, avatar: currentUser.avatar, color: currentUser.color, text: '', uploadedImage: canvas.toDataURL('image/jpeg', 0.8), time: formatTo12HourTime(new Date()), isGhost: isGhostMode, roomId: targetRoomId });
-                    };
+// Paste Image from Clipboard support into chat
+if (input) {
+    input.addEventListener('paste', (e) => {
+        const items = (e.clipboardData || e.originalEvent?.clipboardData)?.items;
+        if (items) {
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf('image') !== -1) {
+                    const blob = items[i].getAsFile();
+                    if (blob) {
+                        e.preventDefault();
+                        handleChatMediaFile(blob);
+                        return;
+                    }
                 }
-                imageUpload.value = '';
-            };
-            reader.readAsDataURL(file);
+            }
+        }
+    });
+}
+
+// Drag & Drop Image/Video support onto chat area
+const chatBodyContainer = document.getElementById('chat-body-container');
+if (chatBodyContainer) {
+    chatBodyContainer.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+    });
+    chatBodyContainer.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+            handleChatMediaFile(e.dataTransfer.files[0]);
         }
     });
 }
@@ -4161,8 +4310,8 @@ function getMessageInnerHTML(data, isMe, isStacked) {
                     </div>
                 </div>`;
         }
-        else if (data.isVideo) content = `${contentText ? `<span class="message-text" style="display:block; margin-bottom:6px;">${contentText}</span>` : ''}<video src="${escapeHTML(imgSrc)}" class="chat-video" controls playsinline></video>`;
-        else content = `${contentText ? `<span class="message-text" style="display:block; margin-bottom:6px;">${contentText}</span>` : ''}<img src="${escapeHTML(imgSrc)}" class="chat-image">`;
+        else if (data.isVideo) content = `${contentText ? `<span class="message-text" style="display:block; margin-bottom:6px;">${contentText}</span>` : ''}<video src="${escapeHTML(imgSrc)}" class="chat-video" controls playsinline onloadeddata="if(typeof handleChatMediaLoaded==='function')handleChatMediaLoaded(this);"></video>`;
+        else content = `${contentText ? `<span class="message-text" style="display:block; margin-bottom:6px;">${contentText}</span>` : ''}<img src="${escapeHTML(imgSrc)}" class="chat-image" alt="Photo" loading="eager" onload="if(typeof handleChatMediaLoaded==='function')handleChatMediaLoaded(this);" onerror="if(typeof handleChatMediaError==='function')handleChatMediaError(this);">`;
     }
     else { content = `<span class="message-text">${contentText}</span>`; }
 
