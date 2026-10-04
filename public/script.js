@@ -2560,6 +2560,7 @@ function updateHeaderSubtitle() {
     if (currentlyTyping.size > 0) {
         const users = Array.from(currentlyTyping.values());
         const namesList = users.map(u => u.name);
+        const firstUser = users[0] || { name: 'Someone', avatar: '' };
 
         let subtitleText = '';
         if (namesList.length === 1) {
@@ -2573,7 +2574,7 @@ function updateHeaderSubtitle() {
         onlineUsersText.textContent = subtitleText;
         onlineUsersText.classList.add('typing-text-active');
 
-        // Update Floating Animated Typing Bubble
+        // Update Animated Typing Bubble docked below messages
         if (floatingTypingBubble && floatingTypingAvatar && floatingTypingName) {
             floatingTypingAvatar.src = getSafeAvatarUrl(firstUser.avatar, firstUser.name);
             floatingTypingAvatar.onerror = function() { window.handleAvatarError(this, firstUser.name); };
@@ -2591,12 +2592,14 @@ function updateHeaderSubtitle() {
                 if (statusLabel) statusLabel.textContent = 'are typing';
             }
 
+            const wasNearBottom = messages && (messages.scrollHeight - messages.scrollTop - messages.clientHeight < 160);
             if (floatingTypingBubble.classList.contains('hidden')) {
                 floatingTypingBubble.classList.remove('hidden');
-                // Scroll down if user is near bottom
-                if (messages && (messages.scrollHeight - messages.scrollTop - messages.clientHeight < 120)) {
+            }
+            if (wasNearBottom && messages) {
+                requestAnimationFrame(() => {
                     messages.scrollTop = messages.scrollHeight;
-                }
+                });
             }
         }
     } else {
@@ -2604,7 +2607,13 @@ function updateHeaderSubtitle() {
         onlineUsersText.classList.remove('typing-text-active');
 
         if (floatingTypingBubble) {
+            const wasNearBottom = messages && (messages.scrollHeight - messages.scrollTop - messages.clientHeight < 160);
             floatingTypingBubble.classList.add('hidden');
+            if (wasNearBottom && messages) {
+                requestAnimationFrame(() => {
+                    messages.scrollTop = messages.scrollHeight;
+                });
+            }
         }
     }
 }
@@ -3694,6 +3703,10 @@ socket.on('pinned updated', (pinnedMsg) => {
 
 socket.on('chat message', (data) => {
     if (data.roomId && data.roomId !== activeRoomId) return;
+    if (data.user && currentlyTyping.has(data.user)) {
+        currentlyTyping.delete(data.user);
+        updateHeaderSubtitle();
+    }
     displayMessage(data, false);
 
     if (data.user !== currentUser.name) {
