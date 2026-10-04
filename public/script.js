@@ -5339,7 +5339,7 @@ if (savedBubbleStyle) {
     });
 }
 
-// Chat Font Size Controller (Settings & Customization Studio)
+// Aesthetic Chat Font Size Controller (Settings & Customization Studio)
 function applyChatFontSize(sizeVal) {
     if (!sizeVal) return;
     const numSize = parseInt(sizeVal, 10);
@@ -5358,6 +5358,46 @@ function applyChatFontSize(sizeVal) {
     const setVal = document.getElementById('settings-font-size-value');
     if (setSlider) setSlider.value = numSize;
     if (setVal) setVal.textContent = formatted;
+
+    // Dynamically update font size of live preview texts in real-time
+    document.querySelectorAll('.font-preview-text').forEach(el => {
+        el.style.fontSize = formatted;
+    });
+
+    // Dynamic track fill calculation: 13px (0%) to 22px (100%)
+    const pct = Math.max(0, Math.min(100, ((numSize - 13) / (22 - 13)) * 100));
+    const fillStyle = `linear-gradient(to right, var(--accent) 0%, var(--accent) ${pct}%, var(--border-color, rgba(148, 163, 184, 0.3)) ${pct}%, var(--border-color, rgba(148, 163, 184, 0.3)) 100%)`;
+
+    if (setSlider) setSlider.style.setProperty('--slider-fill-track', fillStyle);
+    if (custSlider) custSlider.style.setProperty('--slider-fill-track', fillStyle);
+
+    // Update notch dots state across all stepped tracks
+    document.querySelectorAll('.slider-notch-track').forEach(track => {
+        const notches = track.querySelectorAll('.slider-notch');
+        const stepIdx = numSize - 13;
+        notches.forEach((notch, idx) => {
+            if (idx < stepIdx) {
+                notch.classList.add('passed');
+                notch.classList.remove('current');
+            } else if (idx === stepIdx) {
+                notch.classList.add('passed', 'current');
+            } else {
+                notch.classList.remove('passed', 'current');
+            }
+        });
+    });
+
+    // Gentle Anime.js spring pop on the size badge
+    if (window.anime) {
+        const badges = [setVal, custVal].filter(Boolean);
+        window.anime.remove(badges);
+        window.anime({
+            targets: badges,
+            scale: [1, 1.2, 1],
+            duration: 220,
+            easing: 'easeOutBack'
+        });
+    }
 }
 
 const fontSizeSlider = document.getElementById('font-size-slider');
@@ -5369,6 +5409,17 @@ const settingsFontSizeSlider = document.getElementById('settings-font-size-slide
 if (settingsFontSizeSlider) {
     settingsFontSizeSlider.addEventListener('input', (e) => applyChatFontSize(e.target.value));
 }
+
+// Allow clicking on any stepped notch to jump smoothly to that size
+document.querySelectorAll('.slider-notch').forEach(notch => {
+    notch.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const targetSize = notch.getAttribute('data-size');
+        if (targetSize) {
+            applyChatFontSize(targetSize);
+        }
+    });
+});
 
 const initialSavedFontSize = localStorage.getItem('chitchat_font_size') || '15px';
 applyChatFontSize(initialSavedFontSize);

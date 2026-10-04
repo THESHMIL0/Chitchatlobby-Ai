@@ -4208,33 +4208,339 @@ li.system-message {
     color: var(--accent);
 }
 
-.font-size-control-wrap {
-    flex: 1;
-    min-width: 0;
+/* Aesthetic Chat Text Size Card & Stepped Range Slider (iOS/Telegram inspired) */
+.aesthetic-font-card {
+    background: var(--header-card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 18px;
+    padding: 18px 20px;
+    box-shadow: 0 2px 12px var(--shadow-color);
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    margin-top: 10px;
+    position: relative;
+    box-sizing: border-box;
+    transition: border-color 0.22s ease, box-shadow 0.22s ease;
 }
 
-.font-size-label-row {
+.aesthetic-font-card:hover {
+    border-color: rgba(16, 185, 129, 0.35);
+    box-shadow: 0 4px 18px var(--shadow-color);
+}
+
+.aesthetic-font-header {
     display: flex;
+    align-items: center;
     justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.aesthetic-font-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.aesthetic-size-badge {
+    font-size: 13px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--accent);
+    background: rgba(16, 185, 129, 0.12);
+    border: 1.5px solid rgba(16, 185, 129, 0.32);
+    padding: 3px 12px;
+    border-radius: 999px;
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 48px;
+    text-align: center;
+    flex-shrink: 0;
+    will-change: transform;
+    transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Authentic Live Message Bubble Preview */
+.font-preview-bubble-wrap {
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: relative;
+    overflow: hidden;
+    background-image: var(--bg-img-chat);
+    background-size: var(--bg-img-size, 20px 20px);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.font-preview-bubble {
+    position: relative;
+    padding: 9px 13px;
+    border-radius: 16px;
+    max-width: 86%;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+    word-break: break-word;
+}
+
+.font-preview-bubble.incoming {
+    align-self: flex-start;
+    background: var(--message-other);
+    color: var(--message-other-text);
+    border-bottom-left-radius: 4px;
+    border: 1px solid var(--border-color);
+}
+
+.font-preview-bubble.outgoing {
+    align-self: flex-end;
+    background: var(--accent-gradient, linear-gradient(135deg, #10b981 0%, #059669 100%));
+    color: #ffffff;
+    border-bottom-right-radius: 4px;
+    box-shadow: 0 3px 12px rgba(16, 185, 129, 0.28);
+}
+
+.font-preview-sender {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 1px;
+    line-height: 1.2;
+}
+
+.font-preview-text {
+    font-size: var(--chat-font-size, 15px);
+    line-height: 1.45;
+    font-weight: 500;
+    transition: font-size 0.08s ease-out;
+}
+
+.font-preview-time {
+    font-size: 10px;
+    opacity: 0.82;
+    align-self: flex-end;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 1px;
+    font-weight: 500;
+    letter-spacing: 0.2px;
+}
+
+.preview-tick {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* Stepped Slider Controls Container */
+.aesthetic-slider-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+    padding: 2px 0;
+    width: 100%;
+}
+
+.font-scale-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: inherit;
+    -webkit-user-select: none;
+    user-select: none;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.font-scale-icon.min-a {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    width: 18px;
+    text-align: center;
+}
+
+.font-scale-icon.max-a {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text-primary);
+    width: 22px;
+    text-align: center;
+}
+
+.aesthetic-track-wrapper {
+    position: relative;
+    flex: 1;
+    height: 38px;
+    display: flex;
     align-items: center;
 }
 
-.font-size-val-text {
-    font-weight: 700 !important;
-    color: var(--accent) !important;
-    font-variant-numeric: tabular-nums;
+/* Notch Dots Track */
+.slider-notch-track {
+    position: absolute;
+    left: 13px;
+    right: 13px;
+    height: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    pointer-events: none;
+    z-index: 1;
 }
 
-.font-size-range-input {
-    width: 100%;
-    accent-color: var(--accent);
+.slider-notch {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--border-color);
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.04);
+    pointer-events: auto;
     cursor: pointer;
-    height: 6px;
-    border-radius: 4px;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.16s ease, box-shadow 0.2s ease;
+}
+
+.slider-notch.passed {
+    background: #ffffff;
+    box-shadow: 0 0 4px rgba(255, 255, 255, 0.95);
+}
+
+.slider-notch.current {
+    transform: scale(1.6);
+    background: #ffffff;
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.85);
+}
+
+.slider-notch:hover {
+    transform: scale(1.9);
+    background: var(--accent);
+}
+
+/* Range Input Cross-Browser Styling */
+.aesthetic-range-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 38px;
+    background: transparent;
+    cursor: pointer;
+    position: relative;
+    z-index: 2;
+    margin: 0;
+    outline: none;
+    border: none;
+}
+
+.aesthetic-range-slider:focus-visible {
+    outline: none;
+}
+
+/* WebKit Track */
+.aesthetic-range-slider::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 10px;
+    border-radius: 999px;
+    background: var(--slider-fill-track, linear-gradient(to right, var(--accent) 22.2%, var(--border-color) 22.2%));
+    box-shadow: inset 0 1.5px 3px rgba(0, 0, 0, 0.16);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    transition: background 0.05s ease;
+}
+
+/* WebKit Thumb */
+.aesthetic-range-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 3.5px solid var(--accent);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22), 0 0 0 0 rgba(16, 185, 129, 0.35);
+    cursor: grab;
+    margin-top: -8px;
+    will-change: transform, box-shadow;
+    transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, border-color 0.15s ease;
+}
+
+.aesthetic-range-slider:hover::-webkit-slider-thumb {
+    transform: scale(1.15);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25), 0 0 0 6px rgba(16, 185, 129, 0.2);
+}
+
+.aesthetic-range-slider:active::-webkit-slider-thumb {
+    cursor: grabbing;
+    transform: scale(1.28);
+    box-shadow: 0 5px 18px rgba(0, 0, 0, 0.32), 0 0 0 10px rgba(16, 185, 129, 0.26);
+    border-color: var(--accent-hover);
+}
+
+/* Firefox Track & Thumb */
+.aesthetic-range-slider::-moz-range-track {
+    width: 100%;
+    height: 10px;
+    border-radius: 999px;
+    background: var(--slider-fill-track, linear-gradient(to right, var(--accent) 22.2%, var(--border-color) 22.2%));
+    box-shadow: inset 0 1.5px 3px rgba(0, 0, 0, 0.16);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.aesthetic-range-slider::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 3.5px solid var(--accent);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
+    cursor: grab;
+    transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+}
+
+.aesthetic-range-slider:hover::-moz-range-thumb {
+    transform: scale(1.15);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25), 0 0 0 6px rgba(16, 185, 129, 0.2);
+}
+
+.aesthetic-range-slider:active::-moz-range-thumb {
+    cursor: grabbing;
+    transform: scale(1.28);
+    box-shadow: 0 5px 18px rgba(0, 0, 0, 0.32), 0 0 0 10px rgba(16, 185, 129, 0.26);
+}
+
+/* Customization Studio Modal Section Styling */
+.aesthetic-cust-font-section {
     background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 16px;
+    margin-top: 10px;
+    margin-bottom: 14px;
+    box-sizing: border-box;
+}
+
+.aesthetic-cust-font-section .aesthetic-font-header {
+    margin-bottom: 12px;
+}
+
+/* Dark Theme Enhancements */
+body[data-theme="dark"] .aesthetic-range-slider::-webkit-slider-thumb {
+    background: #0f172a;
+}
+body[data-theme="dark"] .aesthetic-range-slider::-moz-range-thumb {
+    background: #0f172a;
+}
+body[data-theme="dark"] .slider-notch:not(.passed) {
+    background: #475569;
 }
 
 /* Sleek Theme Segmented Pill Bar */
