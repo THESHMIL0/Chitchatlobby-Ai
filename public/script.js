@@ -1486,17 +1486,10 @@ function isAiAssistantEnabled() {
 }
 
 const toggleAiChat = document.getElementById('toggle-ai-chat');
-const aiStatusSublabel = document.getElementById('ai-status-sublabel');
 
 function updateAiSettingsUI() {
     const enabled = isAiAssistantEnabled();
     if (toggleAiChat) toggleAiChat.checked = enabled;
-    if (aiStatusSublabel) {
-        aiStatusSublabel.textContent = enabled
-            ? 'Active • Visible on Home as 100% Private AI'
-            : 'Off (Default) • Hidden from Home';
-        aiStatusSublabel.style.color = enabled ? 'var(--accent)' : 'var(--text-secondary)';
-    }
 }
 
 if (toggleAiChat) {
@@ -1513,7 +1506,7 @@ if (toggleAiChat) {
             if (roomListScreen) roomListScreen.classList.remove('hidden');
             try { history.pushState({ screen: 'lobby' }, '', '#lobby'); } catch (err) { }
         }
-        showToast(enabled ? '✨ Private AI enabled and added to Home!' : '🔒 Private AI turned off and removed from Home.');
+        showToast(enabled ? '✨ AI Assistant enabled' : 'AI Assistant turned off');
     });
 }
 updateAiSettingsUI();
@@ -1892,10 +1885,8 @@ function renderRoomList() {
             const badgeHTML = unreadCount > 0 ? `<span class="unread-badge-pill">${unreadCount}</span>` : '';
 
             let subtitleText = '';
-            let aiPill = '';
             if (isAI) {
-                subtitleText = `🔒 Private 1-on-1 • Only you see this chat`;
-                aiPill = `<span class="room-pill-badge active">Private</span>`;
+                subtitleText = `24/7 Smart Companion • Ask anything`;
             } else if (room.isPrivate) {
                 subtitleText = `Passcode protected room`;
             } else {
@@ -1910,7 +1901,6 @@ function renderRoomList() {
                 <div class="room-card-info">
                     <div class="room-card-top-row">
                         <span class="room-card-name">${escapeHTML(room.name || 'Chat Room')}</span>
-                        ${aiPill}
                     </div>
                     <div class="room-card-sub-row">
                         <span class="room-card-subtitle">${subtitleText}</span>
@@ -2054,12 +2044,6 @@ socket.on('chat history', (data) => {
 
     if (isRoomSwitch || messages.querySelectorAll('li').length === 0) {
         messages.innerHTML = '';
-        if (data.room && data.room.id === 'ai_lounge') {
-            const banner = document.createElement('li');
-            banner.className = 'system-message private-security-banner';
-            banner.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> <span><strong>100% Private AI Session</strong> — Your chat here is private to you and never visible to other users.</span>`;
-            messages.appendChild(banner);
-        }
         data.history.forEach(msg => displayMessage(msg, true));
     }
     checkEmptyMessages();
@@ -2588,7 +2572,7 @@ function updateHeaderSubtitle() {
 
 socket.on('room users', (usersList) => {
     if (activeRoomId === 'ai_lounge') {
-        baseOnlineText = "🔒 Private 1-on-1 AI Assistant";
+        baseOnlineText = "🤖 Bot • AI Assistant";
     } else if (usersList.length <= 1) { 
         baseOnlineText = "Only you are here"; 
     } else { 
@@ -3947,9 +3931,6 @@ function getMessageInnerHTML(data, isMe, isStacked) {
 
     let topHeaderHTML = '';
     let senderDisplayName = isMe ? (currentUser.name || 'You') : (data.user || 'Guest');
-    const isBot = data.user === '🤖 Bot' || data.isPrivateAI;
-    const aiBadgeHTML = isBot ? `<span class="private-ai-badge">🔒 Private AI</span>` : '';
-    const whisperNoticeHTML = data.privateNotice ? `<div class="private-whisper-notice"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> ${escapeHTML(data.privateNotice)}</div>` : '';
 
     if (data.replyTo && data.replyTo.user) {
         let targetUser = data.replyTo.user;
@@ -3957,9 +3938,9 @@ function getMessageInnerHTML(data, isMe, isStacked) {
             ? 'you'
             : ((targetUser === currentUser.name && isMe) ? 'yourself' : targetUser);
 
-        topHeaderHTML = `<span class="msg-header-name">${escapeHTML(senderDisplayName)}${aiBadgeHTML}</span> <span class="reply-action-label">replied to</span> <span class="msg-header-name">${escapeHTML(targetDisplayName)}</span>`;
+        topHeaderHTML = `<span class="msg-header-name">${escapeHTML(senderDisplayName)}</span> <span class="reply-action-label">replied to</span> <span class="msg-header-name">${escapeHTML(targetDisplayName)}</span>`;
     } else if (!isMe && !isStacked) {
-        topHeaderHTML = `<span class="msg-header-name">${escapeHTML(data.user)}${aiBadgeHTML}</span>`;
+        topHeaderHTML = `<span class="msg-header-name">${escapeHTML(data.user)}</span>`;
     }
 
     let replyHTML = '';
@@ -3988,7 +3969,7 @@ function getMessageInnerHTML(data, isMe, isStacked) {
             <div class="msg-content-wrapper my-wrapper">
                 ${topHeaderHTML ? `<div class="msg-top-header">${topHeaderHTML}</div>` : ''}
                 <div class="msg-bubble ${data.xox ? 'msg-bubble-xox' : ''} ${isMediaOnly ? 'msg-bubble-media-only' : ''}">
-                    ${whisperNoticeHTML}${replyHTML}${content}
+                    ${replyHTML}${content}
                     <div class="meta-row"><span>${data.isGhost ? '⏱️ ' : ''}${displayTimeStr}</span>${tickHTML}</div>
                     ${reactionsHTML}
                 </div>
