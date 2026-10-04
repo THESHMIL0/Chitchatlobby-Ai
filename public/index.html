@@ -1531,9 +1531,16 @@
                                         points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                                 </svg>
                             </div>
-                            <span class="clean-label">AI Assistant</span>
+                            <div>
+                                <label for="toggle-ai-chat" class="clean-label">Private AI Assistant</label>
+                                <span class="clean-sublabel" id="ai-status-sublabel">Off (Default) • 100% Private 1-on-1 chat</span>
+                            </div>
                         </div>
-                        <span class="clean-pill-tag active">Gemini Active</span>
+                        <label class="switch" for="toggle-ai-chat">
+                            <input type="checkbox" id="toggle-ai-chat" title="Toggle Private AI Assistant"
+                                aria-label="Toggle Private AI Assistant">
+                            <span class="slider"></span>
+                        </label>
                     </div>
                 </div>
             </div>
@@ -1941,6 +1948,27 @@
                         <line x1="1" y1="1" x2="23" y2="23" />
                     </svg>
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Private AI Disabled Notice Modal -->
+    <div id="ai-disabled-modal" class="modal hidden">
+        <div class="modal-content form-modal" style="text-align: center;">
+            <div class="modal-drag-pill"></div>
+            <div style="width: 52px; height: 52px; border-radius: 50%; background: rgba(0, 168, 132, 0.12); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px auto; color: var(--accent);">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+            </div>
+            <h3>Private AI is Turned Off</h3>
+            <p class="modal-subtitle" style="margin: 8px auto 20px auto; max-width: 360px; line-height: 1.5;">
+                AI is <strong>disabled by default</strong> for maximum privacy. When enabled in Settings, your conversations in AI Lounge and with @Bot are <strong>100% private to you</strong> and never visible to other users.
+            </p>
+            <div style="display: flex; gap: 12px; width: 100%;">
+                <button type="button" class="icon-btn cancel-btn" id="btn-cancel-ai-modal" style="flex: 1; padding: 13px; border-radius: 14px; font-weight: 600;">Cancel</button>
+                <button type="button" class="primary-btn" id="btn-enable-ai-modal" style="flex: 1; padding: 13px; border-radius: 14px; font-weight: 700;">Open Settings</button>
             </div>
         </div>
     </div>

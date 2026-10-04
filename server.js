@@ -599,7 +599,25 @@ const db = {
 
 const activeUsersById = {};
 
+function emitToUserSockets(userId, event, payload, fallbackSocket = null) {
+    let delivered = false;
+    if (userId) {
+        for (const [sId, u] of Object.entries(activeUsersById)) {
+            if (u.userId === userId || u.id === userId) {
+                io.to(sId).emit(event, payload);
+                delivered = true;
+            }
+        }
+    }
+    if (!delivered && fallbackSocket) {
+        fallbackSocket.emit(event, payload);
+    }
+}
+
 function getUsersInRoom(roomId) {
+    if (roomId === 'ai_lounge') {
+        return ['🤖 Bot'];
+    }
     return Object.values(activeUsersById).filter(u => u.roomId === roomId).map(u => u.name);
 }
 
@@ -929,14 +947,25 @@ io.on('connection', (socket) => {
             }
 
             db.all("SELECT data FROM history WHERE roomId = ?", [room.id], (err, rows) => {
-                const history = rows?.map(r => typeof r.data === 'string' ? JSON.parse(r.data) : r.data) || [];
+                let history = rows?.map(r => typeof r.data === 'string' ? JSON.parse(r.data) : r.data) || [];
+                if (room.id === 'ai_lounge') {
+                    // 🔒 AI Lounge history is 100% private to this user
+                    history = history.filter(m => m.userId === userId || m.targetUserId === userId);
+                } else {
+                    // In group rooms, filter out private AI messages not belonging to this user
+                    history = history.filter(m => !m.isPrivateAI || m.userId === userId || m.targetUserId === userId);
+                }
                 socket.emit('chat history', {
-                    room: { id: room.id, name: room.name, logo: room.logo, isPrivate: room.isPrivate === 1 },
+                    room: { id: room.id, name: room.name, logo: room.logo, isPrivate: room.isPrivate === 1, isAI: room.id === 'ai_lounge' },
                     history
                 });
             });
 
-            io.to(room.id).emit('room users', getUsersInRoom(room.id));
+            if (room.id === 'ai_lounge') {
+                socket.emit('room users', [cleanName, '🤖 Bot']);
+            } else {
+                io.to(room.id).emit('room users', getUsersInRoom(room.id));
+            }
             if (room.pinnedMessage) {
                 socket.emit('pinned updated', room.pinnedMessage);
             }
@@ -1089,51 +1118,72 @@ io.on('connection', (socket) => {
             activeUsersById[socket.id] = { name: data.user, avatar: data.avatar, userId: data.userId, roomId };
         }
 
+        const isAILounge = roomId === 'ai_lounge';
+
+        if (isAILounge) {
+            data.isPrivateAI = true;
+            data.targetUserId = data.userId;
+        }
+
         if (!data.isGhost) {
             db.run("INSERT INTO history VALUES (?, ?, ?, ?)", [data.id, roomId, Date.now(), JSON.stringify(data)], (err) => {
                 if (err) console.error('History insert error:', err.message);
             });
         }
 
-        io.to(roomId).emit('chat message', data);
+        if (isAILounge) {
+            // 🔒 AI Lounge user messages are strictly PRIVATE to this user
+            emitToUserSockets(data.userId, 'chat message', data, socket);
+        } else {
+            io.to(roomId).emit('chat message', data);
+        }
 
-        db.get(`SELECT name FROM rooms WHERE id = ?`, [roomId], (err, roomRow) => {
-            const roomName = roomRow ? roomRow.name : (rooms.get(roomId)?.name || roomId);
-            let summaryText = data.text || '';
-            if (!summaryText) {
-                if (data.isAudio) summaryText = '🎤 Voice Note';
-                else if (data.isVideo) summaryText = '🎥 Video';
-                else if (data.uploadedImage) summaryText = '📷 Photo';
-                else if (data.poll) summaryText = '📊 Poll: ' + (data.poll.question || '');
-                else if (data.xox) summaryText = '🎮 Tic-Tac-Toe (XOX) Game';
-                else summaryText = 'Sent an attachment';
-            }
-            const alertData = {
-                roomId,
-                roomName,
-                sender: data.user,
-                avatar: data.avatar,
-                text: summaryText,
-                id: data.id
-            };
-            socket.broadcast.emit('global room alert', alertData);
-            sendPushToAllExceptSender(data.senderEndpoint, data.user, roomName, roomId, summaryText, data.avatar);
-        });
+        // Global room alerts and push notifications: ONLY for public group rooms, NEVER for private AI Lounge!
+        if (!isAILounge) {
+            db.get(`SELECT name FROM rooms WHERE id = ?`, [roomId], (err, roomRow) => {
+                const roomName = roomRow ? roomRow.name : (rooms.get(roomId)?.name || roomId);
+                let summaryText = data.text || '';
+                if (!summaryText) {
+                    if (data.isAudio) summaryText = '🎤 Voice Note';
+                    else if (data.isVideo) summaryText = '🎥 Video';
+                    else if (data.uploadedImage) summaryText = '📷 Photo';
+                    else if (data.poll) summaryText = '📊 Poll: ' + (data.poll.question || '');
+                    else if (data.xox) summaryText = '🎮 Tic-Tac-Toe (XOX) Game';
+                    else summaryText = 'Sent an attachment';
+                }
+                const alertData = {
+                    roomId,
+                    roomName,
+                    sender: data.user,
+                    avatar: data.avatar,
+                    text: summaryText,
+                    id: data.id
+                };
+                socket.broadcast.emit('global room alert', alertData);
+                sendPushToAllExceptSender(data.senderEndpoint, data.user, roomName, roomId, summaryText, data.avatar);
+            });
+        }
 
         // Handle AI Bot trigger with Cooldown Protection
         const textContent = data.text || '';
         const isBotMention = textContent.toLowerCase().includes('@bot');
-        const isAILounge = roomId === 'ai_lounge';
         const isUserBot = data.user === '🤖 Bot';
 
         if ((isBotMention || isAILounge) && !isUserBot) {
+            // Check if user has AI enabled
+            if (data.aiEnabled === false) {
+                if (isBotMention) {
+                    socket.emit('action error', 'AI Assistant is currently disabled in your Settings. Turn on "Private AI Assistant" in Settings to use @Bot.');
+                }
+                return;
+            }
+
             if (data.xox) {
-                sendBotGameComment(roomId, "🎮 Challenge accepted! Make your first move as **X**, and I'll play as **O**!");
+                sendBotGameComment(roomId, "🎮 Challenge accepted! Make your first move as **X**, and I'll play as **O**!", data.userId);
                 return;
             }
 
             if (!canTriggerBotInRoom(roomId)) {
-                // Rate limited bot invocation in this room
                 return;
             }
 
@@ -1150,15 +1200,25 @@ io.on('connection', (socket) => {
                         scheduleDataSave();
                     } catch (e) { }
                 }
-                io.to(roomId).emit('messages read', {
-                    roomId,
-                    msgIds: [data.id],
-                    reader: '🤖 Bot',
-                    readAt: Date.now()
-                });
+                if (isAILounge) {
+                    emitToUserSockets(data.userId, 'messages read', {
+                        roomId,
+                        msgIds: [data.id],
+                        reader: '🤖 Bot',
+                        readAt: Date.now()
+                    }, socket);
+                } else {
+                    io.to(roomId).emit('messages read', {
+                        roomId,
+                        msgIds: [data.id],
+                        reader: '🤖 Bot',
+                        readAt: Date.now()
+                    });
+                }
             }, 180);
 
-            io.to(roomId).emit('user typing', { name: '🤖 Bot', isTyping: true });
+            // Bot typing indicator: Private to the requesting user
+            emitToUserSockets(data.userId, 'user typing', { name: '🤖 Bot', isTyping: true, roomId }, socket);
 
             setTimeout(async () => {
                 try {
@@ -1178,19 +1238,27 @@ io.on('connection', (socket) => {
                         time: new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }),
                         color: '#00a884',
                         avatar: 'https://api.dicebear.com/7.x/lorelei/svg?seed=ChitChatBot&backgroundColor=b6e3f4',
-                        replyTo: data.replyTo ? { user: data.user, text: textContent.substring(0, 120) || 'Message', msgId: data.id } : null
+                        replyTo: data.replyTo ? { user: data.user, text: textContent.substring(0, 120) || 'Message', msgId: data.id } : null,
+                        isPrivateAI: true,
+                        targetUserId: data.userId
                     };
-                    io.to(roomId).emit('user typing', { name: '🤖 Bot', isTyping: false });
+
+                    if (!isAILounge) {
+                        botMsg.privateNotice = '🔒 Private to you';
+                    }
+
+                    emitToUserSockets(data.userId, 'user typing', { name: '🤖 Bot', isTyping: false, roomId }, socket);
+
                     db.run("INSERT INTO history VALUES (?, ?, ?, ?)", [botMsg.id, roomId, Date.now(), JSON.stringify(botMsg)], (err) => {
                         if (err) console.error('Bot history insert error:', err.message);
                     });
-                    io.to(roomId).emit('chat message', botMsg);
 
-                    const botSummaryText = reply ? (reply.length > 80 ? reply.substring(0, 80) + '...' : reply) : 'Bot sent a message';
-                    sendPushToAllExceptSender(null, '🤖 Bot', rooms.get(roomId)?.name || roomId, roomId, botSummaryText, botMsg.avatar);
+                    // 🔒 AI responses are delivered strictly and ONLY to the requesting user!
+                    emitToUserSockets(data.userId, 'chat message', botMsg, socket);
+
                 } catch (botErr) {
                     console.error("Bot generation error:", botErr);
-                    io.to(roomId).emit('user typing', { name: '🤖 Bot', isTyping: false });
+                    emitToUserSockets(data.userId, 'user typing', { name: '🤖 Bot', isTyping: false, roomId }, socket);
                 }
             }, 80);
         }
@@ -1272,7 +1340,7 @@ io.on('connection', (socket) => {
         return { winner: null, winningLine: null, status: 'in_progress' };
     }
 
-    function sendBotGameComment(roomId, text) {
+    function sendBotGameComment(roomId, text, targetUserId = null) {
         setTimeout(() => {
             const botMsg = {
                 id: Date.now() + "_bot_game",
@@ -1283,12 +1351,18 @@ io.on('connection', (socket) => {
                 status: 'delivered',
                 time: new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }),
                 color: '#00a884',
-                avatar: 'https://api.dicebear.com/7.x/lorelei/svg?seed=ChitChatBot&backgroundColor=b6e3f4'
+                avatar: 'https://api.dicebear.com/7.x/lorelei/svg?seed=ChitChatBot&backgroundColor=b6e3f4',
+                isPrivateAI: roomId === 'ai_lounge' || !!targetUserId,
+                targetUserId: targetUserId || null
             };
             db.run("INSERT INTO history VALUES (?, ?, ?, ?)", [botMsg.id, roomId, Date.now(), JSON.stringify(botMsg)], (err) => {
                 if (err) console.error('Game bot history insert error:', err.message);
             });
-            io.to(roomId).emit('chat message', botMsg);
+            if (roomId === 'ai_lounge' || targetUserId) {
+                emitToUserSockets(targetUserId, 'chat message', botMsg);
+            } else {
+                io.to(roomId).emit('chat message', botMsg);
+            }
         }, 350);
     }
 
@@ -1331,7 +1405,7 @@ io.on('connection', (socket) => {
         return emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
     }
 
-    function scheduleBotXoxMove(msgId, roomId) {
+    function scheduleBotXoxMove(msgId, roomId, targetUserId = null) {
         const item = historyById.get(msgId) || historyStore.find(h => h.id === msgId);
         if (!item) return;
 
@@ -1345,12 +1419,20 @@ io.on('connection', (socket) => {
         if (!data || !data.xox || data.xox.status !== 'in_progress' || data.xox.turn !== 'O') return;
 
         // Display typing indicator for realism
-        io.to(roomId).emit('user typing', { name: '🤖 Bot', isTyping: true });
+        if (roomId === 'ai_lounge' || targetUserId) {
+            emitToUserSockets(targetUserId, 'user typing', { name: '🤖 Bot', isTyping: true, roomId });
+        } else {
+            io.to(roomId).emit('user typing', { name: '🤖 Bot', isTyping: true });
+        }
 
         setTimeout(() => {
             const freshItem = historyById.get(msgId) || historyStore.find(h => h.id === msgId);
             if (!freshItem) {
-                io.to(roomId).emit('user typing', { name: '🤖 Bot', isTyping: false });
+                if (roomId === 'ai_lounge' || targetUserId) {
+                    emitToUserSockets(targetUserId, 'user typing', { name: '🤖 Bot', isTyping: false, roomId });
+                } else {
+                    io.to(roomId).emit('user typing', { name: '🤖 Bot', isTyping: false });
+                }
                 return;
             }
 
@@ -1358,12 +1440,20 @@ io.on('connection', (socket) => {
             try {
                 freshData = typeof freshItem.data === 'string' ? JSON.parse(freshItem.data) : freshItem.data;
             } catch (e) {
-                io.to(roomId).emit('user typing', { name: '🤖 Bot', isTyping: false });
+                if (roomId === 'ai_lounge' || targetUserId) {
+                    emitToUserSockets(targetUserId, 'user typing', { name: '🤖 Bot', isTyping: false, roomId });
+                } else {
+                    io.to(roomId).emit('user typing', { name: '🤖 Bot', isTyping: false });
+                }
                 return;
             }
 
             if (!freshData || !freshData.xox || freshData.xox.status !== 'in_progress' || freshData.xox.turn !== 'O') {
-                io.to(roomId).emit('user typing', { name: '🤖 Bot', isTyping: false });
+                if (roomId === 'ai_lounge' || targetUserId) {
+                    emitToUserSockets(targetUserId, 'user typing', { name: '🤖 Bot', isTyping: false, roomId });
+                } else {
+                    io.to(roomId).emit('user typing', { name: '🤖 Bot', isTyping: false });
+                }
                 return;
             }
 
@@ -1385,16 +1475,25 @@ io.on('connection', (socket) => {
                 freshItem.data = JSON.stringify(freshData);
                 scheduleDataSave();
 
-                io.to(roomId).emit('user typing', { name: '🤖 Bot', isTyping: false });
-                io.to(roomId).emit('xox updated', freshData);
+                if (roomId === 'ai_lounge' || targetUserId) {
+                    emitToUserSockets(targetUserId, 'user typing', { name: '🤖 Bot', isTyping: false, roomId });
+                    emitToUserSockets(targetUserId, 'xox updated', freshData);
+                } else {
+                    io.to(roomId).emit('user typing', { name: '🤖 Bot', isTyping: false });
+                    io.to(roomId).emit('xox updated', freshData);
+                }
 
                 if (evalRes.status === 'won' && evalRes.winner === 'O') {
-                    sendBotGameComment(roomId, "🎉 Good game! I got 3 in a row. Tap 'Play Again' for a rematch!");
+                    sendBotGameComment(roomId, "🎉 Good game! I got 3 in a row. Tap 'Play Again' for a rematch!", targetUserId);
                 } else if (evalRes.status === 'draw') {
-                    sendBotGameComment(roomId, "🤝 Well played! A perfectly matched tie. Tap 'Play Again' to go again!");
+                    sendBotGameComment(roomId, "🤝 Well played! A perfectly matched tie. Tap 'Play Again' to go again!", targetUserId);
                 }
             } else {
-                io.to(roomId).emit('user typing', { name: '🤖 Bot', isTyping: false });
+                if (roomId === 'ai_lounge' || targetUserId) {
+                    emitToUserSockets(targetUserId, 'user typing', { name: '🤖 Bot', isTyping: false, roomId });
+                } else {
+                    io.to(roomId).emit('user typing', { name: '🤖 Bot', isTyping: false });
+                }
             }
         }, 550);
     }
@@ -1463,16 +1562,20 @@ io.on('connection', (socket) => {
 
                 item.data = JSON.stringify(data);
                 scheduleDataSave();
-                io.to(data.roomId).emit('xox updated', data);
+                if (data.roomId === 'ai_lounge') {
+                    emitToUserSockets(data.userId, 'xox updated', data);
+                } else {
+                    io.to(data.roomId).emit('xox updated', data);
+                }
 
                 const isAIGame = data.roomId === 'ai_lounge' || players.O === '🤖 Bot' || String(data.text || '').toLowerCase().includes('@bot');
                 if (isAIGame) {
                     if (evalRes.status === 'won' && evalRes.winner === 'X') {
-                        sendBotGameComment(data.roomId, "🏆 Brilliant move! You got 3 in a row and won! Rematch?");
+                        sendBotGameComment(data.roomId, "🏆 Brilliant move! You got 3 in a row and won! Rematch?", data.userId);
                     } else if (evalRes.status === 'draw') {
-                        sendBotGameComment(data.roomId, "🤝 Well played! It's a draw! Tap 'Play Again' to go again.");
+                        sendBotGameComment(data.roomId, "🤝 Well played! It's a draw! Tap 'Play Again' to go again.", data.userId);
                     } else if (evalRes.status === 'in_progress' && data.xox.turn === 'O') {
-                        scheduleBotXoxMove(msgId, data.roomId);
+                        scheduleBotXoxMove(msgId, data.roomId, data.userId);
                     }
                 }
             }
@@ -1496,10 +1599,14 @@ io.on('connection', (socket) => {
                 }
                 item.data = JSON.stringify(data);
                 scheduleDataSave();
-                io.to(data.roomId).emit('xox updated', data);
+                if (data.roomId === 'ai_lounge') {
+                    emitToUserSockets(data.userId, 'xox updated', data);
+                } else {
+                    io.to(data.roomId).emit('xox updated', data);
+                }
 
                 if (isAIGame) {
-                    sendBotGameComment(data.roomId, "✨ Rematch started! Your turn as **X**.");
+                    sendBotGameComment(data.roomId, "✨ Rematch started! Your turn as **X**.", data.userId);
                 }
             }
         }
@@ -1675,12 +1782,21 @@ io.on('connection', (socket) => {
 
         if (readMsgIds.length > 0) {
             scheduleDataSave();
-            io.to(targetRoomId).emit('messages read', {
-                roomId: targetRoomId,
-                msgIds: readMsgIds,
-                reader: sessionUser.name,
-                readAt: Date.now()
-            });
+            if (targetRoomId === 'ai_lounge') {
+                emitToUserSockets(sessionUser.userId, 'messages read', {
+                    roomId: targetRoomId,
+                    msgIds: readMsgIds,
+                    reader: sessionUser.name,
+                    readAt: Date.now()
+                });
+            } else {
+                io.to(targetRoomId).emit('messages read', {
+                    roomId: targetRoomId,
+                    msgIds: readMsgIds,
+                    reader: sessionUser.name,
+                    readAt: Date.now()
+                });
+            }
         }
     });
 
@@ -1692,7 +1808,7 @@ io.on('connection', (socket) => {
 
     socket.on('typing', (isTyping) => {
         const roomId = activeUsersById[socket.id]?.roomId;
-        if (roomId) {
+        if (roomId && roomId !== 'ai_lounge') {
             const userData = activeUsersById[socket.id];
             socket.to(roomId).emit('user typing', {
                 name: userData?.name || 'Someone',

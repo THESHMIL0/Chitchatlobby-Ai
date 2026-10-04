@@ -1478,6 +1478,79 @@ if (clearCacheBtn) {
     };
 }
 
+// ==========================================
+// 🤖 Private AI Assistant Controls (Default OFF)
+// ==========================================
+function isAiAssistantEnabled() {
+    return localStorage.getItem('chitchat_ai_enabled') === 'true'; // Default is false!
+}
+
+const toggleAiChat = document.getElementById('toggle-ai-chat');
+const aiStatusSublabel = document.getElementById('ai-status-sublabel');
+
+function updateAiSettingsUI() {
+    const enabled = isAiAssistantEnabled();
+    if (toggleAiChat) toggleAiChat.checked = enabled;
+    if (aiStatusSublabel) {
+        aiStatusSublabel.textContent = enabled
+            ? 'Active • 100% Private 1-on-1 AI Assistant'
+            : 'Off (Default) • 100% Private 1-on-1 chat';
+        aiStatusSublabel.style.color = enabled ? 'var(--accent)' : 'var(--text-secondary)';
+    }
+}
+
+if (toggleAiChat) {
+    toggleAiChat.addEventListener('change', (e) => {
+        hapticFeedback('light');
+        const enabled = e.target.checked;
+        localStorage.setItem('chitchat_ai_enabled', enabled ? 'true' : 'false');
+        updateAiSettingsUI();
+        renderRoomList();
+        showToast(enabled ? '✨ Private AI Assistant enabled!' : '🔒 Private AI Assistant turned off.');
+    });
+}
+updateAiSettingsUI();
+
+// AI Disabled Modal Handlers
+const aiDisabledModal = document.getElementById('ai-disabled-modal');
+const btnCancelAiModal = document.getElementById('btn-cancel-ai-modal');
+const btnEnableAiModal = document.getElementById('btn-enable-ai-modal');
+
+function showAiDisabledModal() {
+    if (aiDisabledModal) aiDisabledModal.classList.remove('hidden');
+}
+
+if (btnCancelAiModal) {
+    btnCancelAiModal.onclick = () => {
+        if (aiDisabledModal) aiDisabledModal.classList.add('hidden');
+    };
+}
+
+if (btnEnableAiModal) {
+    btnEnableAiModal.onclick = () => {
+        if (aiDisabledModal) aiDisabledModal.classList.add('hidden');
+        history.pushState({ screen: 'settings' }, '', '#settings');
+        if (roomListScreen) roomListScreen.classList.add('hidden');
+        if (chatScreen) chatScreen.classList.add('hidden');
+        const setScr = document.getElementById('settings-screen');
+        if (setScr) setScr.classList.remove('hidden');
+
+        setTimeout(() => {
+            const row = toggleAiChat ? toggleAiChat.closest('.clean-row') : null;
+            if (row) {
+                row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                row.style.transition = 'box-shadow 0.4s ease, border-color 0.4s ease';
+                row.style.boxShadow = '0 0 16px var(--accent)';
+                row.style.borderColor = 'var(--accent)';
+                setTimeout(() => {
+                    row.style.boxShadow = '';
+                    row.style.borderColor = '';
+                }, 1600);
+            }
+        }, 250);
+    };
+}
+
 // Sync and Update Profile UI
 function updateProfileScreenUI() {
     syncUserAvatarUI();
@@ -1801,8 +1874,16 @@ function renderRoomList() {
             const badgeHTML = unreadCount > 0 ? `<span class="unread-badge-pill">${unreadCount}</span>` : '';
 
             let subtitleText = '';
+            let aiPill = '';
             if (isAI) {
-                subtitleText = `24/7 Smart Companion • Ask anything`;
+                const aiActive = isAiAssistantEnabled();
+                if (aiActive) {
+                    subtitleText = `🔒 Private 1-on-1 • Only you see this chat`;
+                    aiPill = `<span class="room-pill-badge active">Private</span>`;
+                } else {
+                    subtitleText = `🔒 Private AI • Off in Settings`;
+                    aiPill = `<span class="room-pill-badge off">Off</span>`;
+                }
             } else if (room.isPrivate) {
                 subtitleText = `Passcode protected room`;
             } else {
@@ -1817,6 +1898,7 @@ function renderRoomList() {
                 <div class="room-card-info">
                     <div class="room-card-top-row">
                         <span class="room-card-name">${escapeHTML(room.name || 'Chat Room')}</span>
+                        ${aiPill}
                     </div>
                     <div class="room-card-sub-row">
                         <span class="room-card-subtitle">${subtitleText}</span>
@@ -1898,6 +1980,12 @@ if (createRoomSubmit) {
 let pendingJoinRoom = null;
 function joinRoomPrompt(room) {
     hapticFeedback('light');
+    const roomNameLower = (room.name || '').toLowerCase();
+    const isAI = room.id === 'ai_lounge' || roomNameLower.includes('ai') || roomNameLower.includes('lounge');
+    if (isAI && !isAiAssistantEnabled()) {
+        showAiDisabledModal();
+        return;
+    }
     if (room.isPrivate) {
         pendingJoinRoom = room;
         const joinPass = document.getElementById('join-room-pass');
@@ -1916,7 +2004,7 @@ if (joinRoomSubmit) {
     };
 }
 
-function joinRoom(roomId, password, isReconnect) { socket.emit('join room', { roomId, password, user: currentUser, isReconnect }); }
+function joinRoom(roomId, password, isReconnect) { socket.emit('join room', { roomId, password, user: currentUser, isReconnect, aiEnabled: isAiAssistantEnabled() }); }
 
 socket.on('connect', () => {
     if (typeof completeAppOpening === 'function') {
@@ -1954,6 +2042,12 @@ socket.on('chat history', (data) => {
 
     if (isRoomSwitch || messages.querySelectorAll('li').length === 0) {
         messages.innerHTML = '';
+        if (data.room && data.room.id === 'ai_lounge') {
+            const banner = document.createElement('li');
+            banner.className = 'system-message private-security-banner';
+            banner.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> <span><strong>100% Private AI Session</strong> — Your chat here is private to you and never visible to other users.</span>`;
+            messages.appendChild(banner);
+        }
         data.history.forEach(msg => displayMessage(msg, true));
     }
     checkEmptyMessages();
@@ -2481,7 +2575,13 @@ function updateHeaderSubtitle() {
 }
 
 socket.on('room users', (usersList) => {
-    if (usersList.length <= 1) { baseOnlineText = "Only you are here"; } else { baseOnlineText = "Online: You, " + usersList.filter(u => u !== currentUser.name).join(', '); }
+    if (activeRoomId === 'ai_lounge') {
+        baseOnlineText = "🔒 Private 1-on-1 AI Assistant";
+    } else if (usersList.length <= 1) { 
+        baseOnlineText = "Only you are here"; 
+    } else { 
+        baseOnlineText = "Online: You, " + usersList.filter(u => u !== currentUser.name).join(', '); 
+    }
     updateHeaderSubtitle();
 });
 
@@ -3008,11 +3108,21 @@ function sendMessage() {
     const text = input.value ? input.value.trim() : '';
     if (!text && !editingMsgId && activeRoomId !== 'ai_lounge') return;
 
+    const targetRoomId = activeRoomId || 'lobby';
+
+    if (targetRoomId === 'ai_lounge' && !isAiAssistantEnabled()) {
+        showAiDisabledModal();
+        return;
+    }
+
+    if (text && text.toLowerCase().includes('@bot') && !isAiAssistantEnabled()) {
+        showToast('🔒 AI Assistant is off in Settings. Turn on "Private AI Assistant" to use @Bot.');
+        return;
+    }
+
     if (socket) socket.emit('typing', false);
     clearTimeout(typingTimeout);
     typingSent = false;
-
-    const targetRoomId = activeRoomId || 'lobby';
 
     if (editingMsgId) {
         if (socket) socket.emit('edit message', { msgId: editingMsgId, newText: text, roomId: targetRoomId });
@@ -3028,7 +3138,8 @@ function sendMessage() {
             replyTo: replyingTo,
             isGhost: isGhostMode,
             roomId: targetRoomId,
-            senderEndpoint: currentPushEndpoint
+            senderEndpoint: currentPushEndpoint,
+            aiEnabled: isAiAssistantEnabled()
         });
         playUiSound('send');
     }
@@ -3824,6 +3935,9 @@ function getMessageInnerHTML(data, isMe, isStacked) {
 
     let topHeaderHTML = '';
     let senderDisplayName = isMe ? (currentUser.name || 'You') : (data.user || 'Guest');
+    const isBot = data.user === '🤖 Bot' || data.isPrivateAI;
+    const aiBadgeHTML = isBot ? `<span class="private-ai-badge">🔒 Private AI</span>` : '';
+    const whisperNoticeHTML = data.privateNotice ? `<div class="private-whisper-notice"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> ${escapeHTML(data.privateNotice)}</div>` : '';
 
     if (data.replyTo && data.replyTo.user) {
         let targetUser = data.replyTo.user;
@@ -3831,9 +3945,9 @@ function getMessageInnerHTML(data, isMe, isStacked) {
             ? 'you'
             : ((targetUser === currentUser.name && isMe) ? 'yourself' : targetUser);
 
-        topHeaderHTML = `<span class="msg-header-name">${escapeHTML(senderDisplayName)}</span> <span class="reply-action-label">replied to</span> <span class="msg-header-name">${escapeHTML(targetDisplayName)}</span>`;
+        topHeaderHTML = `<span class="msg-header-name">${escapeHTML(senderDisplayName)}${aiBadgeHTML}</span> <span class="reply-action-label">replied to</span> <span class="msg-header-name">${escapeHTML(targetDisplayName)}</span>`;
     } else if (!isMe && !isStacked) {
-        topHeaderHTML = `<span class="msg-header-name">${escapeHTML(data.user)}</span>`;
+        topHeaderHTML = `<span class="msg-header-name">${escapeHTML(data.user)}${aiBadgeHTML}</span>`;
     }
 
     let replyHTML = '';
@@ -3862,7 +3976,7 @@ function getMessageInnerHTML(data, isMe, isStacked) {
             <div class="msg-content-wrapper my-wrapper">
                 ${topHeaderHTML ? `<div class="msg-top-header">${topHeaderHTML}</div>` : ''}
                 <div class="msg-bubble ${data.xox ? 'msg-bubble-xox' : ''} ${isMediaOnly ? 'msg-bubble-media-only' : ''}">
-                    ${replyHTML}${content}
+                    ${whisperNoticeHTML}${replyHTML}${content}
                     <div class="meta-row"><span>${data.isGhost ? '⏱️ ' : ''}${displayTimeStr}</span>${tickHTML}</div>
                     ${reactionsHTML}
                 </div>
@@ -4171,6 +4285,11 @@ function sendXoxGame() {
     playUiSound('pop');
 
     const isAILounge = activeRoomId === 'ai_lounge';
+    if (isAILounge && !isAiAssistantEnabled()) {
+        showAiDisabledModal();
+        return;
+    }
+
     const gameId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
     const gameMsg = {
         id: gameId,
@@ -4180,6 +4299,8 @@ function sendXoxGame() {
         userId: currentUser.id || currentUser.userId || currentUser.name,
         time: formatTo12HourTime(new Date()),
         status: 'sent',
+        isPrivateAI: isAILounge,
+        aiEnabled: isAiAssistantEnabled(),
         text: isAILounge ? '🎮 Tic-Tac-Toe match vs 🤖 Bot started! Tap squares to play.' : '🎮 Tic-Tac-Toe match started! Tap squares to play.',
         xox: {
             board: Array(9).fill(''),
