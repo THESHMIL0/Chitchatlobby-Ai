@@ -892,6 +892,10 @@ io.on('connection', (socket) => {
         db.get(`SELECT * FROM rooms WHERE id = ?`, [data.roomId], (err, room) => {
             if (!room) return socket.emit('join error', 'Room not found');
 
+            if (room.id === 'ai_lounge' && data.aiEnabled === false) {
+                return socket.emit('join error', 'Private AI Assistant is turned off. You can enable it in Settings.');
+            }
+
             // Constant-time cryptographically secure password verification
             if (room.isPrivate) {
                 const inputPassword = String(data.password || '');

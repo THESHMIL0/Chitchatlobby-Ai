@@ -1493,8 +1493,8 @@ function updateAiSettingsUI() {
     if (toggleAiChat) toggleAiChat.checked = enabled;
     if (aiStatusSublabel) {
         aiStatusSublabel.textContent = enabled
-            ? 'Active • 100% Private 1-on-1 AI Assistant'
-            : 'Off (Default) • 100% Private 1-on-1 chat';
+            ? 'Active • Visible on Home as 100% Private AI'
+            : 'Off (Default) • Hidden from Home';
         aiStatusSublabel.style.color = enabled ? 'var(--accent)' : 'var(--text-secondary)';
     }
 }
@@ -1506,7 +1506,14 @@ if (toggleAiChat) {
         localStorage.setItem('chitchat_ai_enabled', enabled ? 'true' : 'false');
         updateAiSettingsUI();
         renderRoomList();
-        showToast(enabled ? '✨ Private AI Assistant enabled!' : '🔒 Private AI Assistant turned off.');
+        if (!enabled && activeRoomId === 'ai_lounge') {
+            if (socket) socket.emit('leave room');
+            activeRoomId = null;
+            if (chatScreen) chatScreen.classList.add('hidden');
+            if (roomListScreen) roomListScreen.classList.remove('hidden');
+            try { history.pushState({ screen: 'lobby' }, '', '#lobby'); } catch (err) { }
+        }
+        showToast(enabled ? '✨ Private AI enabled and added to Home!' : '🔒 Private AI turned off and removed from Home.');
     });
 }
 updateAiSettingsUI();
@@ -1855,7 +1862,18 @@ function renderRoomList() {
         lobbyAvatar.src = currentUser.avatar;
     }
 
-    const listToRender = (globalRoomList && globalRoomList.length > 0) ? globalRoomList : defaultRooms;
+    const baseList = (globalRoomList && globalRoomList.length > 0) ? globalRoomList : defaultRooms;
+    const aiActive = isAiAssistantEnabled();
+
+    // When AI Assistant is turned OFF in Settings, completely hide AI rooms from Home!
+    const listToRender = baseList.filter(room => {
+        const roomNameLower = (room.name || '').toLowerCase();
+        const isAI = room.id === 'ai_lounge' || room.isAI || roomNameLower.includes('ai lounge') || roomNameLower === 'ai' || (roomNameLower.includes('bot') && room.id.startsWith('ai_'));
+        if (isAI && !aiActive) {
+            return false;
+        }
+        return true;
+    });
 
     const emptyState = document.getElementById('empty-rooms-state');
     if (!listToRender || listToRender.length === 0) {
@@ -1868,7 +1886,7 @@ function renderRoomList() {
             li.className = 'room-card-item';
 
             const roomNameLower = (room.name || '').toLowerCase();
-            const isAI = roomNameLower.includes('ai') || roomNameLower.includes('bot') || roomNameLower.includes('lounge');
+            const isAI = room.id === 'ai_lounge' || room.isAI || roomNameLower.includes('ai lounge') || roomNameLower === 'ai' || (roomNameLower.includes('bot') && room.id.startsWith('ai_'));
             const logoUrl = room.logo || `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(room.id || 'room')}`;
             const unreadCount = unreadCounts[room.id] || 0;
             const badgeHTML = unreadCount > 0 ? `<span class="unread-badge-pill">${unreadCount}</span>` : '';
@@ -1876,14 +1894,8 @@ function renderRoomList() {
             let subtitleText = '';
             let aiPill = '';
             if (isAI) {
-                const aiActive = isAiAssistantEnabled();
-                if (aiActive) {
-                    subtitleText = `🔒 Private 1-on-1 • Only you see this chat`;
-                    aiPill = `<span class="room-pill-badge active">Private</span>`;
-                } else {
-                    subtitleText = `🔒 Private AI • Off in Settings`;
-                    aiPill = `<span class="room-pill-badge off">Off</span>`;
-                }
+                subtitleText = `🔒 Private 1-on-1 • Only you see this chat`;
+                aiPill = `<span class="room-pill-badge active">Private</span>`;
             } else if (room.isPrivate) {
                 subtitleText = `Passcode protected room`;
             } else {
