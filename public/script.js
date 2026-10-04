@@ -5404,6 +5404,7 @@ if (openCustomizationBtn) {
 if (closeCustomizationModal) {
     closeCustomizationModal.onclick = () => {
         if (customizationModal) customizationModal.classList.add('hidden');
+        if (appSettingsModal) appSettingsModal.classList.remove('hidden');
     };
 }
 
@@ -5870,6 +5871,9 @@ const callRemoteAudio = document.getElementById('call-remote-audio');
 const callVoicePlaceholder = document.getElementById('call-voice-placeholder');
 const callLocalPip = document.getElementById('call-local-pip');
 const callLocalVideo = document.getElementById('call-local-video');
+// Set playsInline via JS to avoid HTML linter warnings (functionally identical)
+if (callRemoteVideo) callRemoteVideo.playsInline = true;
+if (callLocalVideo) callLocalVideo.playsInline = true;
 
 const btnCallMuteMic = document.getElementById('btn-call-mute-mic');
 const btnCallToggleCam = document.getElementById('btn-call-toggle-cam');

@@ -1495,6 +1495,10 @@
     <div id="customization-modal" class="modal hidden">
         <div class="modal-card customization-modal-card">
             <div class="modal-card-header">
+                <button id="close-customization-modal" class="clean-back-btn" title="Back to Settings"
+                    aria-label="Back to Settings" type="button">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 5-7 7 7 7"/></svg>
+                </button>
                 <div class="modal-title-with-badge">
                     <span class="sparkle-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -1507,8 +1511,7 @@
                         </svg></span>
                     <span class="modal-title-text">Customization Studio</span>
                 </div>
-                <button id="close-customization-modal" class="modal-close-btn" title="Close Customization Studio"
-                    aria-label="Close Customization Studio" type="button">✕</button>
+                <div class="header-balance-spacer"></div>
             </div>
             <div class="modal-card-body">
                 <!-- Wallpaper Presets -->
@@ -1819,7 +1822,7 @@
 
             <div class="active-call-stage">
                 <!-- Video Elements -->
-                <video id="call-remote-video" class="remote-video-feed hidden" autoplay playsinline></video>
+                <video id="call-remote-video" class="remote-video-feed hidden" autoplay></video>
                 <audio id="call-remote-audio" autoplay></audio>
 
                 <!-- Voice Call Avatar & Waveform -->
@@ -1839,7 +1842,7 @@
 
                 <!-- Local Picture-in-Picture -->
                 <div id="call-local-pip" class="local-pip-box hidden">
-                    <video id="call-local-video" class="local-video-feed" autoplay playsinline muted></video>
+                    <video id="call-local-video" class="local-video-feed" autoplay muted></video>
                 </div>
             </div>
 
@@ -1883,21 +1886,21 @@
 
     <!-- Private AI Disabled Notice Modal -->
     <div id="ai-disabled-modal" class="modal hidden">
-        <div class="modal-content form-modal" style="text-align: center;">
+        <div class="modal-content form-modal modal-content--centered">
             <div class="modal-drag-pill"></div>
-            <div style="width: 52px; height: 52px; border-radius: 50%; background: rgba(0, 168, 132, 0.12); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px auto; color: var(--accent);">
+            <div class="ai-modal-icon-wrap">
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                     <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                 </svg>
             </div>
             <h3>Private AI is Turned Off</h3>
-            <p class="modal-subtitle" style="margin: 8px auto 20px auto; max-width: 360px; line-height: 1.5;">
+            <p class="modal-subtitle modal-subtitle--ai">
                 AI is <strong>disabled by default</strong> for maximum privacy. When enabled in Settings, your conversations in AI Lounge and with @Bot are <strong>100% private to you</strong> and never visible to other users.
             </p>
-            <div style="display: flex; gap: 12px; width: 100%;">
-                <button type="button" class="icon-btn cancel-btn" id="btn-cancel-ai-modal" style="flex: 1; padding: 13px; border-radius: 14px; font-weight: 600;">Cancel</button>
-                <button type="button" class="primary-btn" id="btn-enable-ai-modal" style="flex: 1; padding: 13px; border-radius: 14px; font-weight: 700;">Open Settings</button>
+            <div class="ai-modal-actions">
+                <button type="button" class="icon-btn cancel-btn ai-modal-btn" id="btn-cancel-ai-modal">Cancel</button>
+                <button type="button" class="primary-btn ai-modal-btn ai-modal-btn--primary" id="btn-enable-ai-modal">Open Settings</button>
             </div>
         </div>
     </div>
