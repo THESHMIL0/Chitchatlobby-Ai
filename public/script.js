@@ -4206,6 +4206,7 @@ function getMessageInnerHTML(data, isMe, isStacked) {
                     ${reactionsHTML}
                 </div>
             </div>`;
+    } else {
         const safeAvatar = getSafeAvatarUrl(data.avatar, data.user);
         const avatarHTML = !isStacked
             ? `<img src="${escapeHTML(safeAvatar)}" class="avatar-small" data-name="${escapeHTML(data.user)}" title="${escapeHTML(data.user)}" onerror="window.handleAvatarError(this, '${escapeJsParam(data.user)}');">`
