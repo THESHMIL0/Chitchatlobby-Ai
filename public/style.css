@@ -4043,9 +4043,10 @@ li.system-message {
     right: 2px;
     width: 12px;
     height: 12px;
-    background: #10b981;
+    background: var(--accent);
     border: 2px solid var(--bg-screen);
     border-radius: 50%;
+    transition: background-color 0.25s ease;
 }
 
 .clean-profile-meta {
@@ -4186,7 +4187,7 @@ li.system-message {
     color: var(--accent);
 }
 
-/* Minimalist Unboxed Icons (Frameless & Crisp) */
+/* Minimalist Unboxed Icons (Frameless, Crisp & Theme-Dynamic) */
 .clean-icon-box {
     width: 22px;
     height: 22px;
@@ -4198,54 +4199,53 @@ li.system-message {
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    color: var(--accent) !important;
+    transition: color 0.25s ease;
 }
 
-.clean-icon-box.icon-theme {
-    color: #10b981;
+.clean-icon-box svg {
+    color: var(--accent) !important;
+    stroke: var(--accent) !important;
+    transition: stroke 0.25s ease, color 0.25s ease;
 }
 
-.clean-icon-box.icon-palette {
-    color: #a855f7;
+.clean-icon-box.icon-theme,
+.clean-icon-box.icon-palette,
+.clean-icon-box.icon-sound,
+.clean-icon-box.icon-haptic,
+.clean-icon-box.icon-bell,
+.clean-icon-box.icon-lock,
+.clean-icon-box.icon-fingerprint,
+.clean-icon-box.icon-ghost,
+.clean-icon-box.icon-read-receipts,
+.clean-icon-box.icon-storage,
+.clean-icon-box.icon-ai,
+.clean-icon-box.icon-font,
+.clean-icon-box.icon-star,
+.clean-icon-box.icon-media,
+.clean-icon-box.icon-wallpaper,
+.clean-icon-box.icon-reset {
+    color: var(--accent) !important;
 }
 
-.clean-icon-box.icon-sound {
-    color: #f59e0b;
-}
-
-.clean-icon-box.icon-haptic {
-    color: #f43f5e;
-}
-
-.clean-icon-box.icon-bell {
-    color: #3b82f6;
-}
-
-.clean-icon-box.icon-lock {
-    color: #10b981;
-}
-
-.clean-icon-box.icon-fingerprint {
-    color: #0ea5e9;
-}
-
-.clean-icon-box.icon-ghost {
-    color: #6366f1;
-}
-
-.clean-icon-box.icon-read-receipts {
-    color: #38bdf8;
-}
-
-.clean-icon-box.icon-storage {
-    color: #0ea5e9;
-}
-
-.clean-icon-box.icon-ai {
-    color: #14b8a6;
-}
-
-.clean-icon-box.icon-font {
-    color: var(--accent);
+.clean-icon-box.icon-theme svg,
+.clean-icon-box.icon-palette svg,
+.clean-icon-box.icon-sound svg,
+.clean-icon-box.icon-haptic svg,
+.clean-icon-box.icon-bell svg,
+.clean-icon-box.icon-lock svg,
+.clean-icon-box.icon-fingerprint svg,
+.clean-icon-box.icon-ghost svg,
+.clean-icon-box.icon-read-receipts svg,
+.clean-icon-box.icon-storage svg,
+.clean-icon-box.icon-ai svg,
+.clean-icon-box.icon-font svg,
+.clean-icon-box.icon-star svg,
+.clean-icon-box.icon-media svg,
+.clean-icon-box.icon-wallpaper svg,
+.clean-icon-box.icon-reset svg {
+    color: var(--accent) !important;
+    stroke: var(--accent) !important;
 }
 
 /* Aesthetic Chat Text Size Card & Stepped Range Slider (iOS/Telegram inspired) */
@@ -8010,24 +8010,12 @@ li[id^="msg-msg_"] .meta-row {
     white-space: nowrap;
 }
 
-.clean-icon-box.icon-star {
-    background: rgba(245, 158, 11, 0.12);
-    color: #f59e0b;
-}
-
-.clean-icon-box.icon-media {
-    background: rgba(59, 130, 246, 0.12);
-    color: #3b82f6;
-}
-
-.clean-icon-box.icon-wallpaper {
-    background: rgba(236, 72, 153, 0.12);
-    color: #ec4899;
-}
-
+.clean-icon-box.icon-star,
+.clean-icon-box.icon-media,
+.clean-icon-box.icon-wallpaper,
 .clean-icon-box.icon-reset {
-    background: rgba(107, 114, 128, 0.12);
-    color: var(--text-secondary);
+    background: transparent !important;
+    color: var(--accent) !important;
 }
 
 .room-member-row {
