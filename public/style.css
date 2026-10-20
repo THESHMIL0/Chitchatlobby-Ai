@@ -2360,16 +2360,16 @@ li.system-message {
     transform: scale(1.2);
 }
 
-/* Input Footer Controls */
+/* Input Footer Controls - Clean Floating (No Wall) */
 #chat-footer-controls {
-    padding: 8px 10px 10px 10px;
+    padding: 8px 10px 12px 10px;
     display: flex;
     gap: 8px;
     align-items: center;
-    background: var(--header-bg);
-    -webkit-backdrop-filter: blur(20px);
-    backdrop-filter: blur(20px);
-    border-top: 1px solid var(--border-color);
+    background: transparent;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border-top: none;
     width: 100%;
     box-sizing: border-box;
     flex-shrink: 0;
@@ -2386,6 +2386,7 @@ li.system-message {
     border: 1px solid var(--border-color);
     min-height: 48px;
     box-sizing: border-box;
+    box-shadow: 0 2px 10px var(--shadow-color);
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
