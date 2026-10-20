@@ -13,14 +13,15 @@
     --text-secondary: #64748b;
     --text-inverse: #ffffff;
 
-    --accent: #10b981;
-    --accent-hover: #059669;
-    --accent-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    --accent: #0284c7;
+    --accent-hover: #0369a1;
+    --accent-gradient: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+    --tick-read: #0284c7;
 
     --header-bg: rgba(255, 255, 255, 0.85);
     --header-card-bg: rgba(255, 255, 255, 0.92);
-    --message-my: #dcfce7;
-    --message-my-text: #064e3b;
+    --message-my: #e0f2fe;
+    --message-my-text: #0369a1;
     --message-other: #ffffff;
     --message-other-text: #0f172a;
     --input-bg: #f1f5f9;
@@ -46,31 +47,33 @@ body[data-theme="dark"],
     --text-secondary: #a1a1aa;
     --text-inverse: #000000;
 
-    --accent: #10b981;
-    --accent-hover: #34d399;
-    --accent-gradient: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    --accent: #ffffff;
+    --accent-hover: #e4e4e7;
+    --accent-gradient: linear-gradient(135deg, #ffffff 0%, #e4e4e7 100%);
+    --tick-read: #ffffff;
 
-    --header-bg: rgba(0, 0, 0, 0.82);
-    --header-card-bg: rgba(18, 18, 20, 0.94);
-    --message-my: #064e3b;
-    --message-my-text: #ecfdf5;
-    --message-other: #18181b;
+    --header-bg: rgba(0, 0, 0, 0.88);
+    --header-card-bg: rgba(18, 18, 20, 0.96);
+    --message-my: #27272a;
+    --message-my-text: #f4f4f5;
+    --message-other: #141416;
     --message-other-text: #f4f4f5;
     --input-bg: #141416;
     --modal-bg: rgba(12, 12, 14, 0.98);
 
     --border-color: #27272a;
-    --shadow-color: rgba(0, 0, 0, 0.7);
-    --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.85);
-    --highlight: #854d0e;
-    --danger: #ef4444;
-    --danger-bg: rgba(239, 68, 68, 0.15);
-    --system-msg: rgba(24, 24, 27, 0.95);
+    --shadow-color: rgba(0, 0, 0, 0.85);
+    --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.95);
+    --highlight: #27272a;
+    --danger: #71717a;
+    --danger-bg: rgba(255, 255, 255, 0.08);
+    --system-msg: rgba(20, 20, 22, 0.95);
     --bg-img-chat: radial-gradient(#27272a 1.2px, transparent 1.2px);
     --bg-img-size: 20px 20px;
 }
 
-body[data-theme="pink"] {
+body[data-theme="pink"],
+[data-theme="pink"] {
     --bg-main: linear-gradient(180deg, #FFF0F3 0%, #FFE4E8 100%);
     --bg-screen: #FFF4F6;
     --text-primary: #590216;
@@ -80,10 +83,11 @@ body[data-theme="pink"] {
     --accent: #FF4D6D;
     --accent-hover: #E63946;
     --accent-gradient: linear-gradient(135deg, #FF758F 0%, #FF4D6D 100%);
+    --tick-read: #FF4D6D;
 
     --header-bg: rgba(255, 244, 246, 0.92);
     --header-card-bg: rgba(255, 255, 255, 0.95);
-    --message-my: #FFC2D1;
+    --message-my: #FFCCD5;
     --message-my-text: #4A0010;
     --message-other: #ffffff;
     --message-other-text: #590216;
@@ -97,11 +101,12 @@ body[data-theme="pink"] {
     --danger: #FF4D6D;
     --danger-bg: rgba(255, 77, 109, 0.12);
     --system-msg: rgba(255, 228, 236, 0.92);
-    --bg-img-chat: none;
+    --bg-img-chat: radial-gradient(#FFCCD5 1.2px, transparent 1.2px);
     --bg-img-size: 20px 20px;
 }
 
-body[data-theme="emerald"] {
+body[data-theme="emerald"],
+[data-theme="emerald"] {
     --bg-main: linear-gradient(145deg, #f0fdf4 0%, #dcfce7 50%, #bbf7d0 100%);
     --bg-screen: #f4fbf7;
     --text-primary: #14532d;
@@ -111,6 +116,7 @@ body[data-theme="emerald"] {
     --accent: #22c55e;
     --accent-hover: #16a34a;
     --accent-gradient: linear-gradient(135deg, #4ade80 0%, #16a34a 100%);
+    --tick-read: #22c55e;
 
     --header-bg: rgba(240, 253, 244, 0.92);
     --header-card-bg: rgba(255, 255, 255, 0.96);
@@ -8106,5 +8112,374 @@ li[id^="msg-msg_"] .meta-row {
 
 .room-settings-danger-btn:hover {
     background: rgba(239, 68, 68, 0.08);
+}
+
+/* ==========================================================================
+   🎨 100% UNIFIED THEME ADAPTATION (Full App, Logos, Messages & Controls)
+   ========================================================================== */
+
+/* 1. STRICT MESSAGE BUBBLE THEME ADAPTATION (Overrides any rogue user colors) */
+[data-theme="dark"] .my-message .msg-bubble {
+    background: var(--message-my) !important;
+    color: var(--message-my-text) !important;
+    border: 1px solid #333338 !important;
+}
+[data-theme="dark"] .other-message .msg-bubble {
+    background: var(--message-other) !important;
+    color: var(--message-other-text) !important;
+    border: 1px solid #27272a !important;
+}
+[data-theme="dark"] .sender-name {
+    color: #e4e4e7 !important;
+}
+[data-theme="dark"] .replied-to {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-left: 3px solid #ffffff !important;
+}
+[data-theme="dark"] .replied-to-user {
+    color: #ffffff !important;
+}
+[data-theme="dark"] .replied-to-text {
+    color: #a1a1aa !important;
+}
+
+[data-theme="pink"] .my-message .msg-bubble {
+    background: var(--message-my) !important;
+    color: var(--message-my-text) !important;
+    border: 1px solid #ffccd5 !important;
+}
+[data-theme="pink"] .other-message .msg-bubble {
+    background: var(--message-other) !important;
+    color: var(--message-other-text) !important;
+    border: 1px solid #ffe4e8 !important;
+}
+[data-theme="pink"] .sender-name {
+    color: #be185d !important;
+}
+
+[data-theme="emerald"] .my-message .msg-bubble {
+    background: var(--message-my) !important;
+    color: var(--message-my-text) !important;
+    border: 1px solid #bbf7d0 !important;
+}
+[data-theme="emerald"] .other-message .msg-bubble {
+    background: var(--message-other) !important;
+    color: var(--message-other-text) !important;
+    border: 1px solid #e2f7eb !important;
+}
+[data-theme="emerald"] .sender-name {
+    color: #15803d !important;
+}
+
+/* 2. SEND & ACTION BUTTONS */
+[data-theme="dark"] .circle-btn {
+    background: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: 0 4px 16px rgba(255, 255, 255, 0.22) !important;
+}
+[data-theme="dark"] .circle-btn svg {
+    stroke: #000000 !important;
+}
+[data-theme="dark"] .circle-btn:hover {
+    background: #e4e4e7 !important;
+    box-shadow: 0 6px 22px rgba(255, 255, 255, 0.3) !important;
+}
+[data-theme="dark"] .primary-btn,
+[data-theme="dark"] .fab-btn {
+    background: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: 0 4px 16px rgba(255, 255, 255, 0.15) !important;
+}
+[data-theme="dark"] .primary-btn:hover,
+[data-theme="dark"] .fab-btn:hover {
+    background: #e4e4e7 !important;
+}
+[data-theme="dark"] .footer-action-btn {
+    color: #a1a1aa !important;
+}
+[data-theme="dark"] .footer-action-btn:hover {
+    color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme="pink"] .circle-btn {
+    background: var(--accent-gradient) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 16px rgba(255, 77, 109, 0.3) !important;
+}
+[data-theme="pink"] .circle-btn svg {
+    stroke: #ffffff !important;
+}
+[data-theme="pink"] .primary-btn,
+[data-theme="pink"] .fab-btn {
+    background: var(--accent-gradient) !important;
+    color: #ffffff !important;
+}
+
+[data-theme="emerald"] .circle-btn {
+    background: var(--accent-gradient) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 16px rgba(34, 197, 94, 0.3) !important;
+}
+[data-theme="emerald"] .circle-btn svg {
+    stroke: #ffffff !important;
+}
+[data-theme="emerald"] .primary-btn,
+[data-theme="emerald"] .fab-btn {
+    background: var(--accent-gradient) !important;
+    color: #ffffff !important;
+}
+
+/* 3. TICKS & DOUBLE READ RECEIPTS */
+.ticks.read,
+.media-only-message .ticks.read,
+.msg-bubble-media-only .ticks.read {
+    color: var(--tick-read, var(--accent)) !important;
+}
+[data-theme="dark"] .ticks.read,
+[data-theme="dark"] .media-only-message .ticks.read,
+[data-theme="dark"] .msg-bubble-media-only .ticks.read {
+    color: #ffffff !important;
+}
+[data-theme="dark"] .ticks.sent,
+[data-theme="dark"] .ticks.delivered {
+    color: #71717a !important;
+}
+[data-theme="pink"] .ticks.read,
+[data-theme="pink"] .media-only-message .ticks.read,
+[data-theme="pink"] .msg-bubble-media-only .ticks.read {
+    color: #ff4d6d !important;
+}
+[data-theme="emerald"] .ticks.read,
+[data-theme="emerald"] .media-only-message .ticks.read,
+[data-theme="emerald"] .msg-bubble-media-only .ticks.read {
+    color: #22c55e !important;
+}
+
+/* 4. ONLINE STATUS DOTS & BADGES */
+.lobby-user-online-pulse,
+.live-online-dot,
+.room-status-dot.online-dot {
+    background: var(--accent) !important;
+    box-shadow: 0 0 6px var(--accent) !important;
+}
+.lobby-status-pill {
+    color: var(--accent) !important;
+}
+[data-theme="dark"] .lobby-user-online-pulse,
+[data-theme="dark"] .live-online-dot,
+[data-theme="dark"] .room-status-dot.online-dot {
+    background: #ffffff !important;
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.45) !important;
+}
+[data-theme="dark"] .lobby-status-pill {
+    color: #a1a1aa !important;
+}
+[data-theme="dark"] .room-member-badge {
+    background: #18181b !important;
+    color: #f4f4f5 !important;
+    border: 1px solid #27272a !important;
+}
+[data-theme="dark"] .room-member-badge.badge-bot {
+    background: #27272a !important;
+    color: #ffffff !important;
+    border: 1px solid #3f3f46 !important;
+}
+[data-theme="pink"] .room-member-badge {
+    background: rgba(255, 77, 109, 0.12) !important;
+    color: #db2777 !important;
+}
+[data-theme="pink"] .room-member-badge.badge-bot {
+    background: rgba(255, 77, 109, 0.2) !important;
+    color: #9e2a4b !important;
+}
+[data-theme="emerald"] .room-member-badge {
+    background: rgba(34, 197, 94, 0.12) !important;
+    color: #15803d !important;
+}
+[data-theme="emerald"] .room-member-badge.badge-bot {
+    background: rgba(34, 197, 94, 0.2) !important;
+    color: #14532d !important;
+}
+
+/* 5. LOGOS & AVATARS FULL ADAPTATION */
+/* Dark Theme: True Black & White Monochrome for ALL Logos & Avatars */
+[data-theme="dark"] .room-logo,
+[data-theme="dark"] .chat-room-logo,
+[data-theme="dark"] #current-room-logo,
+[data-theme="dark"] #info-room-logo,
+[data-theme="dark"] .room-hero-img,
+[data-theme="dark"] .room-avatar,
+[data-theme="dark"] .room-icon,
+[data-theme="dark"] .room-member-avatar,
+[data-theme="dark"] .avatar-small,
+[data-theme="dark"] #lobby-user-avatar,
+[data-theme="dark"] #avatar-preview,
+[data-theme="dark"] #settings-avatar-preview,
+[data-theme="dark"] #settings-card-avatar,
+[data-theme="dark"] #view-profile-avatar,
+[data-theme="dark"] #floating-typing-avatar,
+[data-theme="dark"] #notif-banner-avatar,
+[data-theme="dark"] img[src*="ai-icon.svg"],
+[data-theme="dark"] img[src*="icon.svg"] {
+    filter: grayscale(100%) contrast(1.1) brightness(0.95) !important;
+}
+
+/* Pink Theme: Harmonious Pink Hue for Logos */
+[data-theme="pink"] .room-logo,
+[data-theme="pink"] .chat-room-logo,
+[data-theme="pink"] #current-room-logo,
+[data-theme="pink"] #info-room-logo,
+[data-theme="pink"] .room-hero-img,
+[data-theme="pink"] .room-icon,
+[data-theme="pink"] img[src*="ai-icon.svg"],
+[data-theme="pink"] img[src*="icon.svg"] {
+    filter: hue-rotate(140deg) saturate(1.3) brightness(1.02);
+}
+
+/* Emerald Theme: Natural Emerald Green Hue for Logos */
+[data-theme="emerald"] .room-logo,
+[data-theme="emerald"] .chat-room-logo,
+[data-theme="emerald"] #current-room-logo,
+[data-theme="emerald"] #info-room-logo,
+[data-theme="emerald"] .room-hero-img,
+[data-theme="emerald"] .room-icon,
+[data-theme="emerald"] img[src*="ai-icon.svg"],
+[data-theme="emerald"] img[src*="icon.svg"] {
+    filter: hue-rotate(320deg) saturate(1.2);
+}
+
+/* 6. AUDIO RECORDING & PLAYER THEME CONTROLS */
+[data-theme="dark"] .rec-send-btn {
+    background: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: 0 2px 10px rgba(255, 255, 255, 0.25) !important;
+}
+[data-theme="dark"] .rec-send-btn svg {
+    stroke: #000000 !important;
+}
+[data-theme="dark"] .rec-cancel-btn {
+    background: #18181b !important;
+    color: #a1a1aa !important;
+    border: 1px solid #27272a !important;
+}
+[data-theme="dark"] .rec-pause-btn {
+    background: #18181b !important;
+    color: #f4f4f5 !important;
+    border: 1px solid #27272a !important;
+}
+[data-theme="dark"] .recording-dot {
+    background: #ffffff !important;
+}
+[data-theme="dark"] .rec-wave-bar {
+    background: #ffffff !important;
+}
+[data-theme="dark"] .wave-bar {
+    background: #3f3f46 !important;
+}
+[data-theme="dark"] .wave-bar.active {
+    background: #ffffff !important;
+}
+[data-theme="dark"] .audio-play-btn {
+    background: #ffffff !important;
+    color: #000000 !important;
+}
+[data-theme="dark"] .audio-play-btn svg {
+    fill: #000000 !important;
+    stroke: #000000 !important;
+}
+
+[data-theme="pink"] .wave-bar.active {
+    background: #ff4d6d !important;
+}
+[data-theme="pink"] .audio-play-btn {
+    background: #ff4d6d !important;
+    color: #ffffff !important;
+}
+[data-theme="emerald"] .wave-bar.active {
+    background: #22c55e !important;
+}
+[data-theme="emerald"] .audio-play-btn {
+    background: #22c55e !important;
+    color: #ffffff !important;
+}
+
+/* 7. SETTINGS CONTROLS & SWITCHES */
+[data-theme="dark"] .theme-card-btn.active {
+    border-color: #ffffff !important;
+    background: #27272a !important;
+    color: #ffffff !important;
+}
+[data-theme="dark"] .aesthetic-range-slider::-webkit-slider-thumb {
+    background: #ffffff !important;
+}
+[data-theme="dark"] .aesthetic-range-slider::-moz-range-thumb {
+    background: #ffffff !important;
+}
+[data-theme="dark"] .slider-notch.passed {
+    background: #ffffff !important;
+}
+[data-theme="dark"] input[type="checkbox"]:checked + .switch-slider {
+    background: #ffffff !important;
+}
+[data-theme="dark"] input[type="checkbox"]:checked + .switch-slider::before {
+    background: #000000 !important;
+}
+
+[data-theme="pink"] .theme-card-btn.active {
+    border-color: #ff4d6d !important;
+    background: #fff0f3 !important;
+    color: #9e2a4b !important;
+}
+[data-theme="pink"] .aesthetic-range-slider::-webkit-slider-thumb {
+    background: #ff4d6d !important;
+}
+[data-theme="pink"] .slider-notch.passed {
+    background: #ff4d6d !important;
+}
+[data-theme="pink"] input[type="checkbox"]:checked + .switch-slider {
+    background: #ff4d6d !important;
+}
+
+[data-theme="emerald"] .theme-card-btn.active {
+    border-color: #22c55e !important;
+    background: #f0fdf4 !important;
+    color: #14532d !important;
+}
+[data-theme="emerald"] .aesthetic-range-slider::-webkit-slider-thumb {
+    background: #22c55e !important;
+}
+[data-theme="emerald"] .slider-notch.passed {
+    background: #22c55e !important;
+}
+[data-theme="emerald"] input[type="checkbox"]:checked + .switch-slider {
+    background: #22c55e !important;
+}
+
+/* 8. XOX GAME & MISC COMPONENT MONOCHROME/THEME UNIFICATION */
+[data-theme="dark"] .xox-card {
+    background: #141416 !important;
+    border-color: #27272a !important;
+}
+[data-theme="dark"] .xox-badge,
+[data-theme="dark"] .xox-turn-badge,
+[data-theme="dark"] .xox-won-badge,
+[data-theme="dark"] .xox-draw-badge {
+    background: #27272a !important;
+    color: #ffffff !important;
+    border: 1px solid #3f3f46 !important;
+}
+[data-theme="dark"] .xox-cell.winning-cell {
+    background: rgba(255, 255, 255, 0.12) !important;
+}
+[data-theme="dark"] .pencil-path {
+    stroke: #ffffff !important;
+}
+[data-theme="dark"] .floating-typing-bubble {
+    background: #18181b !important;
+    border: 1px solid #27272a !important;
+}
+[data-theme="dark"] .typing-dot {
+    background: #ffffff !important;
 }
 

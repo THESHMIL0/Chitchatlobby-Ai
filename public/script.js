@@ -1591,6 +1591,10 @@ document.querySelectorAll('.theme-card-btn').forEach(btn => {
         localStorage.setItem('chitchat_theme', selectedTheme);
         playUiSound('pop');
         updateSettingsModalUI();
+        const savedWp = (activeRoomId && localStorage.getItem('wallpaper_' + activeRoomId)) || localStorage.getItem('chitchat_global_wallpaper') || 'default';
+        if (typeof applyChatWallpaper === 'function') {
+            applyChatWallpaper(savedWp);
+        }
     };
 });
 
@@ -2914,8 +2918,33 @@ if (groupPicUpload) {
     });
 }
 
+function adaptWallpaperForTheme(bgImageStr, theme) {
+    if (!bgImageStr || typeof bgImageStr !== 'string') return bgImageStr;
+    if (theme === 'dark') {
+        // Strip out colors and convert to subtle monochrome lines and fills
+        return bgImageStr
+            .replace(/rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,/g, 'rgba(255, 255, 255,')
+            .replace(/fill=['"]#[0-9a-fA-F]{3,8}['"]/g, "fill='rgba(255,255,255,0.06)'")
+            .replace(/stroke=['"]#[0-9a-fA-F]{3,8}['"]/g, "stroke='rgba(255,255,255,0.15)'");
+    } else if (theme === 'pink') {
+        return bgImageStr
+            .replace(/rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,/g, 'rgba(244, 114, 182,')
+            .replace(/fill=['"]#[0-9a-fA-F]{3,8}['"]/g, "fill='rgba(244,114,182,0.1)'")
+            .replace(/stroke=['"]#[0-9a-fA-F]{3,8}['"]/g, "stroke='rgba(244,114,182,0.25)'");
+    } else if (theme === 'emerald') {
+        return bgImageStr
+            .replace(/rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,/g, 'rgba(34, 197, 94,')
+            .replace(/fill=['"]#[0-9a-fA-F]{3,8}['"]/g, "fill='rgba(34,197,94,0.1)'")
+            .replace(/stroke=['"]#[0-9a-fA-F]{3,8}['"]/g, "stroke='rgba(34,197,94,0.25)'");
+    }
+    return bgImageStr;
+}
+
 function applyChatWallpaper(wallpaperVal) {
     if (!chatScreen) return;
+    const currentTheme = (typeof document !== 'undefined' && document.body) 
+        ? (document.body.getAttribute('data-theme') || 'emerald') 
+        : 'emerald';
 
     chatScreen.style.removeProperty('background-image');
     chatScreen.style.removeProperty('background-color');
@@ -2933,7 +2962,8 @@ function applyChatWallpaper(wallpaperVal) {
     if (WALLPAPER_PATTERNS[patternKey]) {
         const p = WALLPAPER_PATTERNS[patternKey];
         chatScreen.classList.add('has-custom-wallpaper');
-        chatScreen.style.setProperty('background-image', p.bgImage, 'important');
+        const themedBg = adaptWallpaperForTheme(p.bgImage, currentTheme);
+        chatScreen.style.setProperty('background-image', themedBg, 'important');
         chatScreen.style.setProperty('background-size', p.bgSize, 'important');
         chatScreen.style.setProperty('background-repeat', p.bgRepeat || 'repeat', 'important');
         if (p.bgPosition) {
@@ -5280,13 +5310,10 @@ function applyTheme(themeName) {
         flirtPreview.style.backgroundImage = getFlirtSvgDataUrl();
     }
 
-    // Refresh active wallpaper if sweetheart or flirt is active
-    const savedWallpaper = (typeof activeRoomId !== 'undefined' && activeRoomId && localStorage.getItem('wallpaper_' + activeRoomId)) || localStorage.getItem('chitchat_global_wallpaper');
-    const activeCard = document.querySelector('.wp-card.active');
-    const activeWp = activeCard ? activeCard.dataset.wp : (savedWallpaper ? savedWallpaper.replace('pattern:', '') : '');
-
-    if ((activeWp === 'sweetheart' || activeWp === 'flirt') && typeof applyChatWallpaper === 'function') {
-        applyChatWallpaper('pattern:' + activeWp);
+    // Refresh active wallpaper for the newly applied theme
+    const savedWallpaper = (typeof activeRoomId !== 'undefined' && activeRoomId && localStorage.getItem('wallpaper_' + activeRoomId)) || localStorage.getItem('chitchat_global_wallpaper') || 'default';
+    if (typeof applyChatWallpaper === 'function') {
+        applyChatWallpaper(savedWallpaper);
     }
 }
 
