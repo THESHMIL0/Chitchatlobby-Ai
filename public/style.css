@@ -8302,54 +8302,7 @@ li[id^="msg-msg_"] .meta-row {
     color: #14532d !important;
 }
 
-/* 5. LOGOS & AVATARS FULL ADAPTATION */
-/* Dark Theme: True Black & White Monochrome for ALL Logos & Avatars */
-[data-theme="dark"] .room-logo,
-[data-theme="dark"] .chat-room-logo,
-[data-theme="dark"] #current-room-logo,
-[data-theme="dark"] #info-room-logo,
-[data-theme="dark"] .room-hero-img,
-[data-theme="dark"] .room-avatar,
-[data-theme="dark"] .room-icon,
-[data-theme="dark"] .room-member-avatar,
-[data-theme="dark"] .avatar-small,
-[data-theme="dark"] #lobby-user-avatar,
-[data-theme="dark"] #avatar-preview,
-[data-theme="dark"] #settings-avatar-preview,
-[data-theme="dark"] #settings-card-avatar,
-[data-theme="dark"] #view-profile-avatar,
-[data-theme="dark"] #floating-typing-avatar,
-[data-theme="dark"] #notif-banner-avatar,
-[data-theme="dark"] img[src*="ai-icon.svg"],
-[data-theme="dark"] img[src*="icon.svg"] {
-    filter: grayscale(100%) contrast(1.1) brightness(0.95) !important;
-}
-
-/* Pink Theme: Harmonious Pink Hue for Logos */
-[data-theme="pink"] .room-logo,
-[data-theme="pink"] .chat-room-logo,
-[data-theme="pink"] #current-room-logo,
-[data-theme="pink"] #info-room-logo,
-[data-theme="pink"] .room-hero-img,
-[data-theme="pink"] .room-icon,
-[data-theme="pink"] img[src*="ai-icon.svg"],
-[data-theme="pink"] img[src*="icon.svg"] {
-    filter: hue-rotate(140deg) saturate(1.3) brightness(1.02);
-}
-
-/* Emerald Theme: Natural Emerald Green Hue for Logos */
-[data-theme="emerald"] .room-logo,
-[data-theme="emerald"] .chat-room-logo,
-[data-theme="emerald"] #current-room-logo,
-[data-theme="emerald"] #info-room-logo,
-[data-theme="emerald"] .room-hero-img,
-[data-theme="emerald"] .room-icon,
-[data-theme="emerald"] img[src*="ai-icon.svg"],
-[data-theme="emerald"] img[src*="icon.svg"] {
-    filter: hue-rotate(320deg) saturate(1.2);
-}
-
-/* 6. AUDIO RECORDING & PLAYER THEME CONTROLS */
+/* 5. AUDIO RECORDING & PLAYER THEME CONTROLS */
 [data-theme="dark"] .rec-send-btn {
     background: #ffffff !important;
     color: #000000 !important;
