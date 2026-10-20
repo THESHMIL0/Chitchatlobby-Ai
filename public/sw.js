@@ -32,32 +32,40 @@ self.addEventListener('push', (event) => {
         }
     }
 
-    // Ensure icon uses PNG format for Android / Mobile NotificationManager compatibility
-    let notifIcon = '/icon-192.png';
-    if (data.icon && typeof data.icon === 'string' && !data.icon.endsWith('.svg') && !data.icon.includes('/svg')) {
-        notifIcon = data.icon;
-    }
+    const showNotificationPromise = clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+        // If the user has an active tab focused on screen, skip OS push banner
+        const isClientFocused = clientList.some(client => client.focused);
+        if (isClientFocused) {
+            return;
+        }
 
-    const options = {
-        body: data.body,
-        icon: notifIcon,
-        badge: '/icon-192.png',
-        data: {
-            url: data.url || '/',
-            roomId: data.roomId
-        },
-        tag: 'chitchat-msg-' + Date.now(),
-        renotify: true,
-        requireInteraction: false,
-        vibrate: [100, 50, 100],
-        actions: [
-            { action: 'open', title: 'Open Chat' }
-        ]
-    };
+        // Ensure icon uses PNG format for Android / Mobile NotificationManager compatibility
+        let notifIcon = '/icon-192.png';
+        if (data.icon && typeof data.icon === 'string' && !data.icon.endsWith('.svg') && !data.icon.includes('/svg')) {
+            notifIcon = data.icon;
+        }
 
-    event.waitUntil(
-        self.registration.showNotification(data.title, options)
-    );
+        const options = {
+            body: data.body,
+            icon: notifIcon,
+            badge: '/icon-192.png',
+            data: {
+                url: data.url || '/',
+                roomId: data.roomId
+            },
+            tag: 'chitchat-msg-' + (data.roomId || 'lobby'),
+            renotify: true,
+            requireInteraction: false,
+            vibrate: [100, 50, 100],
+            actions: [
+                { action: 'open', title: 'Open Chat' }
+            ]
+        };
+
+        return self.registration.showNotification(data.title, options);
+    });
+
+    event.waitUntil(showNotificationPromise);
 });
 
 self.addEventListener('notificationclick', (event) => {

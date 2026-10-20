@@ -119,7 +119,7 @@ function savePushSubscriptions() {
 
 loadPushSubscriptions();
 
-function sendPushToAllExceptSender(senderEndpoint, senderName, roomName, roomId, summaryText, avatar) {
+function sendPushToAllExceptSender(senderEndpoint, senderName, roomName, roomId, summaryText, avatar, senderUserId) {
     const safeSummary = (summaryText || 'Sent a message').substring(0, 180);
     const safeSender = (senderName || 'Someone').substring(0, 30);
     const payload = JSON.stringify({
@@ -128,22 +128,43 @@ function sendPushToAllExceptSender(senderEndpoint, senderName, roomName, roomId,
         icon: '/icon-192.png',
         badge: '/icon-192.png',
         url: `/?room=${encodeURIComponent(roomId || 'lobby')}`,
-        roomId: roomId || 'lobby'
+        roomId: roomId || 'lobby',
+        sender: safeSender,
+        senderUserId: senderUserId || null
     });
 
     let dirty = false;
-    pushSubscriptions.forEach(({ userName, subscription }, endpoint) => {
-        if (!senderEndpoint || endpoint !== senderEndpoint) {
-            webPush.sendNotification(subscription, payload).catch(err => {
-                if (err.statusCode === 404 || err.statusCode === 410) {
-                    pushSubscriptions.delete(endpoint);
-                    dirty = true;
-                    savePushSubscriptions();
-                } else {
-                    console.error('Error delivering Web Push notification:', err.message);
-                }
-            });
+    const cleanSender = String(senderName || '').trim().toLowerCase();
+    const cleanSenderEndpoint = String(senderEndpoint || '').trim();
+    const cleanSenderUserId = senderUserId ? String(senderUserId).trim() : null;
+
+    pushSubscriptions.forEach(({ userName, subscription, userId }, endpoint) => {
+        const subUser = String(userName || '').trim().toLowerCase();
+        const subUserId = userId ? String(userId).trim() : null;
+
+        // 🚫 Never deliver a push notification to the user who sent the message!
+        // 1. Skip if endpoint matches sender's endpoint
+        if (cleanSenderEndpoint && endpoint === cleanSenderEndpoint) {
+            return;
         }
+        // 2. Skip if subscription username matches sender username
+        if (cleanSender && subUser && cleanSender === subUser) {
+            return;
+        }
+        // 3. Skip if subscription userId matches sender userId
+        if (cleanSenderUserId && subUserId && cleanSenderUserId === subUserId) {
+            return;
+        }
+
+        webPush.sendNotification(subscription, payload).catch(err => {
+            if (err.statusCode === 404 || err.statusCode === 410) {
+                pushSubscriptions.delete(endpoint);
+                dirty = true;
+                savePushSubscriptions();
+            } else {
+                console.error('Error delivering Web Push notification:', err.message);
+            }
+        });
     });
 }
 
@@ -188,10 +209,11 @@ app.get('/api/push/vapid-public-key', (req, res) => {
 });
 
 app.post('/api/push/subscribe', (req, res) => {
-    const { userName, subscription } = req.body;
+    const { userName, userId, subscription } = req.body;
     if (subscription && typeof subscription === 'object' && typeof subscription.endpoint === 'string' && subscription.endpoint.startsWith('https://')) {
         const cleanName = typeof userName === 'string' ? userName.trim().substring(0, 30) : 'Guest';
-        pushSubscriptions.set(subscription.endpoint, { userName: cleanName, subscription });
+        const cleanUserId = typeof userId === 'string' ? userId.trim() : null;
+        pushSubscriptions.set(subscription.endpoint, { userName: cleanName, userId: cleanUserId, subscription });
         savePushSubscriptions();
         res.status(201).json({ success: true, totalSubscriptions: pushSubscriptions.size });
     } else {
@@ -1215,7 +1237,7 @@ io.on('connection', (socket) => {
                     id: data.id
                 };
                 socket.broadcast.emit('global room alert', alertData);
-                sendPushToAllExceptSender(data.senderEndpoint, data.user, roomName, roomId, summaryText, data.avatar);
+                sendPushToAllExceptSender(data.senderEndpoint, data.user, roomName, roomId, summaryText, data.avatar, data.userId);
             });
         }
 

@@ -2286,6 +2286,7 @@ async function registerWebPushSubscription() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
+                userId: currentUser ? currentUser.id : null,
                 userName: currentUser ? currentUser.name : 'Guest',
                 subscription: subscription
             })
@@ -3281,7 +3282,8 @@ sendPollBtn.onclick = () => {
             poll: pollData,
             time: formatTo12HourTime(new Date()),
             isGhost: isGhostMode,
-            roomId: activeRoomId || 'lobby'
+            roomId: activeRoomId || 'lobby',
+            senderEndpoint: currentPushEndpoint
         });
         createPollModal.classList.add('hidden');
         resetPollForm();
@@ -3433,7 +3435,8 @@ function sendMediaMessage(dataUrl, isVideo = false, originalFileName = '') {
         time: formatTo12HourTime(new Date()),
         isGhost: isGhostMode,
         roomId: targetRoomId,
-        replyTo: replyingTo
+        replyTo: replyingTo,
+        senderEndpoint: currentPushEndpoint
     };
 
     if (socket) {
@@ -5545,7 +5548,8 @@ async function startRecording(e) {
                                 waveform: normalizedWave,
                                 time: formatTo12HourTime(new Date()),
                                 isGhost: isGhostMode,
-                                roomId: activeRoomId || 'lobby'
+                                roomId: activeRoomId || 'lobby',
+                                senderEndpoint: currentPushEndpoint
                             });
                             playUiSound('send');
                         }
@@ -5990,8 +5994,15 @@ if (messagesListEl) {
 // Service Worker Registration & Web Push Init
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').then((reg) => {
+        navigator.serviceWorker.register('/sw.js').then(async (reg) => {
             console.log('Service Worker registered with scope:', reg.scope);
+            try {
+                const existingSub = await reg.pushManager.getSubscription();
+                if (existingSub && existingSub.endpoint) {
+                    currentPushEndpoint = existingSub.endpoint;
+                    localStorage.setItem('chitchat_push_endpoint', existingSub.endpoint);
+                }
+            } catch (e) { }
             if (Notification.permission === 'granted') {
                 registerWebPushSubscription();
             }
