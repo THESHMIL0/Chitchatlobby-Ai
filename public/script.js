@@ -2795,6 +2795,8 @@ function openRoomSettingsScreen() {
                 : (activeRoomId === 'lobby' ? 'Public Lobby • Open Discussion' : `Custom Room #${activeRoomId}`);
         }
         renderRoomSettingsMembers(currentRoomMembersCache);
+        const scrollArea = roomSettingsScreen.querySelector('.settings-clean-scroll');
+        if (scrollArea) scrollArea.scrollTop = 0;
         try { history.pushState({ screen: 'room-settings', roomId: activeRoomId }, '', '#room-settings'); } catch (e) { }
     }
 }

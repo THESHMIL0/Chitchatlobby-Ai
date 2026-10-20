@@ -7883,6 +7883,10 @@ li[id^="msg-msg_"] .meta-row {
     background-color: var(--bg-screen);
 }
 
+.visually-hidden-file-input {
+    display: none !important;
+}
+
 .room-settings-hero-card {
     background: transparent;
     border: none;
@@ -7895,7 +7899,9 @@ li[id^="msg-msg_"] .meta-row {
     text-align: center;
     box-shadow: none;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
+    flex-shrink: 0;
+    min-height: min-content;
 }
 
 .room-hero-avatar-wrap {
@@ -7903,6 +7909,7 @@ li[id^="msg-msg_"] .meta-row {
     width: 92px;
     height: 92px;
     margin-bottom: 14px;
+    flex-shrink: 0;
 }
 
 .room-hero-avatar {
@@ -7911,7 +7918,7 @@ li[id^="msg-msg_"] .meta-row {
     border-radius: 50%;
     object-fit: cover;
     border: 3px solid var(--accent);
-    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.25);
+    box-shadow: 0 4px 16px var(--shadow-color);
     background: var(--bg-hover);
     display: block;
 }
