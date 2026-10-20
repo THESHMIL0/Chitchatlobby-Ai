@@ -1592,7 +1592,7 @@ io.on('connection', (socket) => {
                 } else if (currentTurn === 'O') {
                     if (!players.O) {
                         if (players.X === player) {
-                            return socket.emit('xox error', { msgId, message: "💖 You are Player X! Waiting for your opponent to take O." });
+                            return socket.emit('xox error', { msgId, message: "🎮 You are Player X! Waiting for your opponent to take O." });
                         }
                         players.O = player;
                         data.xox.playerAvatars.O = avatar;

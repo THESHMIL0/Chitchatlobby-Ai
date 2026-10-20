@@ -112,18 +112,27 @@ function showToast(msg, options = {}) {
 
     let text = String(msg || '').trim();
 
+    // Heart emoji pattern
+    const heartEmojiRegex = /[\u2764\uFE0F\uD83D\uDC96\uD83D\uDC97\uD83D\uDC93\uD83D\uDC9E\uD83D\uDC95\uD83E\uDE77\uD83E\uDE75\uD83E\uDE76\uD83D\uDC99\uD83D\uDC9A\uD83D\uDC9B\uD83D\uDC9C\uD83E\uDD0E\uD83E\uDD0D\uD83D\uDC94]/u;
+
+    if (icon && heartEmojiRegex.test(icon)) {
+        icon = '';
+    }
+
     // Auto-detect emoji if present at beginning of message
     if (!icon) {
         const emojiRegex = /^(\p{Extended_Pictographic}|\p{Emoji_Presentation})/u;
         const match = text.match(emojiRegex);
         if (match) {
-            icon = match[0];
+            if (!heartEmojiRegex.test(match[0])) {
+                icon = match[0];
+            }
             text = text.substring(match[0].length).trim();
         } else {
             if (type === 'error') icon = '🌸';
             else if (type === 'game') icon = '🎮';
             else if (type === 'success') icon = '✨';
-            else icon = '💖';
+            else icon = '';
         }
     }
 
@@ -136,7 +145,7 @@ function showToast(msg, options = {}) {
 
     toast.className = `custom-toast-pill toast-${type}`;
     toast.innerHTML = `
-        <span class="toast-emoji-icon" aria-hidden="true">${escapeHTML(icon)}</span>
+        ${icon ? `<span class="toast-emoji-icon" aria-hidden="true">${escapeHTML(icon)}</span>` : ''}
         <span class="toast-message-text">${escapeHTML(text)}</span>
     `;
 
@@ -4758,7 +4767,7 @@ function handleXoxCellClick(msgId, index) {
         } else if (currentTurn === 'O') {
             if (!players.O) {
                 if (players.X === myName) {
-                    showToast("💖 You are Player X! Waiting for your opponent to take O.", { icon: '💖', type: 'game' });
+                    showToast("🎮 You are Player X! Waiting for your opponent to take O.", { icon: '🎮', type: 'game' });
                     return;
                 }
             } else if (players.O !== myName) {
@@ -5975,7 +5984,7 @@ const messagesListEl = document.getElementById('messages');
 if (messagesListEl) {
     messagesListEl.addEventListener('dblclick', (e) => {
         triggerReactionParticles(e.clientX, e.clientY, '❤️');
-        showToast('❤️ Reacted!');
+        showToast('Reacted!');
     });
 }
 
