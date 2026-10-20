@@ -2805,7 +2805,7 @@ li.system-message {
     align-items: center;
     justify-content: space-between;
     padding: 0 16px;
-    background: var(--header-card-bg);
+    background: transparent;
     -webkit-backdrop-filter: blur(16px);
     backdrop-filter: blur(16px);
     border-bottom: 1px solid var(--border-color);
@@ -2815,9 +2815,9 @@ li.system-message {
 .profile-top-navbar .back-btn-nav {
     width: 38px;
     height: 38px;
-    border-radius: 12px;
-    background: var(--input-bg);
-    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    background: transparent;
+    border: none;
     color: var(--text-primary);
     display: flex;
     align-items: center;
@@ -2827,9 +2827,8 @@ li.system-message {
 }
 
 .profile-top-navbar .back-btn-nav:hover {
-    background: var(--accent);
-    color: var(--text-inverse);
-    border-color: var(--accent);
+    background: var(--bg-hover);
+    color: var(--accent);
 }
 
 .profile-nav-title {
@@ -2859,12 +2858,14 @@ li.system-message {
     top: 0;
     left: 0;
     width: 100%;
-    height: 180px;
+    height: 220px;
     background: var(--accent-gradient);
-    opacity: 0.15;
+    opacity: 0.12;
     z-index: 0;
     overflow: hidden;
     pointer-events: none;
+    mask-image: linear-gradient(to bottom, black 30%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 30%, transparent 100%);
 }
 
 .profile-header-mesh .mesh-orb {
@@ -2981,38 +2982,45 @@ li.system-message {
     display: flex;
     align-items: center;
     gap: 6px;
-    background: var(--input-bg);
+    background: transparent;
     border: 1px solid var(--border-color);
     color: var(--accent);
     font-size: 12.5px;
-    font-weight: 700;
-    padding: 7px 14px;
-    border-radius: 20px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 999px;
     cursor: pointer;
     transition: all 0.2s ease;
-    box-shadow: 0 2px 6px var(--shadow-color);
+    box-shadow: none;
 }
 
 .avatar-action-chip:hover {
     background: var(--accent);
-    color: var(--text-inverse);
+    color: #ffffff;
     border-color: var(--accent);
     transform: translateY(-1px);
 }
 
 .avatar-action-chip.secondary {
-    color: var(--text-primary);
+    color: var(--text-secondary);
+}
+
+.avatar-action-chip.secondary:hover {
+    background: var(--accent);
+    color: #ffffff;
+    border-color: var(--accent);
 }
 
 /* Section Blocks */
 .profile-section-block {
     width: 100%;
-    background: var(--header-card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 20px;
-    padding: 14px 16px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--border-color);
+    border-radius: 0;
+    padding: 12px 4px;
     margin-bottom: 16px;
-    box-shadow: var(--shadow-sm);
+    box-shadow: none;
 }
 
 .section-label-header {
@@ -3073,20 +3081,20 @@ li.system-message {
     transform: scale(1.08);
 }
 
-/* Profile Form Card */
+/* Profile Form Card - Fully Unboxed */
 .profile-card {
-    background: var(--header-card-bg);
+    background: transparent;
     width: 100%;
-    border-radius: 22px;
-    box-shadow: var(--shadow-md);
-    padding: 16px 18px;
-    margin-bottom: 20px;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 4px 2px;
+    margin-bottom: 24px;
     z-index: 1;
-    border: 1px solid var(--border-color);
+    border: none;
 }
 
 .profile-input-group {
-    padding: 6px 0;
+    padding: 8px 0;
     width: 100%;
 }
 
@@ -3094,13 +3102,14 @@ li.system-message {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
+    padding: 0 2px;
 }
 
 .profile-input-group label {
-    font-size: 11.5px;
+    font-size: 11px;
     color: var(--accent);
-    font-weight: 800;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.8px;
     margin: 0;
@@ -3108,29 +3117,47 @@ li.system-message {
 
 .char-counter {
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 600;
     color: var(--text-secondary);
+    opacity: 0.8;
+}
+
+.profile-divider {
+    height: 14px;
+    background: transparent;
+    border: none;
+    margin: 0;
 }
 
 .input-with-icon {
     display: flex;
     align-items: center;
-    gap: 10px;
-    background: var(--input-bg);
-    border: 1.5px solid var(--border-color);
-    border-radius: 14px;
-    padding: 10px 14px;
-    transition: all 0.2s ease;
+    gap: 12px;
+    background: transparent;
+    border: none;
+    border-bottom: 1.5px solid var(--border-color);
+    border-radius: 0;
+    padding: 10px 2px 10px 2px;
+    transition: border-color 0.2s ease;
 }
 
 .input-with-icon:focus-within {
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.15);
+    box-shadow: none;
 }
 
 .input-field-icon {
     font-size: 16px;
     flex-shrink: 0;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease;
+}
+
+.input-with-icon:focus-within .input-field-icon {
+    color: var(--accent);
 }
 
 .input-with-icon input {
@@ -3141,7 +3168,7 @@ li.system-message {
     background: transparent;
     padding: 0;
     color: var(--text-primary);
-    font-weight: 600;
+    font-weight: 500;
 }
 
 /* Quick Status Presets */
@@ -3246,13 +3273,14 @@ li.system-message {
     letter-spacing: 0.5px;
 }
 
-/* Live Chat Bubble Preview Box */
+/* Live Chat Bubble Preview Box - Unboxed */
 .bubble-preview-card {
     margin-top: 16px;
-    background: var(--input-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 12px 14px;
+    background: transparent;
+    border: 1px dashed var(--border-color);
+    border-radius: 14px;
+    padding: 12px 8px;
+    box-shadow: none;
 }
 
 .preview-label {
@@ -3325,16 +3353,16 @@ li.system-message {
 #save-profile-btn {
     width: 100%;
     max-width: 440px;
-    color: var(--text-inverse);
-    padding: 16px;
-    border-radius: 18px;
-    font-size: 16px;
-    font-weight: 800;
+    color: #ffffff;
+    padding: 14px 24px;
+    border-radius: 999px;
+    font-size: 15px;
+    font-weight: 700;
     border: none;
     cursor: pointer;
     z-index: 1;
-    background: var(--accent-gradient);
-    box-shadow: 0 6px 20px var(--shadow-color);
+    background: var(--accent);
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -3343,8 +3371,9 @@ li.system-message {
 }
 
 #save-profile-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px var(--shadow-color);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(16, 185, 129, 0.35);
+    filter: brightness(1.05);
 }
 
 #save-profile-btn:active {
