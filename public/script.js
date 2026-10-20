@@ -2292,7 +2292,6 @@ async function registerWebPushSubscription() {
         });
 
         console.log('Web Push subscription registered successfully!');
-        showToast('Web Push Notifications Enabled!');
         updateNotifStatusText();
     } catch (err) {
         console.error('Failed to register Web Push subscription:', err);

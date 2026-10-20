@@ -5980,30 +5980,32 @@ body[data-theme="dark"] .slider-notch:not(.passed) {
     position: fixed;
     bottom: 84px;
     left: 50%;
-    transform: translateX(-50%) translateY(28px) scale(0.92);
+    transform: translateX(-50%) translateY(24px) scale(0.94);
     opacity: 0;
     pointer-events: none;
     z-index: 999999;
-    background: var(--header-card-bg, rgba(255, 255, 255, 0.95));
+    background: var(--header-card-bg, rgba(255, 255, 255, 0.96));
     color: var(--text-primary, #0f172a);
-    border: 1.5px solid var(--border-color, rgba(0, 0, 0, 0.12));
+    border: 1px solid var(--border-color, rgba(0, 0, 0, 0.1));
     border-radius: 9999px;
-    padding: 10px 20px;
-    font-size: 13.5px;
+    padding: 8px 18px;
+    font-size: 13px;
     font-weight: 600;
-    line-height: 1.35;
+    line-height: 1.25;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    box-shadow: 0 14px 40px var(--shadow-color, rgba(0, 0, 0, 0.18)), 0 4px 12px rgba(0, 0, 0, 0.08);
+    gap: 8px;
+    box-shadow: 0 8px 24px var(--shadow-color, rgba(0, 0, 0, 0.12)), 0 2px 6px rgba(0, 0, 0, 0.05);
     -webkit-backdrop-filter: blur(20px);
     backdrop-filter: blur(20px);
-    max-width: min(calc(100vw - 32px), 440px);
-    text-align: left;
-    white-space: normal;
-    word-break: break-word;
-    transition: opacity 0.2s ease, transform 0.25s ease;
+    width: max-content;
+    max-width: min(calc(100vw - 32px), 420px);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: opacity 0.2s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     -webkit-user-select: none;
     user-select: none;
 }
@@ -6011,18 +6013,18 @@ body[data-theme="dark"] .slider-notch:not(.passed) {
 .custom-toast-pill.show {
     opacity: 1;
     pointer-events: auto;
-    animation: cuteToastBounceIn 0.38s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    animation: cuteToastBounceIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
 @keyframes cuteToastBounceIn {
     0% {
         opacity: 0;
-        transform: translateX(-50%) translateY(32px) scale(0.88);
+        transform: translateX(-50%) translateY(24px) scale(0.92);
     }
 
     65% {
         opacity: 1;
-        transform: translateX(-50%) translateY(-4px) scale(1.02);
+        transform: translateX(-50%) translateY(-3px) scale(1.01);
     }
 
     100% {
@@ -6032,9 +6034,9 @@ body[data-theme="dark"] .slider-notch:not(.passed) {
 }
 
 .custom-toast-pill .toast-emoji-icon {
-    font-size: 20px;
+    font-size: 16px;
     line-height: 1;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
@@ -6049,18 +6051,22 @@ body[data-theme="dark"] .slider-notch:not(.passed) {
     }
 
     30% {
-        transform: scale(1.25) rotate(-10deg);
+        transform: scale(1.2) rotate(-8deg);
     }
 
     60% {
-        transform: scale(1.15) rotate(10deg);
+        transform: scale(1.1) rotate(8deg);
     }
 }
 
 .custom-toast-pill .toast-message-text {
-    font-size: 13.5px;
+    font-size: 13px;
     font-weight: 600;
     color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.25;
 }
 
 .custom-toast-pill.toast-error {
