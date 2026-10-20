@@ -498,6 +498,17 @@ function loadChatData() {
                 });
             }
             if (Array.isArray(raw.historyStore)) {
+                raw.historyStore.forEach(h => {
+                    if (h && h.data) {
+                        try {
+                            const d = typeof h.data === 'string' ? JSON.parse(h.data) : h.data;
+                            if (d && (d.user === '🤖 Bot' || String(d.user).toLowerCase().includes('bot') || (d.avatar && (d.avatar.includes('ChitChatBot') || d.avatar.includes('bottts'))))) {
+                                d.avatar = '/ai-icon.svg';
+                                h.data = JSON.stringify(d);
+                            }
+                        } catch (e) { }
+                    }
+                });
                 historyStore.push(...raw.historyStore);
                 // Rebuild O(1) lookup index from loaded data
                 historyStore.forEach(h => { if (h && h.id) historyById.set(h.id, h); });
@@ -638,8 +649,15 @@ function emitToUserSockets(userId, event, payload, fallbackSocket = null) {
 
 function getSafeServerAvatar(avatar, name) {
     const cleanName = String(name || 'Alex').trim() || 'Alex';
+    const isBot = cleanName === '🤖 Bot' || cleanName.toLowerCase().includes('bot') || cleanName.toLowerCase() === 'chitchat ai';
+    if (isBot) {
+        return '/ai-icon.svg';
+    }
     if (avatar && typeof avatar === 'string') {
         const trimmed = avatar.trim();
+        if (trimmed.includes('seed=ChitChatBot') || trimmed.includes('ChitChatBot') || trimmed.includes('bottts')) {
+            return '/ai-icon.svg';
+        }
         if (trimmed.startsWith('data:image/') || trimmed.startsWith('https://') || trimmed.startsWith('http://') || trimmed.startsWith('/')) {
             if (trimmed !== 'undefined' && trimmed !== 'null' && trimmed.length > 5) {
                 return trimmed.length <= 1500000 ? trimmed : `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(cleanName)}`;
@@ -653,7 +671,7 @@ function getUsersInRoom(roomId) {
     if (roomId === 'ai_lounge') {
         return [{
             name: '🤖 Bot',
-            avatar: 'https://api.dicebear.com/7.x/lorelei/svg?seed=ChitChatBot&backgroundColor=b6e3f4',
+            avatar: '/ai-icon.svg',
             about: 'Official AI Assistant'
         }];
     }
@@ -995,7 +1013,13 @@ io.on('connection', (socket) => {
             }
 
             db.all("SELECT data FROM history WHERE roomId = ?", [room.id], (err, rows) => {
-                let history = rows?.map(r => typeof r.data === 'string' ? JSON.parse(r.data) : r.data) || [];
+                let history = rows?.map(r => {
+                    const m = typeof r.data === 'string' ? JSON.parse(r.data) : r.data;
+                    if (m && (m.user === '🤖 Bot' || String(m.user).toLowerCase().includes('bot') || (m.avatar && (m.avatar.includes('ChitChatBot') || m.avatar.includes('bottts'))))) {
+                        m.avatar = '/ai-icon.svg';
+                    }
+                    return m;
+                }) || [];
                 if (room.id === 'ai_lounge') {
                     // 🔒 AI Lounge history is 100% private to this user
                     history = history.filter(m => m.userId === userId || m.targetUserId === userId);
@@ -1180,7 +1204,7 @@ io.on('connection', (socket) => {
                 },
                 playerAvatars: {
                     X: data.xox.playerAvatars?.X || data.avatar,
-                    O: isAIRoom ? 'https://api.dicebear.com/7.x/lorelei/svg?seed=ChitChatBot&backgroundColor=b6e3f4' : (data.xox.playerAvatars?.O || null)
+                    O: isAIRoom ? '/ai-icon.svg' : (data.xox.playerAvatars?.O || null)
                 },
                 status: 'in_progress',
                 winner: null,
@@ -1314,7 +1338,7 @@ io.on('connection', (socket) => {
                         status: 'delivered',
                         time: new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }),
                         color: '#00a884',
-                        avatar: 'https://api.dicebear.com/7.x/lorelei/svg?seed=ChitChatBot&backgroundColor=b6e3f4',
+                        avatar: '/ai-icon.svg',
                         replyTo: data.replyTo ? { user: data.user, text: textContent.substring(0, 120) || 'Message', msgId: data.id } : null,
                         isPrivateAI: true,
                         targetUserId: data.userId
@@ -1428,7 +1452,7 @@ io.on('connection', (socket) => {
                 status: 'delivered',
                 time: new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }),
                 color: '#00a884',
-                avatar: 'https://api.dicebear.com/7.x/lorelei/svg?seed=ChitChatBot&backgroundColor=b6e3f4',
+                avatar: '/ai-icon.svg',
                 isPrivateAI: roomId === 'ai_lounge' || !!targetUserId,
                 targetUserId: targetUserId || null
             };
@@ -1538,7 +1562,7 @@ io.on('connection', (socket) => {
             if (moveIdx !== -1) {
                 freshData.xox.board[moveIdx] = 'O';
                 freshData.xox.players.O = '🤖 Bot';
-                freshData.xox.playerAvatars.O = 'https://api.dicebear.com/7.x/lorelei/svg?seed=ChitChatBot&backgroundColor=b6e3f4';
+                freshData.xox.playerAvatars.O = '/ai-icon.svg';
 
                 const evalRes = evaluateXoxBoard(freshData.xox.board);
                 freshData.xox.status = evalRes.status;
@@ -1600,7 +1624,7 @@ io.on('connection', (socket) => {
                 // In AI Lounge, auto-assign AI Bot as Player O if unassigned
                 if ((data.roomId === 'ai_lounge' || String(data.text || '').toLowerCase().includes('@bot')) && !players.O) {
                     players.O = '🤖 Bot';
-                    data.xox.playerAvatars.O = 'https://api.dicebear.com/7.x/lorelei/svg?seed=ChitChatBot&backgroundColor=b6e3f4';
+                    data.xox.playerAvatars.O = '/ai-icon.svg';
                 }
 
                 // Player Turn Authorization & Slot Claiming
@@ -1672,7 +1696,7 @@ io.on('connection', (socket) => {
                 data.xox.turn = 'X';
                 if (isAIGame) {
                     data.xox.players.O = '🤖 Bot';
-                    data.xox.playerAvatars.O = 'https://api.dicebear.com/7.x/lorelei/svg?seed=ChitChatBot&backgroundColor=b6e3f4';
+                    data.xox.playerAvatars.O = '/ai-icon.svg';
                 }
                 item.data = JSON.stringify(data);
                 scheduleDataSave();
@@ -1894,9 +1918,9 @@ io.on('connection', (socket) => {
             }
         }
 
-        const isBot = safeName === '🤖 Bot' || safeName.toLowerCase().includes('bot');
+        const isBot = safeName === '🤖 Bot' || safeName.toLowerCase().includes('bot') || safeName.toLowerCase() === 'chitchat ai';
         const defaultAvatar = isBot 
-            ? 'https://api.dicebear.com/7.x/lorelei/svg?seed=ChitChatBot&backgroundColor=b6e3f4' 
+            ? '/ai-icon.svg' 
             : `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(safeName)}`;
 
         const finalAvatar = getSafeServerAvatar(matched?.avatar, safeName) || defaultAvatar;

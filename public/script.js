@@ -59,16 +59,20 @@ function getInlineSvgAvatar(name) {
 
 function getSafeAvatarUrl(avatar, name) {
     const cleanName = String(name || 'Alex').trim() || 'Alex';
+    const isBot = cleanName === '🤖 Bot' || cleanName.toLowerCase().includes('bot') || cleanName.toLowerCase() === 'chitchat ai';
+    if (isBot) {
+        return '/ai-icon.svg';
+    }
     if (avatar && typeof avatar === 'string') {
         const trimmed = avatar.trim();
+        if (trimmed.includes('seed=ChitChatBot') || trimmed.includes('ChitChatBot') || trimmed.includes('bottts')) {
+            return '/ai-icon.svg';
+        }
         if (trimmed.startsWith('data:image/') || trimmed.startsWith('https://') || trimmed.startsWith('http://') || trimmed.startsWith('blob:') || trimmed.startsWith('/')) {
             if (trimmed !== 'undefined' && trimmed !== 'null' && trimmed.length > 5) {
                 return trimmed;
             }
         }
-    }
-    if (cleanName === '🤖 Bot' || cleanName.toLowerCase().includes('bot')) {
-        return 'https://api.dicebear.com/7.x/lorelei/svg?seed=ChitChatBot&backgroundColor=b6e3f4';
     }
     return `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(cleanName)}`;
 }
@@ -76,6 +80,11 @@ function getSafeAvatarUrl(avatar, name) {
 window.handleAvatarError = function(img, name) {
     if (!img) return;
     img.onerror = null;
+    const cleanName = String(name || 'Alex').trim();
+    if (cleanName === '🤖 Bot' || cleanName.toLowerCase().includes('bot') || cleanName.toLowerCase() === 'chitchat ai') {
+        img.src = '/ai-icon.svg';
+        return;
+    }
     img.src = getInlineSvgAvatar(name || 'User');
 };
 
@@ -2742,7 +2751,7 @@ function renderRoomSettingsMembers(usersList) {
     roomSettingsMembersList.innerHTML = users.map(userItem => {
         const userName = (typeof userItem === 'object' && userItem !== null) ? userItem.name : String(userItem || '');
         const isMe = (currentUser && currentUser.name === userName);
-        const isBot = (userName === 'ChitChat AI' || (activeRoomId === 'ai_lounge' && userName.toLowerCase().includes('bot')));
+        const isBot = (userName === '🤖 Bot' || userName === 'ChitChat AI' || userName.toLowerCase().includes('bot'));
         const rawAvatar = (typeof userItem === 'object' && userItem !== null) ? userItem.avatar : (isMe ? currentUser.avatar : '');
         const avatarUrl = isBot 
             ? '/ai-icon.svg' 
@@ -4729,7 +4738,7 @@ function sendXoxGame() {
             },
             playerAvatars: {
                 X: currentUser.avatar || `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(currentUser.name || 'Alex')}`,
-                O: isAILounge ? 'https://api.dicebear.com/7.x/lorelei/svg?seed=ChitChatBot&backgroundColor=b6e3f4' : null
+                O: isAILounge ? '/ai-icon.svg' : null
             },
             status: 'in_progress',
             winner: null,
